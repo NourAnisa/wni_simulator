@@ -6,6 +6,8 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 
 ## Referensi
 
+- Unggahan “WNI cobain WNI Simulator pt.2”: `SaveInta.com_AQP6AVbEItUK3Jjxqq1RCNe7Ja1rhaI4FNdt8xupr9hbO-Pqy0NOYNM3wffIv_VbHwFlspTuF1FMFYWLE-AXPusijvoypDBOHVJSmyA.mp4` (83,33 detik, 720 × 1280). Analisis berdasarkan frame, tulisan kartu, dan subtitle.
+
 - [Video tutorial](https://www.youtube.com/watch?v=OEyiAVH1OaU)
 - [Video pendek](https://www.youtube.com/shorts/IEihkCUZTwI)
 - [Referensi Instagram 1](https://www.instagram.com/p/DdVhylZgdFx/)
@@ -15,7 +17,7 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 - Unggahan gameplay “Monopoli versi Indonesia (WNI SIMULATOR) Part 1”.
 - Unggahan gameplay tambahan: `SaveInta.com_AQMHJKqzfz1-5No7M4e2kJLoCoMahKN05RkYVP_ek8p3hWgAqOY0THqoIBQ6tuUW5AstELNNgFm8F9qt5wJmq_mrpG7bksn8gmjgeN4.mp4` (84,52 detik, 720 × 1280). Dianalisis melalui frame, tulisan kartu, dan subtitle; bukan transkripsi audio lengkap.
 
-Timestamp pada bagian 2–4 mengacu pada unggahan unboxing. Timestamp pada bagian 10–17 mengacu pada video gameplay tambahan berdurasi 84,52 detik. Timestamp tidak harus sama dengan versi pada tautan media sosial. Dokumen ini merangkum analisis percakapan; bukan salinan buku aturan resmi. Video, gambar, dan aset visual asli tidak disertakan.
+Timestamp pada bagian 2–4 mengacu pada unggahan unboxing. Timestamp pada bagian 10–17 mengacu pada video gameplay tambahan berdurasi 84,52 detik. Timestamp pada bagian 19–27 mengacu pada video “WNI cobain WNI Simulator pt.2” berdurasi 83,33 detik. Timestamp tidak harus sama dengan versi pada tautan media sosial. Dokumen ini merangkum analisis percakapan; bukan salinan buku aturan resmi. Video, gambar, dan aset visual asli tidak disertakan.
 
 ## 1. Bentuk permainan dan papan
 
@@ -476,9 +478,321 @@ Pertanyaan tambahan:
 ## 18. Rekap status pengumpulan
 
 - Bentuk papan, kelompok wilayah, dan komponen sudah dicatat; urutan setiap petak belum lengkap.
-- Nominal properti yang terkumpul: Padang (harga sementara), Palu, Jakarta, Surabaya dari analisis gameplay sebelumnya, serta harga papan Gorontalo dan Manado.
-- Kartu terdokumentasi: Penggeledahan KPK, Tambang Ilegal, WIBU, Kena PHK, Baterai Sekarat, Pembebasan Lahan.
+- Nominal properti yang terkumpul: Padang (harga sementara), Palu, Jakarta, Surabaya dari analisis gameplay sebelumnya, serta harga papan Gorontalo, Manado, Balikpapan, Palangkaraya, Solo, Bandung, dan Jogja. Pembacaan sertifikat IKN masih sementara.
+- Kartu terdokumentasi: Penggeledahan KPK, Tambang Ilegal, WIBU, Kena PHK, Baterai Sekarat, Pembebasan Lahan, Subsidi BBM Dicabut, Generasi Sandwich, Dibungkam, Kabur Aja Dulu, dan Awas Ada Boomers!!!. Beberapa nominal dan kasus khusus masih perlu verifikasi.
 - Catatan kartu yang belum lengkap: Orang Dalam, Sengketa, Tukar Nasib, dan kejadian begal.
 - Koreksi Jakarta Rp4 juta dipertahankan; biaya subsidi Jakarta belum diisi.
 - Aturan teramati dipisahkan dari interpretasi, pertanyaan terbuka, dan usulan adaptasi.
 - Dokumen ini belum merupakan game Godot yang dapat dimainkan.
+
+## 19. Indeks bukti “WNI cobain WNI Simulator pt.2”
+
+Video berdurasi sekitar 1 menit 23 detik menggabungkan demonstrasi kartu, potongan permainan, sketsa komedi, dan promosi produk. Adegan berurutan tidak selalu merupakan giliran yang berkesinambungan.
+
+| Waktu perkiraan | Bukti | Temuan |
+| --- | --- | --- |
+| 00:00–00:01 | Subsidi BBM Dicabut | Pembayaran kepada Negara dengan nominal berbeda untuk pengambil kartu dan pemain lainnya |
+| 00:11–00:12 | Generasi Sandwich | Transfer uang atau tanah kepada pemain termuda |
+| 00:19–00:25 | Pendaratan di Parkiran Pungli | Petak dan pendaratan terlihat; nominal pembayaran tidak terverifikasi dari adegan ini |
+| Sekitar 00:31 | Sertifikat IKN | Harga dan tarif tampak, tetapi pembacaan masih sementara |
+| 00:31–00:32 | Dibungkam | Larangan berbicara sampai giliran berikutnya; denda per pelanggaran |
+| Sekitar 00:38 | Papan Kalimantan | Harga Balikpapan dan Palangkaraya Rp2 juta |
+| Sekitar 00:44 | Kabur Aja Dulu | Sekali pakai sebelum lempar dadu; efek lokasi tujuan tetap berlaku |
+| Sekitar 00:50 | Papan Jawa | Solo, Bandung, dan Jogja Rp4 juta |
+| Sekitar 00:56 | Kena PHK | Kartu yang telah dianalisis muncul kembali; tidak melengkapi seluruh pertanyaan durasi |
+| 01:01–01:02 | Awas Ada Boomers!!! | Larangan pembelian global atau transfer kepada pemain tertua |
+| Sekitar 01:15–akhir | Promosi produk | Informasi preorder dalam rekaman, bukan bukti ketersediaan atau harga jual terkini |
+
+Sketsa naik kuda/T-rex, keluarga besar, pemain dibawa pergi, kebakaran, dan properti komedi lain tidak otomatis menjadi mekanisme game.
+
+## 20. Musibah: Subsidi BBM Dicabut
+
+Sumber: sekitar 00:00–00:01. Instruksi memakai satu dadu.
+
+| Hasil dadu | Pengambil kartu | Setiap pemain lainnya | Penerima |
+| --- | ---: | ---: | --- |
+| 5–6 | Tidak ada efek | Tidak ada efek | — |
+| 3–4 | Rp400.000 | Rp200.000 | Negara |
+| 1–2 | Tampak Rp600.000, sementara | Rp400.000 | Negara |
+
+**Bagian akhir nominal pengambil kartu pada hasil 1–2 tertutup jari. Rp600.000 belum boleh dianggap sepenuhnya terverifikasi.**
+
+“Semua pemain lainnya” dibaca sebagai pembayaran masing-masing pemain lain, bukan satu tagihan kolektif yang dibagi.
+
+Contoh empat pemain, hasil 3–4:
+- Pengambil kartu membayar Rp400.000.
+- Tiga pemain lain masing-masing membayar Rp200.000.
+- Total Negara menerima Rp1.000.000.
+
+Untuk N pemain, total pembayaran hasil 3–4 adalah `400000 + 200000 × (N − 1)` rupiah. Dampak total bertambah dengan jumlah pemain.
+
+Implikasi Godot:
+- Satu kartu dapat menghasilkan banyak transaksi dengan nominal berbeda.
+- Pisahkan kelompok pengambil kartu dan pemain lain agar tidak dihitung dua kali.
+- Urutan penyelesaian kekurangan dana/kebangkrutan perlu mengikuti aturan lengkap.
+- Tidak ada dasar membuat sistem konsumsi BBM atau kendaraan hanya dari tema kartu.
+
+## 21. Musibah: Generasi Sandwich
+
+Sumber: sekitar 00:11–00:12. Kartu memiliki ikon jam dan meminta satu dadu.
+
+| Hasil dadu | Efek yang terbaca |
+| --- | --- |
+| 5–6 | Kamu dan pemain tertua masing-masing membayar Rp200.000 kepada pemain termuda |
+| 3–4 | Kamu membayar Rp700.000 kepada pemain termuda |
+| 1–2 | Berikan satu Surat Tanah termahal milikmu kepada pemain termuda; jika tidak memiliki Surat Tanah, bayar Rp2.000.000 kepadanya |
+
+Pembayaran ditujukan kepada pemain, bukan Negara. Pada hasil 1–2, penyerahan tanah dan pembayaran pengganti adalah alternatif, bukan hukuman yang dijalankan sekaligus.
+
+Contoh hasil 5–6 jika pengambil kartu, pemain tertua, dan pemain termuda adalah orang berbeda:
+
+| Peran | Perubahan uang |
+| --- | ---: |
+| Pengambil kartu | −Rp200.000 |
+| Pemain tertua | −Rp200.000 |
+| Pemain termuda | +Rp400.000 |
+
+Jumlah uang antarpemain tetap; distribusinya berubah.
+
+Belum terverifikasi:
+- Pengambil kartu sekaligus pemain tertua atau termuda.
+- Beberapa pemain berusia sama.
+- Beberapa tanah memiliki harga tertinggi yang sama.
+- Dasar “termahal”: harga tanah saja atau beserta bangunan.
+- Nasib bangunan di atas tanah yang diserahkan.
+- Pemain sasaran sudah keluar/bangkrut.
+
+Usulan Godot: masukkan urutan usia saat persiapan permainan. Tanggal lahir lengkap tidak diperlukan jika urutan sudah cukup untuk aturan. Penentuan kasus seri harus menjadi keputusan aturan yang eksplisit.
+
+Cerita membiayai orang tua dan 13 adik adalah humor, bukan bukti adanya simulasi anggota keluarga.
+
+## 22. Takdir: Dibungkam
+
+Sumber: sekitar 00:31–00:32; teks jelas.
+
+- Pemain tidak boleh bersuara/berbicara sampai gilirannya tiba kembali.
+- Setiap kali tertangkap bersuara/berbicara, bayar Rp500.000 kepada Negara.
+- Tidak terlihat instruksi lempar dadu.
+
+| Pelanggaran yang dinyatakan selama efek aktif | Total denda |
+| --- | ---: |
+| 0 | Rp0 |
+| 1 | Rp500.000 |
+| 2 | Rp1.000.000 |
+| 3 | Rp1.500.000 |
+
+Kata “setiap” mendukung denda berulang. Batas efek mengikuti giliran pemilik kembali, bukan durasi detik. Ini berbeda dari kehilangan giliran: kartu tidak melarang pemain menerima sewa atau mengambil keputusan nonverbal.
+
+### Usulan adaptasi Godot
+
+- Status terlihat: “Dibungkam sampai giliran berikutnya”.
+- Mode bermain bersama dapat memakai pencatatan pelanggaran manual dengan konfirmasi.
+- Setiap pelanggaran yang sah menghasilkan satu pembayaran.
+- Efek berakhir ketika giliran pemain kembali.
+- Jangan mematikan semua kontrol pemain.
+- Menganggap pesan chat sebagai pelanggaran adalah aturan adaptasi, bukan teks asli.
+- Mematikan mikrofon otomatis mengubah tantangan karena pemain tidak dapat melanggar melalui kanal tersebut.
+- Definisi satu pelanggaran, misalnya satu ucapan atau satu rangkaian bicara, belum dijelaskan.
+
+Adegan pemain dibawa pergi merupakan dramatisasi; bukan instruksi memindahkan pion ke LAPAS atau mengeluarkannya dari permainan.
+
+## 23. Takdir: Kabur Aja Dulu
+
+Sumber: sekitar 00:44.
+
+Teks yang terlihat:
+1. Hanya sekali pakai.
+2. Digunakan sebelum melempar dadu.
+3. Pemain boleh pindah ke lokasi mana pun.
+4. Efek lokasi tetap berlaku.
+
+Kartu memberi pilihan tujuan, bukan kekebalan terhadap konsekuensi tujuan. Ucapan pemain tentang “tidak perlu bayar lima juta” tidak menetapkan harga kartu, denda, atau pengecualian baru.
+
+Belum terverifikasi:
+- Apakah perpindahan menggantikan lemparan dadu atau masih diikuti lemparan setelah efek lokasi.
+- Penggunaan ketika ditahan di LAPAS.
+- Apakah lokasi khusus Bekasi termasuk tujuan sah.
+- Perlakuan gaji START.
+- Kapan kartu dibuang dan mekanisme pengembalian ke dek.
+
+Implikasi Godot:
+- Sediakan tahap sebelum lempar dadu untuk penggunaan kartu simpanan.
+- Pemain memilih tujuan lalu mengonfirmasi pemakaian.
+- Jalankan efek tujuan setelah berpindah.
+- Cegah penggunaan ulang kartu yang sudah dikonsumsi.
+- Aturan Kabur Aja Dulu tentang efek tujuan tidak otomatis berlaku untuk semua kartu teleportasi lainnya.
+
+Penanda cetak **T-03 ×2** terlihat. Ini metadata cetak, belum verifikasi lengkap mengenai komposisi dek atau semua edisi produk.
+
+## 24. Musibah: Awas Ada Boomers!!!
+
+Sumber: sekitar 01:01–01:02. Kartu memiliki ikon jam dan meminta satu dadu.
+
+| Hasil dadu | Efek yang terbaca |
+| --- | --- |
+| 5–6 | Semua pemain tidak bisa membeli Surat Tanah dan Rumah selama satu putaran |
+| 3–4 | Bayar Rp500.000 kepada pemain tertua |
+| 1–2 | Surat Tanah termahal milikmu berpindah kepada pemain tertua; jika tidak memiliki Surat Tanah, bayar Rp3.500.000 kepadanya |
+
+Penanda cetak **M-18 ×1** terlihat. Generasi Sandwich memperlihatkan **M-20 ×1**. Metadata tersebut tidak menetapkan jumlah seluruh dek.
+
+Implikasi:
+- Hasil dadu tinggi tidak selalu berarti tanpa kerugian.
+- Larangan membeli tidak otomatis menonaktifkan sewa.
+- Tidak punya tanah memicu pembayaran pengganti.
+- Transfer ditujukan kepada pemain tertua, bukan Negara.
+- Durasi “satu putaran” belum dipastikan sebagai putaran lintasan atau rangkaian giliran.
+
+| Aspek | Generasi Sandwich | Awas Ada Boomers!!! |
+| --- | --- | --- |
+| Penerima utama | Pemain termuda | Pemain tertua |
+| Pembayaran hasil 3–4 | Rp700.000 | Rp500.000 |
+| Aset hasil 1–2 | Tanah sendiri termahal | Tanah sendiri termahal |
+| Pengganti jika tanpa tanah | Rp2.000.000 | Rp3.500.000 |
+
+Kasus usia seri, pengambil kartu sekaligus penerima, nilai tanah seri, dan penanganan bangunan masih belum diketahui. Jangan membuat aturan tambahan tanpa penanda keputusan adaptasi.
+
+## 25. Harga dan potongan papan tambahan
+
+### Harga yang terbaca pada papan
+
+| Properti | Wilayah | Harga tanah | Sumber |
+| --- | --- | ---: | --- |
+| Balikpapan | Kalimantan | Rp2.000.000 | Sekitar 00:38 |
+| Palangkaraya | Kalimantan | Rp2.000.000 | Sekitar 00:38 |
+| Solo | Jawa | Rp4.000.000 | Sekitar 00:50 |
+| Bandung | Jawa | Rp4.000.000 | Sekitar 00:50 |
+| Jogja | Jawa | Rp4.000.000 | Sekitar 00:50 |
+
+Harga tanah yang sama tidak berarti tarif sewa atau biaya bangunannya sama.
+
+### Sertifikat IKN — seluruh nominal masih sementara
+
+Sertifikat muncul singkat sekitar 00:31, kecil dan agak buram.
+
+| Data | Pembacaan sementara |
+| --- | ---: |
+| Harga tanah | Rp2.000.000 |
+| Sewa kosong | Rp500.000 |
+| Sewa Subsidi 1 | Rp1.000.000 |
+| Sewa Subsidi 2 | Rp1.500.000 |
+| Sewa Rumah OKB | Rp3.000.000 |
+| Biaya bangunan | Belum cukup terbaca |
+
+Jangan menggunakan pembacaan sementara IKN sebagai data final tanpa gambar yang lebih jelas.
+
+### Urutan petak yang terlihat
+
+Dalam orientasi kiri–kanan gambar:
+- Jawa sekitar 00:50: Musibah → Takdir → Solo → Bandung → Musibah → Jogja → sebagian Surabaya.
+- Kalimantan sekitar 00:38: Musibah → Balikpapan → Palangkaraya → Takdir.
+- IKN dan properti lain juga terlihat di Kalimantan, sebagian tertutup uang.
+
+Orientasi gambar tidak otomatis sama dengan arah perjalanan pion. Cocokkan dengan START dan papan lengkap sebelum menetapkan indeks petak.
+
+Komentar “harga Kalimantan bisa turun?” bukan bukti mekanisme tawar-menawar. “Jawa adalah kunci” bukan bukti bonus wilayah Jawa.
+
+Adegan Parkiran Pungli sekitar 00:19–00:25 tidak memperlihatkan nominal pembayaran cukup jelas. Kena PHK muncul lagi sekitar 00:56, tetapi belum menyelesaikan pertanyaan definisi durasi.
+
+## 26. Perluasan sistem ekonomi, kartu, dan pengujian
+
+Bagian ini merupakan usulan implementasi berdasarkan temuan.
+
+| Perubahan ekonomi | Contoh | Konsekuensi |
+| --- | --- | --- |
+| Bayar kepada Negara | Subsidi BBM Dicabut, Dibungkam | Uang keluar dari peredaran antarpemain |
+| Transfer uang antarpemain | Generasi Sandwich, Boomers | Jumlah uang tetap, distribusi berubah |
+| Transfer tanah | Cabang berat Sandwich/Boomers | Pemilik dan calon penerima sewa berubah |
+
+Fungsi transaksi membutuhkan pembayar, penerima, nominal, dan alasan. Jangan selalu mengurangi uang tanpa mencatat siapa penerimanya.
+
+### Kebutuhan data dan alur
+
+- Urutan usia pemain untuk target tertua/termuda.
+- Status Dibungkam dan pemicu berakhir pada giliran pemilik berikutnya.
+- Catatan pelanggaran agar satu kejadian tidak ditagih dua kali.
+- Tahap sebelum lempar dadu untuk kartu simpanan.
+- Penentuan tanah termahal dengan kebijakan kasus seri yang terverifikasi.
+- Alternatif pembayaran bila tidak memiliki aset.
+- Sekumpulan transaksi berbeda dari satu kartu global.
+- Transfer kepemilikan terpisah dari penghapusan data sertifikat.
+- Keputusan tentang bangunan menunggu aturan; jangan otomatis merobohkan atau memindahkannya.
+- Sumber dan status verifikasi setiap angka disimpan bersama datanya.
+
+### Skenario verifikasi
+
+| Skenario | Hasil yang perlu dipastikan |
+| --- | --- |
+| Subsidi BBM hasil 3–4, empat pemain | Empat transaksi; total Rp1 juta kepada Negara |
+| Subsidi BBM hasil 5–6 | Tidak ada pembayaran dari efek ini |
+| Subsidi BBM hasil 1–2 | Nominal pengambil kartu menunggu konfirmasi; jangan menganggap Rp600 ribu final |
+| Sandwich, penerima termuda | Uang/aset masuk kepada pemain termuda, bukan Negara |
+| Boomers, penerima tertua | Uang/aset masuk kepada pemain tertua, bukan Negara |
+| Memiliki tanah pada cabang penyerahan | Jangan sekaligus menagih pembayaran pengganti |
+| Tidak punya tanah | Gunakan nominal pengganti kartu yang benar |
+| Dibungkam, tiga pelanggaran sah | Tiga pembayaran, total Rp1,5 juta |
+| Giliran pemain Dibungkam kembali | Status berakhir |
+| Pemain Dibungkam memilih aksi nonverbal | Jangan otomatis mengunci seluruh aksi |
+| Kabur Aja Dulu | Hanya pada tahap yang sesuai; satu pemakaian; efek tujuan tetap berlaku |
+| Larangan membeli | Tidak otomatis menghapus hak sewa |
+| Usia seri / pengambil sekaligus target | Tangani setelah aturan ditetapkan; jangan menagih ganda secara tidak sengaja |
+| Tanah termahal seri | Jangan memilih diam-diam tanpa aturan |
+| Harga tanah sama | Jangan menyalin tarif sewa antarproperti |
+
+### Pertanyaan terbuka tambahan
+
+- Nominal lengkap Subsidi BBM hasil 1–2 yang tertutup jari.
+- Urutan penyelesaian jika beberapa pemain kekurangan uang bersamaan.
+- Aturan ketika pembayar dan penerima merupakan pemain yang sama.
+- Aturan usia seri dan pemain yang telah keluar.
+- Dasar pemeringkatan harga tanah serta perlakuan bangunan.
+- Definisi satu pelanggaran Dibungkam dan penerapannya pada chat/voice.
+- Kelanjutan giliran setelah Kabur Aja Dulu.
+- Tujuan khusus, LAPAS, dan START saat memakai kartu tersebut.
+- Definisi satu putaran serta penumpukan larangan pembelian.
+- Pembacaan sertifikat IKN dan biaya bangunannya.
+
+## 27. Indeks gabungan harga dan kartu
+
+### Seluruh harga tanah yang telah dicatat
+
+Tabel ini merupakan indeks ringkas. Tarif sewa, biaya bangunan, timestamp, serta catatan keterbacaan tetap merujuk bagian terkait.
+
+| Properti | Harga tanah | Status / rujukan |
+| --- | ---: | --- |
+| Padang | Rp1.500.000 | Sementara; bagian nominal tertutup, bagian 2 |
+| IKN | Rp2.000.000 | Sementara; sertifikat kecil/buram, bagian 25 |
+| Balikpapan | Rp2.000.000 | Terbaca pada papan, bagian 25 |
+| Palangkaraya | Rp2.000.000 | Terbaca pada papan, bagian 25 |
+| Palu | Rp2.500.000 | Sertifikat dan papan cocok, bagian 2 dan 15 |
+| Gorontalo | Rp2.500.000 | Terbaca pada papan, bagian 15 |
+| Manado | Rp2.500.000 | Terbaca pada papan, bagian 15 |
+| Jakarta | Rp4.000.000 | Sertifikat; koreksi pembacaan lama Rp6 juta, bagian 2 |
+| Surabaya | Rp4.000.000 | Catatan analisis gameplay sebelumnya, bagian 2 |
+| Solo | Rp4.000.000 | Terbaca pada papan, bagian 25 |
+| Bandung | Rp4.000.000 | Terbaca pada papan, bagian 25 |
+| Jogja | Rp4.000.000 | Terbaca pada papan, bagian 25 |
+
+Ini belum melengkapi seluruh 25 properti.
+
+### Indeks kartu
+
+| Kartu / kejadian | Bagian | Status ringkas |
+| --- | ---: | --- |
+| Penggeledahan KPK | 3 | Tiga cabang terbaca |
+| Tambang Ilegal | 4 | Efek utama terbaca; beberapa kondisi masih sementara |
+| Orang Dalam | 5 | Catatan gameplay, teks lengkap belum dicatat |
+| Sengketa | 5 | Penjelasan gameplay, teks lengkap belum terbaca |
+| Tukar Nasib | 5 | Mekanisme utama tercatat; aturan seri belum jelas |
+| WIBU | 11 | Cabang terbaca; detail perpindahan/skip belum lengkap |
+| Kena PHK | 12 | Efek utama tercatat; durasi satu putaran belum pasti |
+| Baterai Sekarat | 13 | Tabel terbaca; adaptasi perangkat perlu keputusan |
+| Pembebasan Lahan | 14 | Teks utama jelas; penanganan bangunan belum diketahui |
+| Kejadian begal | 15 | Subtitle pembayaran Rp400 ribu; nama dan cabang belum lengkap |
+| Subsidi BBM Dicabut | 20 | Salah satu nominal tertutup jari |
+| Generasi Sandwich | 21 | Cabang terbaca; kasus target dan aset seri belum diketahui |
+| Dibungkam | 22 | Teks jelas; definisi pelanggaran/adaptasi perlu keputusan |
+| Kabur Aja Dulu | 23 | Teks jelas; kelanjutan giliran belum pasti |
+| Awas Ada Boomers!!! | 24 | Cabang terbaca; durasi dan kasus seri belum diketahui |
+
+Semua temuan di atas adalah acuan analisis. Implementasi game belum dibuat dalam repositori ini. Pertanyaan terbuka tidak dianggap sudah terjawab hanya karena rancangan teknis dapat dibuat.
