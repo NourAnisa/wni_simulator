@@ -13,8 +13,9 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 - Foto papan yang diberikan pengguna.
 - Unggahan video unboxing berdurasi sekitar 3 menit yang dianalisis melalui frame dan teks yang tampil.
 - Unggahan gameplay “Monopoli versi Indonesia (WNI SIMULATOR) Part 1”.
+- Unggahan gameplay tambahan: `SaveInta.com_AQMHJKqzfz1-5No7M4e2kJLoCoMahKN05RkYVP_ek8p3hWgAqOY0THqoIBQ6tuUW5AstELNNgFm8F9qt5wJmq_mrpG7bksn8gmjgeN4.mp4` (84,52 detik, 720 × 1280). Dianalisis melalui frame, tulisan kartu, dan subtitle; bukan transkripsi audio lengkap.
 
-Timestamp di bawah mengacu pada unggahan unboxing, bukan jaminan timestamp yang sama pada seluruh tautan. Dokumen ini merangkum analisis percakapan; bukan salinan buku aturan resmi. Video, gambar, dan aset visual asli tidak disertakan.
+Timestamp pada bagian 2–4 mengacu pada unggahan unboxing. Timestamp pada bagian 10–17 mengacu pada video gameplay tambahan berdurasi 84,52 detik. Timestamp tidak harus sama dengan versi pada tautan media sosial. Dokumen ini merangkum analisis percakapan; bukan salinan buku aturan resmi. Video, gambar, dan aset visual asli tidak disertakan.
 
 ## 1. Bentuk permainan dan papan
 
@@ -237,3 +238,247 @@ Contoh log:
 - Urutan prioritas efek dan kondisi akhir permainan.
 
 Tidak ada harga atau aturan yang belum diketahui yang dianggap final hanya untuk melengkapi implementasi.
+
+## 10. Indeks bukti video gameplay tambahan
+
+Video ini merupakan montase beberapa kejadian. Pergantian adegan tidak membuktikan urutan giliran yang berkesinambungan.
+
+| Waktu perkiraan | Kejadian | Hasil pengamatan |
+| --- | --- | --- |
+| 00:02–00:04 | WIBU | Kartu terlihat jelas; perpindahan ke Bandung atau kehilangan giliran dan pembayaran. |
+| 00:10–00:17 | Kena PHK | Tiga cabang efek global; subtitle mendukung perpindahan seluruh pemain ke Pengadilan. |
+| 00:23–00:30 | Baterai Sekarat | Tabel kondisi HP dan denda terbaca; demonstrasi menyebut baterai 11 dan pembayaran Rp1 juta. |
+| 00:34–00:38 | Gajian | Pergerakan pion diikuti penerimaan gaji Rp1 juta. |
+| 00:40–00:44 | Penggeledahan KPK | Nama kartu disebut, tetapi hasil dadu dan penyelesaiannya tidak lengkap. |
+| 00:46–00:54 | Pembebasan Lahan | Teks kartu dan contoh perubahan tanah menjadi tol. |
+| 00:55–00:59 | Kejadian begal | Subtitle menyebut pembayaran Rp400 ribu; teks kartu lengkap tidak terlihat. |
+| 01:04–01:15 | Pengadilan | Aturan papan terbaca; uang Rp6,2 juta dihitung menjadi pembayaran Rp3,1 juta. |
+
+Tingkat kepastian:
+- **Terbaca:** tulisan kartu/papan cukup jelas pada frame.
+- **Didukung demonstrasi:** subtitle dan aksi pemain mendukung suatu pembacaan.
+- **Sementara:** bagian tertutup, kecil, atau belum lengkap.
+- **Usulan adaptasi:** keputusan rancangan digital, bukan aturan asli.
+
+## 11. Takdir: WIBU
+
+Sumber: video tambahan sekitar 00:03. Kartu meminta satu dadu.
+
+| Hasil dadu | Efek yang terbaca |
+| --- | --- |
+| 2, 4, 6 | Pindah ke lokasi Bandung. |
+| 1, 3, 5 | Lewati satu giliran dan bayar Rp500.000 kepada Negara. |
+
+Cerita tentang truk dan isekai adalah tema humor kartu. Efek tertulis tidak membuktikan adanya dunia isekai terpisah.
+
+Belum diketahui:
+- Apakah giliran yang dilewati adalah giliran berikutnya atau sisa giliran saat ini.
+- Apakah perpindahan ke Bandung menjalankan efek properti tujuan.
+- Apakah perpindahan ini memberikan gaji START.
+
+Implikasi Godot: simpan status kehilangan giliran; bedakan perpindahan langsung dari berjalan dengan dadu. Setiap perpindahan perlu menetapkan tujuan, alasan, perilaku START, dan pemicu efek tujuan. Jangan mengisi aturan yang belum diketahui secara diam-diam.
+
+## 12. Musibah: Kena PHK
+
+Sumber: sekitar 00:11–00:12; tulisan kecil tetapi tiga cabang utama dapat dibaca. Instruksi memakai satu dadu.
+
+| Hasil dadu | Pembacaan efek |
+| --- | --- |
+| 5–6 | Semua pemain tidak mendapatkan gaji ketika melewati START selama satu putaran. |
+| 3–4 | Semua pemain tidak bisa membeli Surat Tanah/Rumah selama satu putaran. |
+| 1–2 | Semua pemain pindah ke Pengadilan, lalu menjalankan efek lokasi. |
+
+Cabang 1–2 diperkuat subtitle sekitar 00:15–00:17. Frasa humor “sampai tujuh turunan” bukan instruksi untuk menerapkan hukuman tujuh putaran.
+
+Pemisahan mekanisme:
+- Larangan menerima gaji tidak otomatis melarang menerima sewa.
+- Larangan membeli tanah/rumah tidak otomatis menonaktifkan sewa aset yang sudah dimiliki.
+- Semua pemain yang terkena perpindahan harus menjalankan penyelesaian Pengadilan sesuai aturan; urutan antarpemain belum diketahui.
+- “Satu putaran” belum dipastikan berarti putaran lintasan atau satu rangkaian giliran. Jangan menyamakannya dengan batas efek KPK yang menyebut giliran pemilik kembali.
+
+Implikasi Godot: dukung efek global, pembatasan gaji dan pembelian yang terpisah, serta antrean efek lokasi untuk beberapa pemain. Durasi dan aturan penumpukan PHK masih perlu verifikasi.
+
+## 13. Takdir: Baterai Sekarat
+
+Sumber: sekitar 00:25–00:26, kartu terbaca jelas. Pemain diminta memeriksa HP.
+
+| Teks kondisi | Pembayaran kepada Negara |
+| --- | ---: |
+| Baterai 50% ke atas | Aman / Rp0 |
+| Baterai di bawah 50% | Rp500.000 |
+| Baterai di bawah 30% | Rp1.000.000 |
+| Tidak membawa HP | Rp2.000.000 |
+
+Demonstrasi menyebut baterai 11 dan pembayaran Rp1 juta. Ini mendukung penerapan satu kategori yang paling sesuai, bukan penjumlahan denda kategori di bawah 50% dan di bawah 30%.
+
+Pembacaan operasional yang didukung demonstrasi:
+
+| Kondisi | Pembayaran |
+| --- | ---: |
+| Tidak membawa HP | Rp2.000.000 |
+| Membawa HP, baterai <30% | Rp1.000.000 |
+| Baterai ≥30% dan <50% | Rp500.000 |
+| Baterai ≥50% | Rp0 |
+
+Batas 30% dan 50% mengikuti arti matematis teks kartu. Contoh: 11% membayar Rp1 juta, tepat 30% membayar Rp500 ribu, tepat 50% aman.
+
+### Adaptasi digital
+
+Ini adalah keputusan desain yang belum ditetapkan:
+- Mode bergantian pada satu komputer dapat meminta pemain memasukkan persentase baterai HP masing-masing.
+- Baterai perangkat otomatis hanya mewakili pemain jika perangkat itu memang perangkat pemain tersebut.
+- “Tidak membawa HP” berbeda dari kegagalan membaca baterai perangkat.
+- Baterai HP virtual adalah alternatif aturan adaptasi; jangan mengklaimnya sebagai mekanisme asli.
+
+Kartu ini membuktikan bahwa Takdir biru tidak selalu memberi keuntungan.
+
+## 14. Takdir: Pembebasan Lahan
+
+Sumber: sekitar 00:46–00:47; kartu terbaca jelas dan memiliki ikon jam.
+
+Aturan yang terlihat:
+1. Jika tidak ada pemain yang memiliki Surat Tanah, abaikan efek kartu.
+2. Pemain **boleh** memilih satu Surat Tanah milik pemain lain.
+3. Tanah tersebut disita dan diubah menjadi lokasi tol secara permanen.
+4. Tol baru berlaku seperti tol lainnya.
+5. Kartu diletakkan pada lokasi yang dipilih sebagai penanda tol baru.
+
+Kata “boleh” menunjukkan pilihan opsional. Antarmuka perlu mengizinkan pemain menggunakan efek atau melewatinya.
+
+| Aspek | Pembebasan Lahan | Tambang Ilegal |
+| --- | --- | --- |
+| Dadu | Tidak tercantum pada kartu yang terlihat | Satu dadu |
+| Target | Pilihan tanah milik pemain lain | Bergantung hasil dadu |
+| Tanah lawan | Menjadi tol permanen | Hasil genap mengembalikan tanah kepada Negara |
+| Tanah sendiri | Bukan target yang disebut | Hasil ganjil mengubah tanah sendiri termahal menjadi tol |
+| Tidak ada kepemilikan tanah | Abaikan efek | Pembacaan awal tampak meminta kartu Takdir baru; belum sepenuhnya terverifikasi |
+
+Mengembalikan properti kepada Negara berbeda dari mengubah fungsi petaknya menjadi tol.
+
+Implikasi Godot:
+- Tampilkan hanya target milik lawan yang memenuhi syarat.
+- Sediakan pilihan melewati efek.
+- Ganti fungsi dan tampilan petak secara permanen.
+- Tol asli dan tol hasil konversi memakai sistem efek tol yang sama.
+- Jangan menjalankan sewa properti lama setelah konversi.
+- Jika tidak ada target milik lawan, jangan memaksakan pilihan tanah sendiri.
+
+Belum diketahui: penanganan bangunan yang sudah berdiri, rincian sertifikat setelah penyitaan, dan kompensasi. Teks yang terbaca tidak memberi dasar untuk mengarang pembayaran ganti rugi.
+
+## 15. Penguatan harga, gaji, dan Pengadilan
+
+### Harga pada papan
+
+Terlihat sekitar 01:04–01:05:
+
+| Properti | Wilayah | Harga tanah pada papan | Sewa dan biaya bangunan |
+| --- | --- | ---: | --- |
+| Gorontalo | Sulawesi | Rp2.500.000 | Belum diketahui |
+| Palu | Sulawesi | Rp2.500.000 | Lihat sertifikat pada bagian 2 |
+| Manado | Sulawesi | Rp2.500.000 | Belum diketahui |
+
+Harga Palu cocok dengan sertifikat dari video unboxing. Kesamaan harga tanah tidak membuktikan kesamaan sewa atau biaya bangunan.
+
+### Pengadilan
+
+Tulisan papan sekitar 01:04–01:05 menguatkan:
+- Satu dadu saat mendarat.
+- 5–6: menerima Rp1 juta.
+- 3–4: masuk LAPAS dan denda Rp1,5 juta.
+- 1–2: masuk LAPAS dan membayar 50% uang kepada Negara, dibulatkan ke atas.
+
+Demonstrasi subtitle sekitar 01:10–01:15:
+
+`Rp6.200.000 × 50% = Rp3.100.000`
+
+Sisa uang menjadi Rp3,1 juta jika tidak ada transaksi lain. Dasar contoh perhitungan adalah uang tunai, bukan gabungan nilai properti dan bangunan.
+
+Contoh ini tidak memverifikasi satuan pembulatan karena pembagian menghasilkan angka tepat.
+
+### Gaji dan kejadian begal
+
+- Sekitar 00:34–00:38: pergerakan pion disusul gajian Rp1 juta, menguatkan nominal START. Urutan pembangunan setelah gajian belum dijelaskan.
+- Sekitar 00:55–00:59: subtitle menyebut korban begal membayar Rp400 ribu kepada Negara karena motor hilang dan cicilan belum lunas. Nama kartu, hasil dadu, dan seluruh cabang belum terbaca. Ini tidak membuktikan adanya inventaris motor atau sistem kredit terpisah.
+- Penggeledahan KPK muncul sekitar 00:41, tetapi tidak menambah bukti tentang hasil dadu atau penyelesaian cabangnya.
+
+## 16. Perluasan rancangan Godot dan pengalaman bermain
+
+Usulan berikut berasal dari analisis mekanisme, bukan penambahan aturan resmi.
+
+| Jenis efek | Contoh | Kebutuhan sistem |
+| --- | --- | --- |
+| Pembayaran tetap | WIBU, Baterai Sekarat | Nominal, penerima, alasan |
+| Pembayaran persentase | Pengadilan | Uang saat efek diproses, persentase, aturan pembulatan |
+| Kehilangan giliran | WIBU | Jumlah giliran yang dilewati dan waktu penerapan |
+| Gaji dinonaktifkan | PHK | Pemeriksaan penerimaan gaji terpisah dari sewa |
+| Pembelian dilarang | PHK | Pemeriksaan izin membeli tanah/bangunan |
+| Perpindahan semua pemain | PHK | Antrean perpindahan dan efek tujuan |
+| Konversi permanen petak | Pembebasan Lahan | Keadaan fungsi petak yang tersimpan |
+| Kondisi dunia nyata | Baterai Sekarat | Input pemain atau sumber kondisi perangkat |
+| Pilihan opsional | Pembebasan Lahan | Target sah dan tombol lewati |
+
+### Data tambahan
+
+- PlayerState: status kehilangan giliran, kemajuan putaran, dan efek aktif.
+- GlobalEffect: jenis pembatasan, pemain terdampak, asal kartu, dan syarat berakhir.
+- MovementAction: tujuan, alasan, perlakuan START, serta apakah efek tujuan dipicu.
+- CardResolution: pemain pemicu, target, hasil dadu/input, dan antrean aksi.
+- Setiap aturan/data: sumber, timestamp, status verifikasi, serta pertanyaan yang belum terjawab.
+
+Nilai yang belum terverifikasi harus ditandai, bukan diasumsikan berlaku pada seluruh kartu. Jangan memakai satu flag “terkena hukuman” untuk sewa nonaktif, gaji nonaktif, larangan membeli, dan kehilangan giliran.
+
+### Alur presentasi kartu
+
+Tampilkan kartu → jelaskan instruksi → minta pilihan/input atau dadu jika diperlukan → tampilkan konsekuensi → jalankan aksi → perbarui papan, uang, dan log.
+
+Tidak semua kartu perlu lempar dadu. Baterai Sekarat meminta kondisi HP; Pembebasan Lahan meminta pilihan target.
+
+Animasi harus mengikuti penyelesaian logika. Cegah tombol berulang menggandakan pembayaran, perpindahan, atau konversi petak.
+
+### Ekonomi dan interaksi
+
+Pembayaran kepada Negara mengurangi uang yang beredar di antara pemain. PHK dapat menghentikan pemasukan baru dari START. Konversi properti menjadi tol dapat menghilangkan sumber sewa pribadi. Gabungan efek tersebut membantu menjelaskan risiko kehilangan kemampuan membayar meskipun sebelumnya memiliki aset.
+
+Adegan reaksi pemain menunjukkan pentingnya waktu pengungkapan kartu dan penjelasan konsekuensi. Tampilkan alasan perubahan keadaan agar pemain memahami mengapa uang, hak transaksi, atau fungsi petak berubah.
+
+## 17. Skenario verifikasi tambahan dan pertanyaan terbuka
+
+| Skenario | Hasil yang diharapkan / batas verifikasi |
+| --- | --- |
+| WIBU hasil genap | Tujuan Bandung; aturan START dan efek tujuan menunggu konfirmasi |
+| WIBU hasil ganjil | Pembayaran Rp500 ribu dan kehilangan satu giliran; waktu skip menunggu konfirmasi |
+| PHK hasil 5–6 | Semua pemain kehilangan hak gaji sesuai durasi resmi; jangan otomatis mematikan sewa |
+| PHK hasil 3–4 | Pembelian tanah/rumah dibatasi; jangan otomatis mematikan sewa |
+| PHK hasil 1–2 | Semua pemain menuju Pengadilan dan efek lokasi diselesaikan; urutan perlu ditetapkan dari aturan |
+| Baterai 11% | Bayar Rp1 juta sekali |
+| Baterai tepat 30% | Bayar Rp500 ribu berdasarkan pembacaan batas |
+| Baterai tepat 50% | Aman |
+| Tidak membawa HP | Bayar Rp2 juta |
+| Pembacaan baterai gagal | Jangan otomatis menyamakan dengan tidak membawa HP |
+| Pembebasan Lahan tanpa kepemilikan tanah | Abaikan efek; jangan otomatis menarik ulang kartu |
+| Pemain menolak Pembebasan Lahan | Tidak ada tanah yang dikonversi |
+| Target hanya tanah sendiri | Tidak sah menurut target yang tertulis |
+| Konversi tanah lawan | Fungsi tol permanen; tidak lagi menagih sewa lama |
+| Pengadilan dengan Rp6,2 juta | Pembayaran Rp3,1 juta |
+| Harga Gorontalo/Manado | Rp2,5 juta; tarif sewa tetap belum diketahui |
+
+Pertanyaan tambahan:
+- Definisi “satu putaran” pada PHK.
+- Waktu penerapan kehilangan giliran WIBU.
+- Aturan pendaratan dan gaji pada perpindahan langsung.
+- Urutan penyelesaian Pengadilan untuk seluruh pemain.
+- Durasi jika kartu PHK muncul berulang dan interaksi dengan efek lain.
+- Penanganan bangunan dan kepemilikan setelah penyitaan.
+- Pilihan adaptasi baterai untuk komputer, perangkat bersama, atau multiplayer.
+- Seluruh cabang kartu kejadian begal.
+- Satuan pembulatan pembayaran 50%.
+
+## 18. Rekap status pengumpulan
+
+- Bentuk papan, kelompok wilayah, dan komponen sudah dicatat; urutan setiap petak belum lengkap.
+- Nominal properti yang terkumpul: Padang (harga sementara), Palu, Jakarta, Surabaya dari analisis gameplay sebelumnya, serta harga papan Gorontalo dan Manado.
+- Kartu terdokumentasi: Penggeledahan KPK, Tambang Ilegal, WIBU, Kena PHK, Baterai Sekarat, Pembebasan Lahan.
+- Catatan kartu yang belum lengkap: Orang Dalam, Sengketa, Tukar Nasib, dan kejadian begal.
+- Koreksi Jakarta Rp4 juta dipertahankan; biaya subsidi Jakarta belum diisi.
+- Aturan teramati dipisahkan dari interpretasi, pertanyaan terbuka, dan usulan adaptasi.
+- Dokumen ini belum merupakan game Godot yang dapat dimainkan.
