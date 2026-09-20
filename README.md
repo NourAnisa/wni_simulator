@@ -1,10 +1,10 @@
-# WNI Simulator — Acuan Pengembangan Godot
+# WNI Simulator — Rencana Pengembangan Roblox Studio
 
-Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digital di Godot.
+Dokumentasi analisis papan, video referensi, dan rencana adaptasi game online menggunakan **Roblox Studio dan Luau**.
 
-**Status: tahap analisis dan spesifikasi. Repositori ini belum berisi game Godot yang dapat dimainkan.** Data yang belum terbaca atau aturan yang belum terverifikasi ditandai secara eksplisit.
+**Status dokumen: analisis dan spesifikasi. Pembaruan README ini belum mengimplementasikan atau memublikasikan game Roblox yang dapat dimainkan.** Data yang belum terbaca atau aturan yang belum terverifikasi ditandai secara eksplisit.
 
-**Target produk terbaru:** game online dengan lobby, matchmaking, dan mode tim sesuai permintaan pengguna. Usulan awal mode tim adalah 2v2. Bagian 45–49 menjadi acuan terbaru untuk scope, tim, dan roadmap; rekomendasi MVP lokal pada bagian 36–44 kini menjadi tahap pengujian fondasi, bukan target akhir.
+**Target produk terbaru:** game online dengan lobby, matchmaking, dan mode tim sesuai permintaan pengguna. Usulan awal mode tim adalah 2v2. Bagian 45–50 memuat rancangan online dan pengalaman bermain. **Pengguna telah memilih Roblox Studio; bagian 51–54 menjadi acuan terbaru untuk platform, arsitektur, pembagian kerja dan milestone.** Rekomendasi Godot pada bagian sebelumnya disimpan sebagai arsip perencanaan; aturan papan dan analisis bukti tetap berlaku.
 
 ## Panduan membaca
 
@@ -17,6 +17,9 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 - [Target online, lobby, matchmaking dan tim](#45-target-online-dengan-lobby-matchmaking-dan-mode-tim): bagian 45–49, menggantikan rencana online sebagai fitur opsional.
 
 - [Saran penyempurnaan dan scope MVP](#50-saran-penyempurnaan-pengalaman-bermain-dan-prioritas-mvp): tempo, kerja sama tim, tutorial, pemain bangkrut, deck online dan rematch.
+
+- [Saran tambahan dan prototipe pertama](#51-saran-tambahan-dan-prototipe-pertama): keputusan, kenyamanan, moderasi, alat uji dan metrik.
+- [Peralihan ke Roblox Studio](#52-keputusan-platform-roblox-studio-dan-pemetaan-arsitektur), [alur layanan Roblox](#53-lobby-matchmaking-dan-pertandingan-di-roblox), serta [tim dan milestone terbaru](#54-tim-milestone-dan-pengelolaan-repositori-roblox).
 
 ## Referensi
 
@@ -165,6 +168,8 @@ Kartu tambahan dari video gameplay:
 - **Tukar Nasib:** pemain dengan uang terbanyak dan paling sedikit bertukar seluruh uang, bukan aset. Teks klausul jumlah uang sama kini terbaca; cakupan dan urutan penyelesaiannya masih perlu verifikasi (bagian 32).
 
 ## 6. Rancangan sistem Godot
+
+> Catatan migrasi: target aktif sekarang Roblox Studio. Istilah Godot dan infrastruktur generik di bagian ini merupakan rancangan terdahulu. Gunakan pemetaan serta milestone bagian 52–54; prinsip aturan dan konsistensi state tetap relevan.
 
 Bagian ini merupakan usulan implementasi, bukan aturan resmi tambahan.
 
@@ -420,6 +425,8 @@ Contoh ini tidak memverifikasi satuan pembulatan karena pembagian menghasilkan a
 - Penggeledahan KPK muncul sekitar 00:41, tetapi tidak menambah bukti tentang hasil dadu atau penyelesaian cabangnya.
 
 ## 16. Perluasan rancangan Godot dan pengalaman bermain
+
+> Catatan migrasi: target aktif sekarang Roblox Studio. Istilah Godot dan infrastruktur generik di bagian ini merupakan rancangan terdahulu. Gunakan pemetaan serta milestone bagian 52–54; prinsip aturan dan konsistensi state tetap relevan.
 
 Usulan berikut berasal dari analisis mekanisme, bukan penambahan aturan resmi.
 
@@ -1274,6 +1281,8 @@ Diagram bukan izin membiarkan saldo negatif atau menjual aset otomatis. Pilihan 
 
 ## 42. Alur teknis Godot dan perluasan online
 
+> Catatan migrasi: target aktif sekarang Roblox Studio. Istilah Godot dan infrastruktur generik di bagian ini merupakan rancangan terdahulu. Gunakan pemetaan serta milestone bagian 52–54; prinsip aturan dan konsistensi state tetap relevan.
+
 ### Pembagian sistem yang diusulkan
 
 | Sistem | Tanggung jawab | Pemilik utama |
@@ -1568,6 +1577,8 @@ Usulan setelah batas reconnect/AFK: pemain dianggap keluar dan diproses melalui 
 
 ## 48. Arsitektur layanan online dan data
 
+> Catatan migrasi: target aktif sekarang Roblox Studio. Istilah Godot dan infrastruktur generik di bagian ini merupakan rancangan terdahulu. Gunakan pemetaan serta milestone bagian 52–54; prinsip aturan dan konsistensi state tetap relevan.
+
 Bagian ini adalah rancangan tanggung jawab sistem; belum memilih vendor, versi API atau paket hosting.
 
 **Rekomendasi untuk matchmaking publik: server sebagai otoritas pertandingan.** Godot client menangani tampilan dan input; server memutuskan dadu, validitas pilihan, uang, aset, giliran dan hasil.
@@ -1613,6 +1624,8 @@ Komponen logis ini tidak wajib menjadi microservice terpisah. MVP dapat mengguna
 Uang pertandingan terpisah dari data profil. Untuk prototipe internal, mode pengujian boleh membuat identitas sementara; rilis publik membutuhkan keputusan akun, pemulihan akses dan masa hidup sesi yang jelas.
 
 ## 49. Revisi tim, roadmap dan pengujian untuk target online
+
+> Catatan migrasi: target aktif sekarang Roblox Studio. Istilah Godot dan infrastruktur generik di bagian ini merupakan rancangan terdahulu. Gunakan pemetaan serta milestone bagian 52–54; prinsip aturan dan konsistensi state tetap relevan.
 
 **Rekomendasi terbaru: enam orang inti sejak awal**, karena online sekarang merupakan kebutuhan pengguna. Network/backend programmer ikut menetapkan kontrak sejak fondasi dibuat; tidak menunggu proyek lokal selesai seluruhnya.
 
@@ -1748,3 +1761,170 @@ Saldo, kepemilikan, hukuman dan efek sesi sebelumnya tidak terbawa ke match baru
 “Satu deck lengkap” berarti setiap kartu yang diaktifkan memiliki seluruh cabang dan interaksi yang diputuskan; bukan klaim seluruh kartu board game sudah berhasil dikumpulkan. Daftar kartu yang belum aktif harus terlihat.
 
 Fokus evaluasi MVP: apakah satu pertandingan dapat diselesaikan dengan konsisten, dipahami pemain baru, mempunyai kerja sama tim yang terasa, dan tetap nyaman saat koneksi terganggu. Dana darurat, kemampuan karakter, banyak papan/mode dan ranked masuk backlog berikutnya.
+
+
+## 51. Saran tambahan dan prototipe pertama
+
+Saran berikut ditambahkan atas permintaan pengguna. Target implementasi sekarang Roblox Studio. Mekanik tambahan tetap rancangan yang perlu diuji, bukan bukti aturan asli.
+
+| Saran | Penerapan | Prioritas |
+| --- | --- | --- |
+| Prototipe empat pemain | Empat peserta bergabung melalui room berkode, bermain 2v2 dan mendapat hasil | Milestone pertama |
+| Pisahkan uang sesi dan progres akun | Uang, tanah dan efek kembali ke kondisi awal setiap match; profil menyimpan statistik dan kosmetik | Fondasi |
+| Pratinjau keputusan | Sebelum membeli/membangun, tampilkan biaya, sisa uang dan tarif sewa setelah aksi | MVP |
+| Identitas visual Indonesia | Papan, bangunan, pion, suara dan humor dengan teks kartu yang mudah dibaca | MVP bertahap |
+| Pengaturan kenyamanan | Volume musik/efek terpisah, ukuran teks, pengurangan animasi dan label tim selain warna | MVP |
+| Penanganan gangguan | Mute ping, pembatasan spam, blokir undangan dalam game dan alur laporan | Sebelum uji publik |
+| Alat pengujian internal | Memunculkan kartu, mengatur saldo, menguji LAPAS dan kebangkrutan | Sejak prototipe |
+| Catat alasan sesi terhenti | Bedakan disconnect, AFK, antrean lama, kebingungan aturan dan durasi permainan | Playtest |
+
+### Bentuk prototipe pertama
+
+**Papan sementara → room berkode → empat pemain → giliran dan dadu → pembelian dan sewa → hasil tim.**
+
+Prototipe menggunakan subset aturan yang dinyatakan jelas. Kondisi menang/kalah sementara harus diberi label mode prototipe jika belum mencakup seluruh ekonomi dan kartu. Tujuannya membuktikan empat peserta melihat keadaan yang konsisten dan dapat menyelesaikan sesi.
+
+Jangan menunggu semua aset final untuk menguji. Setelah fondasi lolos, tambahkan keluarga efek kartu, pemulihan koneksi, lalu matchmaking publik. Kontrak jaringan tetap dirancang sejak awal agar logika tidak bergantung pada satu perangkat.
+
+### Kejelasan, moderasi dan alat uji
+
+Pratinjau transaksi tidak menjamin aksi pasti dapat dilakukan: server memeriksa kembali saldo dan state saat pemain mengonfirmasi. Jika keadaan berubah, tampilkan alasan penolakan dan nilai terbaru.
+
+Blokir undangan dalam game harus memiliki lingkup yang jelas; jangan menjanjikan bahwa fitur itu otomatis memblokir akun di seluruh Roblox atau mencegah semua pertemuan lewat matchmaking. Laporan pemain bukan pemicu ban otomatis. Untuk MVP, ping preset mengurangi kebutuhan chat bebas khusus.
+
+Alat debug hanya di lingkungan pengujian yang dibatasi. Menyembunyikan tombol pada klien tidak cukup: server produksi tidak menerima perintah ubah saldo atau paksa kartu. Setiap skenario debug mencatat setup sehingga bug dapat diulang.
+
+Metrik awal: keberhasilan mulai match, gagal masuk/teleport, durasi antrean, durasi match, timeout, reconnect, waktu menunggu setelah bangkrut, dan penyelesaian tutorial. Alasan “tidak memahami aturan” berasal dari observasi atau feedback sukarela; jangan menyimpulkannya hanya karena pemain keluar.
+
+## 52. Keputusan platform Roblox Studio dan pemetaan arsitektur
+
+**Keputusan pengguna: game akan dibuat di Roblox Studio.** Rencana Godot tidak lagi menjadi stack implementasi aktif. Roblox Studio adalah lingkungan pengembangan; target perangkat pemain masih perlu diuji. Usulan awal: antarmuka mendukung PC dan ponsel dengan kamera papan terkontrol.
+
+### Bentuk experience yang diusulkan
+
+- Satu experience dengan dua place: **Lobby** sebagai pintu masuk dan **Match** untuk pertandingan.
+- Lobby sederhana dengan UI memilih mode, party, room, tutorial dan pengaturan; ruang sosial 3D dapat ditambahkan bertahap.
+- Match memakai papan 3D ringan bergaya diorama, kamera miring/atas, pion dan panel 2D. Ini usulan visual, bukan kewajiban grafis realistis.
+- Prototipe awal boleh menguji satu pertandingan dalam satu server/place; pemisahan dua place menjadi milestone berikutnya.
+- Satu server pertandingan melayani satu match 2v2 untuk menyederhanakan isolasi state pada MVP.
+
+### Pemetaan dari rancangan lama
+
+| Rancangan terdahulu | Target Roblox | Prinsip yang dipertahankan |
+| --- | --- | --- |
+| Script Godot/GDScript | Script dan ModuleScript Luau | Aturan dipisahkan dari tampilan |
+| Scene papan/pion | Model/Part dan controller tampilan | Posisi logis tidak ditentukan benturan fisika |
+| UI client | ScreenGui, komponen UI dan LocalScript | Klien menampilkan state dan meminta aksi |
+| Resource properti/kartu | Modul katalog data Luau dengan ID dan versi | Data referensi terpisah dari state sesi |
+| Server otoritatif generik | Script server Roblox | Server menentukan dadu, saldo, aset dan giliran |
+| Permintaan aksi jaringan | RemoteEvent dengan kontrak yang jelas | Validasi, pembatasan frekuensi dan ID aksi |
+| Identitas akun khusus | Identitas pemain Roblox melalui UserId | Nama tampilan bukan kunci kepemilikan |
+| Hosting server mandiri | Server experience Roblox | Tetap perlu menangani kapasitas, kegagalan dan observabilitas |
+| Save sesi lokal | State server dan rancangan pemulihan online | Pemain tidak dapat mengembalikan match bersama ke save pribadinya |
+
+Perubahan engine tidak memperbaiki aturan yang belum lengkap secara otomatis. Harga, urutan petak, cabang kartu, likuidasi, kondisi akhir, serta adaptasi tim tetap perlu diselesaikan.
+
+### Struktur tanggung jawab yang diusulkan
+
+| Lokasi Roblox | Isi |
+| --- | --- |
+| ServerScriptService | Bootstrap server, TurnService, EconomyService, EffectResolver, PartyService, RoomService, MatchmakingService, MatchService dan ProfileService |
+| ServerStorage | Template/aset khusus server serta modul yang tidak perlu direplikasi |
+| ReplicatedStorage | Kontrak remote, katalog publik dan komponen bersama yang aman dilihat klien |
+| StarterPlayerScripts | Controller input, kamera, animasi papan dan sinkronisasi tampilan |
+| StarterGui | Lobby, party, room, antrean, HUD, kartu, hasil dan reconnect |
+| Workspace | Papan, penanda petak, pion dan dekorasi |
+
+Nama modul adalah usulan organisasi, belum merupakan file yang sudah dibuat. Urutan deck, state rahasia, kode akses server dan alat admin tidak ditempatkan di penyimpanan yang direplikasi ke klien.
+
+Dadu visual mengikuti hasil server. Gerakan avatar, lompatan atau sentuhan pion pada objek tidak menentukan pembelian, gaji atau lokasi logis. Server menilai giliran dan petak dari model permainan.
+
+## 53. Lobby, matchmaking dan pertandingan di Roblox
+
+### Layanan dan batas pemakaiannya
+
+**MemoryStoreService:** direncanakan untuk tiket antrean, reservasi sementara, registry room/match dan rute reconnect yang memiliki masa berlaku. Layanan ini mendukung data sementara lintas server; bukan penyimpanan progres permanen. Gunakan expiry, pembersihan dan retry terbatas. Matchmaker custom tetap harus dibuat. [Dokumentasi Memory stores](https://create.roblox.com/docs/cloud-services/memory-stores).
+
+**TeleportService:** direncanakan untuk perpindahan dari Lobby ke reserved server Match dan kembali. Teleport dapat gagal; uji pada experience terpublikasi melalui aplikasi Roblox karena tidak didukung dalam playtest Studio. Kirim identifier match sebagai petunjuk, lalu validasi roster terhadap catatan server; data teleport tidak menjadi bukti saldo atau hak bergabung. Kode room yang dibagikan pemain berbeda dari kode akses reserved server. [Dokumentasi teleport](https://create.roblox.com/docs/projects/teleport).
+
+**DataStoreService:** direncanakan untuk profil, pengaturan, kosmetik, statistik dan hasil yang perlu bertahan lintas sesi. Akses dilakukan dari server; tangani error dan konflik pembaruan. Gunakan pola pembaruan yang sesuai serta deduplikasi Match ID agar retry hasil tidak menggandakan progres. Jangan menulis setiap frame/animasi. [Dokumentasi Data stores](https://create.roblox.com/docs/cloud-services/data-stores).
+
+**Remote client/server:** semua permintaan aksi diperiksa tipe, ukuran, izin, fase, target dan frekuensinya sebelum diproses. Klien tidak menetapkan hasil dadu, saldo atau tim secara sepihak. [Dokumentasi batas client-server](https://create.roblox.com/docs/scripting/security/client-server-boundary).
+
+### Alur matchmaking yang diusulkan
+
+1. Pemain masuk Lobby dengan identitas Roblox; server memuat profil atau menampilkan keadaan gagal muat tanpa menimpa data lama.
+2. Pemain membuat party atau masuk sebagai solo. MVP party duo dibentuk dalam server lobby yang sama; undangan lintas server dapat ditambahkan kemudian.
+3. Server membuat tiket antrean dengan roster, mode, versi aturan dan masa berlaku.
+4. Koordinator mencari empat peserta, mempertahankan duo satu tim dan mengirim permintaan penerimaan.
+5. Setelah semua menerima, koordinator mengunci roster dan menentukan satu tujuan server pertandingan.
+6. Jika peserta berasal dari beberapa server Lobby, masing-masing server asal memindahkan pemain lokalnya ke tujuan reserved server yang sama.
+7. Server Match memverifikasi UserId, Match ID, roster dan versi; menunggu seluruh peserta dengan batas waktu.
+8. Jika lengkap, mulai 2v2. Jika pengiriman sebagian gagal, beri kesempatan retry terbatas; batalkan secara konsisten bila roster tidak lengkap.
+9. Server menjalankan aturan dan menyiarkan hasil yang boleh diketahui setiap peserta.
+10. Setelah selesai, catat hasil sekali dan kembalikan pemain ke lobby; kegagalan kembali tidak mengeksekusi hasil ulang.
+
+Usulan implementasi reservasi memakai lease koordinator, perubahan bersyarat per record, ID operasi dan pembatalan yang dapat diulang. Jangan menganggap beberapa update key sebagai satu transaksi atomik. Jika dua koordinator bersaing, hanya satu roster final boleh berhak memulai match; peserta yang sudah terkunci ditolak dari kandidat lain.
+
+Untuk MVP, pencocokan berfokus pada mode, versi, waktu antre dan komposisi party. Preferensi region/latensi pada rancangan generik sebelumnya tidak menjadi janji kontrol lokasi server fisik Roblox. Evaluasi koneksi nyata sebelum menambahkan optimasi geografis.
+
+### Reconnect dan batas pemulihan
+
+Simpan pemetaan sementara UserId → Match ID → tujuan sesi dengan masa berlaku. Ketika masuk lagi melalui Lobby, server menawarkan kembali hanya jika peserta masih sah dan match masih aktif. Server pertandingan mengirim snapshot sesuai hak peserta; klien tidak mengirim snapshot pengganti.
+
+Reconnect awal hanya menjamin upaya kembali ke **sesi yang masih hidup**, bukan pemulihan otomatis setelah server berhenti. Jika server hilang, perlukan protokol snapshot/pemulihan yang terpisah atau batalkan match tanpa mencatat kekalahan akibat gangguan layanan. Masa reconnect 90 detik pada bagian 47 tetap parameter uji.
+
+### Pengujian khusus Roblox
+
+- Jalankan pengujian server dengan empat klien untuk giliran, ekonomi dan UI.
+- Periksa input mouse dan sentuh, ukuran layar, label tim dan performa papan.
+- Uji teleport pada place uji terpublikasi dengan akun penguji yang memiliki akses.
+- Uji hanya sebagian peserta tiba, retry, anggota keluar ketika antre, serta server Lobby asal berhenti.
+- Uji record antrean kedaluwarsa dan perebutan roster oleh dua koordinator.
+- Uji reconnect sah serta penolakan pemain yang bukan roster.
+- Pisahkan environment uji/profil penguji dari data produksi.
+- Pastikan kegagalan penyimpanan tidak mengganti profil lama dengan profil kosong.
+
+## 54. Tim, milestone dan pengelolaan repositori Roblox
+
+### Pembagian tim terbaru
+
+Rekomendasi tetap **enam orang inti**, dengan keterampilan disesuaikan ke Roblox:
+
+| Peran | Tanggung jawab |
+| --- | --- |
+| Game designer + producer | Aturan WNI, adaptasi 2v2, scope, backlog dan playtest |
+| Roblox gameplay programmer | Luau server, giliran, ekonomi, kartu, state dan hasil |
+| Roblox client/UI programmer | Lobby, input, kamera, HUD, pratinjau transaksi dan animasi |
+| Builder/artist + UI/UX | Papan diorama, pion, ikon, tampilan dan optimasi aset |
+| Roblox systems programmer | Party, antrean lintas server, teleport, profil, reconnect dan pemantauan |
+| QA/tester | Empat klien, perangkat target, race condition, gangguan koneksi dan konsistensi aturan |
+
+Audio dapat tetap ditangani freelancer. Tim tiga orang dapat membuat prototipe dengan merangkap peran, tetapi bukan alasan menjanjikan scope online penuh dalam waktu yang sama.
+
+### Milestone yang menggantikan urutan kerja Godot
+
+| Tahap | Hasil konkret | Syarat lolos |
+| --- | --- | --- |
+| R0 — Fondasi | Proyek Studio, modul Luau, katalog dan papan sementara | Data belum pasti tetap ditandai; aturan inti dapat diuji |
+| R1 — Empat pemain | Room berkode dalam server uji, pembagian 2v2, dadu, beli, sewa dan hasil | Semua peserta melihat state yang sama dan match selesai |
+| R2 — Aturan dan UI | Kartu dalam scope, pratinjau transaksi, tutorial, log dan ping | Tidak ada transaksi ganda atau kebuntuan yang diketahui |
+| R3 — Lobby ke Match | Dua place, roster dan reserved server | Empat peserta berhasil masuk bersama; kegagalan parsial tertangani |
+| R4 — Reconnect | Timer, AFK, rute kembali dan snapshot | Peserta sah melanjutkan tanpa efek ulang |
+| R5 — Matchmaking | Antrean solo/duo lintas server dan penerimaan match | Satu peserta tidak masuk dua match; party tetap utuh |
+| R6 — Uji publik terbatas | Pengaturan, moderasi, metrik, perbaikan dan pemeriksaan perangkat | Sesi nyata memenuhi kriteria MVP bagian 49–51 |
+
+Online tetap target akhir; pengujian dalam satu server adalah fondasi. Rentang 20–28 minggu sebelumnya merupakan estimasi kasar perencanaan, **belum tervalidasi untuk tim Roblox**. Ukur ulang setelah R1 berdasarkan pengalaman tim, kelengkapan aturan dan scope perangkat. Pergantian engine tidak otomatis memperpendek jadwal.
+
+### Hubungan GitHub dan Roblox Studio
+
+- GitHub menyimpan source Luau, data aturan, dokumentasi dan catatan perubahan.
+- Roblox Studio digunakan untuk menyusun experience, aset/place dan pengujian.
+- Permainan dipublikasikan ke Roblox; tautan GitHub bukan tautan bermain.
+- Source dapat disusun menurut kelompok server, client dan shared dengan pemetaan ke layanan Studio.
+- Tentukan satu alur sinkronisasi source yang disepakati sebelum banyak orang mengedit; dokumentasikan penggunaan alat sinkronisasi jika dipilih.
+- Catat versi source yang sesuai dengan setiap build/place yang diuji.
+- Berkas place, asset ID dan konfigurasi deployment dicatat sesuai kebutuhan proyek; jangan mengklaim place sudah dibuat hanya karena README tersedia.
+- Uji rilis terlebih dahulu pada environment pengujian sebelum memperbarui experience publik.
+
+**Status setelah perubahan ini:** rekomendasi terbaru telah didokumentasikan dan platform aktif menjadi Roblox Studio. Belum ada implementasi Luau, place Roblox atau publikasi experience yang dibuat melalui pembaruan README ini.
