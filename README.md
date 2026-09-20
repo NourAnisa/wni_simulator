@@ -4,6 +4,8 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 
 **Status: tahap analisis dan spesifikasi. Repositori ini belum berisi game Godot yang dapat dimainkan.** Data yang belum terbaca atau aturan yang belum terverifikasi ditandai secara eksplisit.
 
+**Target produk terbaru:** game online dengan lobby, matchmaking, dan mode tim sesuai permintaan pengguna. Usulan awal mode tim adalah 2v2. Bagian 45–49 menjadi acuan terbaru untuk scope, tim, dan roadmap; rekomendasi MVP lokal pada bagian 36–44 kini menjadi tahap pengujian fondasi, bukan target akhir.
+
 ## Panduan membaca
 
 - Analisis papan, harga, kartu dan aturan: bagian 1–35.
@@ -11,6 +13,8 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 - [Prioritas fitur](#38-scope-dan-urutan-prioritas-fitur) dan [roadmap](#39-roadmap-perkiraan-waktu-dan-gerbang-kelulusan): bagian 38–39.
 - [Alur kerja tim](#40-alur-kerja-tim-dari-referensi-hingga-fitur-selesai), [alur permainan](#41-alur-pemain-dan-satu-giliran), dan [alur teknis](#42-alur-teknis-godot-dan-perluasan-online): bagian 40–42.
 - [Pengujian dan workflow GitHub](#43-pengujian-github-dan-kriteria-selesai), serta [risiko dan keputusan awal](#44-risiko-utama-dan-keputusan-pertama-yang-perlu-dibuat): bagian 43–44.
+
+- [Target online, lobby, matchmaking dan tim](#45-target-online-dengan-lobby-matchmaking-dan-mode-tim): bagian 45–49, menggantikan rencana online sebagai fitur opsional.
 
 ## Referensi
 
@@ -1055,6 +1059,8 @@ Analisis ini memperbarui bukti yang sebelumnya belum lengkap, tetapi tidak menja
 
 ## 36. Rekomendasi jumlah anggota tim
 
+> Pembaruan scope: pengguna menetapkan lobby, matchmaking dan mode tim sebagai target. Gunakan rencana tim online dan roadmap terbaru di bagian 49; versi lokal di bawah adalah milestone internal.
+
 **Rekomendasi: 5 orang inti untuk versi lokal, kemudian 6 orang inti jika mengembangkan multiplayer online.** Prototipe dapat dibuat oleh 1–3 orang, tetapi jumlah pekerjaan tidak berkurang: beberapa orang harus merangkap desain aturan, pemrograman, visual, dan pengujian.
 
 Bagian 36–44 adalah **usulan perencanaan pengembangan**, bukan informasi dari video atau aturan resmi board game. Estimasi belum merupakan komitmen jadwal. Status repositori tetap dokumentasi; penambahan rencana tidak berarti fitur sudah tersedia.
@@ -1378,3 +1384,286 @@ Fitur dinyatakan selesai jika memenuhi kriteria issue, perilakunya sesuai spesif
 **Urutan keputusan awal:** pilih target lokal dahulu atau online; tetapkan platform dan jumlah pemain yang didukung; tentukan apakah tujuan adaptasi setia atau mode terinspirasi; kunci aturan minimum sesi; sepakati komitmen waktu anggota; lalu susun backlog dua minggu pertama.
 
 Rekomendasi pelaksanaan untuk proyek ini: mulai dengan **lima orang inti, MVP lokal 2D, dan logika aturan terpisah dari tampilan**. Setelah satu sesi lokal terbukti berjalan dengan aturan yang disepakati, tambahkan programmer jaringan sebagai orang keenam jika online tetap menjadi target. Fokus pertama adalah permainan yang konsisten dan dapat dijelaskan, kemudian kelengkapan konten serta presentasinya.
+
+
+## 45. Target online dengan lobby, matchmaking dan mode tim
+
+**Kebutuhan yang diminta pengguna:** lobby, pencarian pertandingan otomatis (matchmaking), dan bermain dalam tim, dengan pengalaman Get Rich sebagai referensi.
+
+Referensi: [LINE Let's Get Rich di Google Play](https://play.google.com/store/apps/details?id=com.linecorp.LGGRTHN). Deskripsi resmi menyebut permainan papan dengan dadu, pembangunan, kompetisi serta bermain bersama teman; kategori mencantumkan multiplayer. Halaman tersebut tidak memberikan spesifikasi lengkap tentang lobby, algoritma matchmaking, protokol jaringan atau peraturan tim. Rancangan berikut merupakan **usulan adaptasi WNI Simulator**, bukan klaim bahwa seluruh detailnya identik dengan Get Rich.
+
+### Keputusan scope dan usulan awal
+
+| Aspek | Status | Rancangan |
+| --- | --- | --- |
+| Lobby online | Diminta pengguna | Halaman utama sebelum masuk pertandingan |
+| Matchmaking | Diminta pengguna | Mencari peserta yang sesuai secara otomatis |
+| Mode tim | Diminta pengguna | Bentuk awal yang diusulkan: 2v2, total empat pemain |
+| Party teman | Usulan pendukung | Dua teman masuk antrean tim bersama dan tetap satu tim |
+| Room privat | Usulan pendukung | Buat/gabung dengan kode; pertandingan teman tanpa antrean publik |
+| Mode individual | Usulan berikutnya | Duel 1v1 atau empat pemain bebas; jangan membuka semua antrean sekaligus saat populasi kecil |
+| Ranked | Tahap berikutnya | Setelah permainan, jumlah pemain dan penyeimbangan cukup stabil |
+| Karakter | Visual lebih dahulu | Kemampuan khusus, equipment dan progresi kekuatan belum termasuk MVP |
+| Platform | Belum diputuskan | Antarmuka mempertimbangkan layar sentuh; pengujian jaringan awal dapat memakai desktop |
+| Aset dan identitas | WNI Simulator | Papan, kartu dan ekonomi tetap mengikuti dokumentasi WNI/adaptasi berlabel |
+
+MVP online yang disarankan membuka **satu antrean publik casual 2v2** dan room privat. Pemain sendirian tetap dapat memilih mode tim; server mencari rekan serta lawannya. Mode individual dapat ditambahkan setelah fondasi stabil agar pemain awal tidak tersebar ke banyak antrean.
+
+### Istilah yang harus dibedakan
+
+- **Lobby utama:** tempat melihat profil, memilih mode, mengajak teman dan mulai mencari pertandingan.
+- **Party:** kelompok teman yang ingin bermain bersama, maksimum dua untuk antrean 2v2.
+- **Room:** ruang persiapan satu pertandingan, dengan empat slot, tim dan status siap.
+- **Match:** sesi permainan aktif yang mempunyai state dan hasil sendiri.
+- **Team:** dua peserta dalam pertandingan yang mempunyai tujuan kemenangan bersama.
+- **Matchmaking:** layanan yang membentuk pertandingan dari antrean; tidak sama dengan daftar room.
+
+### Struktur layar
+
+| Layar | Informasi dan aksi utama |
+| --- | --- |
+| Masuk | Identitas akun/sesi, status koneksi dan pilihan masuk yang nantinya diputuskan |
+| Lobby utama | Nama/avatar, Main Tim, Buat Room, Gabung Kode, Undang Teman, Panduan, Pengaturan |
+| Party | Dua slot, undangan, ketua party, siap mencari, keluar party |
+| Room privat | Kode, empat slot, Tim A/B, aturan, siap/batal siap, mulai |
+| Pencarian | Mode, anggota party, waktu tunggu dan Batal |
+| Pertandingan ditemukan | Daftar peserta/tim dan tombol Terima dengan batas waktu |
+| Pemuatan | Progres kesiapan peserta dan pesan jika koneksi bermasalah |
+| Papan pertandingan | Pion, warna tim, saldo pribadi, aset, giliran, timer, kartu dan log |
+| Hasil | Tim menang/kalah/seri, alasan hasil, ringkasan aset dan tombol kembali |
+| Pemulihan koneksi | Status mencoba menyambung dan lanjut ke pertandingan yang masih aktif |
+
+Jumlah kemenangan/progres akun berbeda dari uang permainan. Saldo dalam pertandingan tidak dibawa ke pertandingan baru sebagai modal tambahan kecuali suatu mode terpisah kelak menetapkannya.
+
+## 46. Alur lobby, party, room dan matchmaking
+
+### Alur pemain
+
+```mermaid
+flowchart TD
+    A["Lobby utama"] --> B{"Cara bermain"}
+    B --> C["Main tim: sendiri atau party"]
+    B --> D["Buat atau gabung room privat"]
+    C --> E["Antrean matchmaking"]
+    E --> F{"Semua menerima?"}
+    F -->|Ya| G["Room terkunci dan pemuatan"]
+    F -->|Tidak| E
+    D --> H{"Empat peserta siap?"}
+    H -->|Ya| G
+    H -->|Belum| D
+    G --> I["Pertandingan 2v2"]
+    I --> J["Hasil dan kembali ke lobby"]
+```
+
+Panah kembali antrean setelah penolakan berlaku bagi peserta yang menerima dan masih ingin mencari. Peserta yang menolak kembali ke lobby; pembatalan dan kegagalan koneksi tidak boleh menahan pemain tanpa penjelasan.
+
+### Aturan party dan room yang diusulkan
+
+- Undangan memerlukan penerimaan; kode room tidak otomatis menjadi daftar pertemanan.
+- Party duo tidak dipisahkan ke tim berlawanan oleh matchmaking.
+- Perubahan anggota, tim, mode atau aturan membatalkan status siap.
+- Saat antrean aktif, komposisi party dikunci; perubahan membatalkan tiket antrean terlebih dahulu.
+- Hanya ketua party memulai pencarian setelah kedua anggota siap, tetapi anggota dapat keluar sehingga pencarian party dibatalkan.
+- Room privat mulai hanya jika empat slot terisi, dua pemain pada setiap tim, versi aturan cocok dan semua siap.
+- Ketua room hanya mengelola persiapan; bukan pihak yang menentukan hasil dadu atau saldo.
+- Setelah pertandingan dibuat, slot dan tim dikunci. Pemain baru tidak menggantikan peserta di tengah pertandingan MVP.
+- Ketua room keluar sebelum mulai: pindahkan kepemimpinan ke peserta tersisa; jika kosong, tutup room.
+- Ketua room keluar saat pertandingan: gunakan kebijakan disconnect peserta biasa; server tetap menjalankan sesi.
+
+### Cara matchmaking bekerja
+
+1. Server memvalidasi sesi pemain, versi game/aturan, mode, party dan bahwa peserta tidak sedang bermain atau memiliki tiket aktif.
+2. Buat tiket dengan identitas peserta, ukuran party, mode, wilayah layanan, waktu masuk dan status.
+3. Cari empat peserta dengan kombinasi dua duo, satu duo + dua pemain solo, atau empat solo.
+4. Penuhi batas wajib: mode/versi cocok, tidak ada peserta ganda, kapasitas tepat, setiap tim berisi dua, party tidak dipecah.
+5. Utamakan kualitas koneksi dan waktu antre; setelah data kemampuan cukup, tambahkan perkiraan kemampuan sebagai preferensi yang bisa diperluas.
+6. Usahakan duo melawan duo. Jika antrean terlalu lama, casual dapat mempertemukan duo melawan dua solo menurut kebijakan yang dijelaskan.
+7. Reservasi seluruh peserta secara atomik, lalu minta penerimaan pertandingan.
+8. Jika semua menerima, alokasikan server sesi dan kunci roster. Jika ada penolakan/timeout, lepaskan reservasi dan kembalikan peserta yang memenuhi syarat.
+9. Setelah semua siap memuat dalam batas yang ditentukan, mulai pertandingan.
+10. Hapus tiket yang sudah dipakai; permintaan Batal yang terlambat diproses sesuai status server, bukan membuat pemain masuk dua sesi.
+
+**Jangan menampilkan perkiraan waktu tunggu palsu.** Pada awal layanan tampilkan waktu yang sudah berlalu; prediksi waktu tunggu baru ditambahkan setelah ada data. Jika pemain belum cukup, tawarkan tetap menunggu, membatalkan, atau membuat room teman. Bot tidak ditambahkan diam-diam.
+
+### State antrean yang disarankan
+
+| State | Aksi berikutnya | Penanganan penting |
+| --- | --- | --- |
+| Idle | Buat tiket | Maksimum satu tiket aktif per peserta |
+| Queued | Batal atau reservasi match | Timeout koneksi menghapus tiket usang |
+| Reserved | Terima/tolak | Slot tidak dipakai match lain |
+| Accepted | Tunggu peserta lain | Ada batas waktu penerimaan |
+| Allocating | Siapkan sesi | Kegagalan alokasi melepas reservasi |
+| Loading | Muat state awal | Kegagalan sebelum mulai membatalkan match tanpa hasil menang/kalah |
+| InMatch | Bermain/reconnect | Tidak dapat masuk antrean baru |
+| Finished | Kembali ke lobby | Hasil dicatat sekali |
+
+Setiap transisi menggunakan pemeriksaan state terkini agar Batal, Terima dan timeout yang tiba bersamaan tidak menghasilkan dua pertandingan.
+
+## 47. Usulan aturan mode tim 2v2 WNI Simulator
+
+**Seluruh aturan tim berikut adalah rancangan digital untuk playtest, bukan hasil pembacaan aturan board game.** Permintaan pengguna menetapkan fitur tim, tetapi belum menetapkan rincian ekonominya.
+
+Prinsip awal: setiap pemain memiliki pion, uang, properti dan kartu sendiri; kemenangan ditentukan bersama tim. Model ini lebih mudah dipadukan dengan kartu yang merujuk “milik sendiri”, “uang terbanyak” dan pemain tertua/termuda daripada langsung memakai satu saldo bersama.
+
+| Komponen | Usulan awal 2v2 |
+| --- | --- |
+| Peserta | Tim A: A1/A2; Tim B: B1/B2 |
+| Urutan giliran | Bergantian antartim: A1 → B1 → A2 → B2; tim pembuka diacak server |
+| Uang | Saldo pribadi, tidak digabung |
+| Tanah/bangunan | Pemilik individu; tampilkan warna tim serta identitas pemilik |
+| Mendarat di tanah rekan | Bebas sewa biasa sebagai adaptasi tim |
+| Mendarat di tanah lawan | Bayar menurut tarif dan status pemilik |
+| Pemilik ditahan | Sewa ke Negara tetap berlaku, termasuk jika yang mendarat rekannya |
+| KPK menonaktifkan sewa | Untuk mode tim usulan prioritas KPK menghilangkan tagihan, lalu cek LAPAS, lalu pengecualian rekan |
+| Pajak/denda ke Negara | Tetap ditanggung pemain yang terkena |
+| Membangun | Hanya pada tanah sendiri dan saat kesempatan membangun sah |
+| Transfer bantuan bebas | Tidak tersedia pada MVP untuk membatasi eksploitasi dan scope |
+| Kartu simpanan | Dimiliki dan dipakai pemain pemilik; tidak dibagikan otomatis |
+| Efek global | Mencakup kedua tim kecuali kartu secara eksplisit menyebut pihak lain |
+| Target “lawan” | Hanya anggota tim musuh |
+| Target “pemain lain” | Pertahankan arti semua pemain selain pengambil, termasuk rekan, kecuali adaptasi kartu menetapkan lain |
+| Pemain bangkrut | Dikeluarkan dari giliran; rekan tetap bermain |
+| Tim kalah | Kedua anggota bangkrut, atau kondisi forfeiture tim terpenuhi |
+| Tim menang | Satu-satunya tim yang masih memiliki pemain aktif setelah satu kelompok efek selesai |
+
+Prioritas KPK/LAPAS di tabel adalah **usulan yang menyelesaikan pertanyaan terbuka khusus ruleset tim**; tidak mengubah status bukti aturan asli pada bagian 3 dan 34.
+
+### Kartu yang membutuhkan peninjauan khusus
+
+- **Tukar Nasib:** tetap membaca saldo individu peserta aktif, bukan total uang tim. Kasus seri yang belum jelas harus diputuskan sebelum kartu masuk deck online.
+- **Generasi Sandwich/Boomers:** target mengikuti atribut urutan usia yang ditetapkan untuk sesi, bukan tim. Tidak perlu meminta tanggal lahir lengkap. Penetapan atribut untuk pemain asing masih keputusan desain terbuka.
+- **PHK:** semua pemain terdampak secara berurutan dan konsisten; tentukan urutan resolusi serta arti satu putaran.
+- **Tambang Ilegal/Pembebasan Lahan:** filter target menurut teks kartu dan aturan tim; jangan otomatis menganggap semua efek hanya boleh merugikan musuh.
+- **Dibungkam:** laporan pelanggaran sosial sulit diverifikasi dalam matchmaking publik tanpa kebijakan komunikasi. Usulan MVP publik: keluarkan dari deck, tampilkan daftar kartu nonaktif; room privat dapat mengujinya melalui persetujuan manual.
+- **Baterai Sekarat:** kondisi HP asli tidak seragam antarplatform. Keluarkan dari deck publik sampai adaptasinya disepakati; jangan menerima persentase dari klien sebagai dasar kompetisi tepercaya.
+- **Buzzer ganjil, Begal cabang Lampung dan aturan kembali dari Bekasi:** konten belum lengkap tidak masuk deck aktif sampai ditetapkan.
+
+Deck publik mempunyai versi sendiri dan daftar pengecualian yang terlihat. Mode ini disebut adaptasi online dengan subset/penyesuaian kartu, bukan seluruh aturan WNI asli.
+
+### Akhir pertandingan dan batas durasi
+
+Usulan untuk casual publik: maksimum 20 ronde penuh, kemudian nilai tim = jumlah uang anggota + nilai likuidasi aset anggota yang masih dimiliki, tanpa menghitung aset dua kali. Definisi satu ronde adalah selesainya kesempatan semua pemain dalam roster urutan awal, termasuk kesempatan yang dilewati; pemain yang telah keluar tidak menyebabkan ronde macet.
+
+Angka 20 adalah nilai awal playtest, bukan target durasi dalam menit dan bukan aturan resmi. Nilai likuidasi bangunan harus diputuskan sebelum penilaian ini digunakan. Jika nilai akhir sama, hasil seri; jangan menciptakan pemecah seri tersembunyi.
+
+Jika satu kelompok efek menyebabkan kedua tim habis bersamaan, selesaikan kelompok efek sebagai satu kesatuan dan nyatakan seri untuk mode adaptasi. Jangan memberi kemenangan sementara hanya karena urutan pemrosesan peserta. Kondisi ini berbeda dari narasi Negara menang pada permainan referensi.
+
+### Timeout, AFK dan reconnect
+
+Usulan konfigurasi awal untuk uji, seluruhnya dapat disesuaikan:
+
+| Parameter | Nilai awal | Perilaku |
+| --- | ---: | --- |
+| Penerimaan match | 15 detik | Tidak menjawab dianggap tidak menerima |
+| Keputusan pemain | 30 detik per pilihan | Server menjalankan fallback yang terlihat |
+| Masa reconnect | 90 detik | Sesi tetap berjalan dengan fallback terbatas |
+| Timeout berturut-turut | 3 kesempatan | Tandai AFK dan terapkan kebijakan keluar pertandingan |
+
+Fallback bukan bot strategis: dadu wajib dilempar server; pembelian opsional dilewati; target wajib dipilih dari daftar sah dengan aturan deterministik yang tercatat. Likuidasi memerlukan urutan default yang diputuskan desainer; jangan memilih aset secara sembarang. Reset penghitung timeout setelah aksi sah.
+
+Usulan setelah batas reconnect/AFK: pemain dianggap keluar dan diproses melalui kebijakan eliminasi adaptasi, dengan disposisi aset/utang yang harus dikunci sebelum rilis. Rekan tidak langsung kalah selama masih aktif. Putus koneksi server bukan forfeiture pemain: pertandingan dibatalkan tanpa hasil kompetitif jika tidak dapat dipulihkan. Hukuman antrean berulang baru diterapkan setelah dapat membedakan penolakan sengaja dari gangguan layanan.
+
+## 48. Arsitektur layanan online dan data
+
+Bagian ini adalah rancangan tanggung jawab sistem; belum memilih vendor, versi API atau paket hosting.
+
+**Rekomendasi untuk matchmaking publik: server sebagai otoritas pertandingan.** Godot client menangani tampilan dan input; server memutuskan dadu, validitas pilihan, uang, aset, giliran dan hasil.
+
+| Komponen | Tugas | Data utama |
+| --- | --- | --- |
+| Client Godot | Lobby, input, papan, animasi, reconnect | Cache tampilan dan state yang boleh diketahui |
+| Identitas/sesi | Identifikasi pemain dan validasi akses | Player ID, token sesi dan profil |
+| Party dan room | Undangan, keanggotaan, siap, kode room | Party ID, room ID, roster, tim dan aturan |
+| Matchmaker | Tiket, pencocokan, reservasi dan pembatalan | Mode, versi, ukuran party, wilayah, waktu |
+| Pengalokasi sesi | Menempatkan pertandingan pada kapasitas server | Match ID, server tujuan dan status alokasi |
+| Server pertandingan | Resolver aturan dan otoritas state | Dadu, saldo, kepemilikan, deck, timer dan urutan aksi |
+| Penyimpanan | Profil, hasil, versi aturan dan snapshot pemulihan | Record persisten dengan ID unik |
+| Pemantauan | Kegagalan sesi, antrean, disconnect dan performa | Metrik serta log terstruktur |
+
+Komponen logis ini tidak wajib menjadi microservice terpisah. MVP dapat menggunakan satu aplikasi backend dengan modul yang jelas dan proses sesi permainan sesuai kebutuhan.
+
+### Batas kepercayaan dan konsistensi
+
+- Server memperoleh identitas dari sesi yang tervalidasi, bukan mempercayai Player ID bebas dari klien.
+- Klien meminta aksi, bukan menetapkan saldo, dadu, pemilik atau hasil.
+- Setiap perintah membawa ID aksi dan versi/urutan yang diharapkan. Duplikat mengembalikan hasil lama tanpa mengeksekusi ulang.
+- Timer menggunakan waktu server; mengubah jam perangkat tidak memperpanjang giliran.
+- Snapshot hanya mengirim informasi yang sah untuk peserta. Urutan kartu tersembunyi dan seed RNG server tidak dibagikan kepada pemain.
+- Reconnect membutuhkan sesi peserta yang sah dan mengembalikan state terkini, pilihan yang menunggu, serta sisa timer.
+- Hasil ditulis sekali menggunakan Match ID; retry tidak menggandakan progres atau hadiah.
+- Satu peserta tidak dapat memiliki dua tiket aktif atau berada pada dua match aktif.
+- Match publik memakai ruleset terkunci; room privat tidak boleh mengganti nominal atau mode setelah match dimulai.
+- Undangan dan kode room dibatasi frekuensinya untuk mengurangi spam dan percobaan kode berulang.
+
+### Model data minimum tambahan
+
+| Entitas | Field konseptual |
+| --- | --- |
+| Party | ID, leader, member IDs, readiness, revision |
+| Room | ID, visibility, join code, roster, team assignment, ruleset version, status |
+| QueueTicket | ID, party/member IDs, mode, region, enqueue time, status, reservation |
+| Match | ID, roster, teams, ruleset version, lifecycle, server assignment |
+| Participant | Player ID, team ID, seat, connection state, timeout count |
+| MatchState | Turn/phase, effect queue, assets, balances, statuses, server sequence |
+| MatchResult | Match ID, outcome, reason, summary, finalized timestamp |
+
+Uang pertandingan terpisah dari data profil. Untuk prototipe internal, mode pengujian boleh membuat identitas sementara; rilis publik membutuhkan keputusan akun, pemulihan akses dan masa hidup sesi yang jelas.
+
+## 49. Revisi tim, roadmap dan pengujian untuk target online
+
+**Rekomendasi terbaru: enam orang inti sejak awal**, karena online sekarang merupakan kebutuhan pengguna. Network/backend programmer ikut menetapkan kontrak sejak fondasi dibuat; tidak menunggu proyek lokal selesai seluruhnya.
+
+| Peran | Fokus tambahan dari scope online |
+| --- | --- |
+| Desainer + producer | Aturan 2v2, kondisi kemenangan, deck publik, timeout dan fairness |
+| Gameplay programmer | Resolver yang dapat dijalankan otoritas server, prioritas efek, eliminasi |
+| UI/client programmer | Lobby, party, antrean, terima match, room, tim dan reconnect |
+| Artist + UI/UX | Identitas tim, slot peserta, status siap/koneksi dan keterbacaan mobile |
+| Network/backend programmer | Sesi, room, matchmaker, alokasi, sinkronisasi, penyimpanan dan operasi |
+| QA | Empat klien, race condition antrean, AFK, reconnect dan aturan tim |
+
+Untuk uji publik lebih besar, pekerjaan operasi server dapat membutuhkan bantuan paruh waktu; tidak diasumsikan kapasitas produksi besar hanya dari enam orang.
+
+### Roadmap terbaru
+
+Estimasi awal **20–28 minggu total** untuk tim berpengalaman penuh waktu, satu platform target, visual 2D, casual 2v2, room privat dan backend sederhana. Ini menggantikan rentang online generik 16–24 minggu pada bagian 39 karena kini mencakup matchmaking dan aturan tim secara eksplisit. Waktu dapat bertambah jika aturan tetap belum lengkap, tim belajar, atau scope mencakup Android dan desktop sekaligus.
+
+| Tahap | Jendela rencana | Hasil yang wajib dibuktikan |
+| --- | --- | --- |
+| Spesifikasi online | Minggu 1–2 | Mode 2v2, data aturan minimum, identitas, kontrak client/server |
+| Fondasi gameplay dan sesi | Minggu 3–6 | Satu siklus lokal teruji; dua klien berbagi hasil dadu/state server yang sama |
+| Room empat pemain | Minggu 7–10 | Buat/gabung kode, siap, mulai dan pertandingan dasar empat perangkat |
+| Aturan tim dan konten | Minggu 11–14 | Kepemilikan pribadi, pengecualian sewa, efek kartu, eliminasi dan hasil tim |
+| Party dan matchmaking | Minggu 15–18 | Solo/duo masuk antrean, reservasi, penerimaan, pembatalan dan alokasi |
+| Alpha online | Minggu 19–22 | Reconnect, AFK, timeout, penyimpanan hasil dan uji kegagalan |
+| Beta dan cadangan perbaikan | Minggu 23–28 | Playtest, penyeimbangan, keterbacaan, operasi dan kandidat rilis |
+
+Pengerjaan tampilan, konten dan backend dapat tumpang tindih. Bagian lokal adalah alat uji logika; tidak menggantikan target produk online.
+
+### Kriteria penerimaan MVP online
+
+1. Empat akun/perangkat dapat masuk room dan menyelesaikan match 2v2.
+2. Satu pemain solo dapat mendapat rekan; party duo tetap satu tim.
+3. Antrean tidak menghasilkan pemain ganda, tim tidak seimbang, atau match dari versi aturan berbeda.
+4. Pembatalan bersamaan dengan match ditemukan selalu berakhir pada satu state yang jelas.
+5. Penolakan/timeout penerimaan membebaskan seluruh reservasi secara benar.
+6. Server menolak aksi di luar giliran, nominal palsu, target tidak sah dan replay perintah.
+7. Semua klien melihat saldo, aset, giliran, status dan hasil yang konsisten.
+8. Reconnect melanjutkan match tanpa dadu ulang, transaksi ulang atau bocornya kartu tersembunyi.
+9. Pemain keluar/AFK tidak menghentikan pertandingan tanpa batas.
+10. Ketua party/room bukan otoritas dadu; keluarnya ketua tidak mematikan server pertandingan.
+11. Hasil seri, batas ronde, satu pemain bangkrut dan dua tim habis dalam efek bersamaan dapat diselesaikan.
+12. Hasil disimpan sekali; kegagalan server tidak otomatis dicatat sebagai kekalahan pemain.
+13. Target jumlah match bersamaan dan batas latensi ditetapkan sebelum uji beban; jangan menyatakan skala ribuan pemain tanpa pengukuran.
+
+### Keputusan yang masih perlu dikunci sebelum implementasi lengkap
+
+- Platform rilis pertama: Android, desktop atau web.
+- Persetujuan detail usulan 2v2 dan penilaian akhir.
+- Modal awal, likuidasi bangunan, disposisi aset saat keluar, serta aturan kartu yang masih terbuka.
+- Identitas akun dan metode mengajak teman.
+- Region layanan, kapasitas pengujian dan anggaran server bulanan.
+- Batas waktu, durasi permainan nyata dan daftar kartu publik setelah playtest.
+
+Kebutuhan lobby, matchmaking dan tim sudah menjadi target. Pilihan teknis dan angka usulan di atas dapat disempurnakan melalui prototipe tanpa menganggapnya aturan asli board game.
