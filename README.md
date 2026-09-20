@@ -4,6 +4,14 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 
 **Status: tahap analisis dan spesifikasi. Repositori ini belum berisi game Godot yang dapat dimainkan.** Data yang belum terbaca atau aturan yang belum terverifikasi ditandai secara eksplisit.
 
+## Panduan membaca
+
+- Analisis papan, harga, kartu dan aturan: bagian 1–35.
+- [Jumlah anggota dan pembagian tugas](#36-rekomendasi-jumlah-anggota-tim): bagian 36–37.
+- [Prioritas fitur](#38-scope-dan-urutan-prioritas-fitur) dan [roadmap](#39-roadmap-perkiraan-waktu-dan-gerbang-kelulusan): bagian 38–39.
+- [Alur kerja tim](#40-alur-kerja-tim-dari-referensi-hingga-fitur-selesai), [alur permainan](#41-alur-pemain-dan-satu-giliran), dan [alur teknis](#42-alur-teknis-godot-dan-perluasan-online): bagian 40–42.
+- [Pengujian dan workflow GitHub](#43-pengujian-github-dan-kriteria-selesai), serta [risiko dan keputusan awal](#44-risiko-utama-dan-keputusan-pertama-yang-perlu-dibuat): bagian 43–44.
+
 ## Referensi
 
 - Unggahan “WNI cobain WNI Simulator” (76,97 detik, 720 × 1280): `SaveInta.com_AQMkEuO1zA2rB2TPUfk1RzyhfV9q1_XLrNLZFHBsx9fH-BwDdW7SnckO4sBdjeAEKaLKl2A1w-HDGlWNjQ6pQOvZXjo6OBThw1Ga1j8(1).mp4`. Identik secara SHA-256 dengan unggahan bernama sama tanpa `(1)`; dihitung sebagai satu sumber, bukan dua bukti independen. Analisis melalui frame, teks kartu, dan subtitle, bukan transkripsi audio lengkap.
@@ -1043,3 +1051,330 @@ Potongan papan memperlihatkan kedekatan Batam → Tilang → LAPAS → Pontianak
 9. Durasi/urutan giliran jika beberapa efek kehilangan giliran bertumpuk.
 
 Analisis ini memperbarui bukti yang sebelumnya belum lengkap, tetapi tidak menjadikan semua pertanyaan aturan sudah terjawab. Dokumentasi tetap berupa acuan pengembangan Godot; tidak ada klaim bahwa game sudah diimplementasikan.
+
+
+## 36. Rekomendasi jumlah anggota tim
+
+**Rekomendasi: 5 orang inti untuk versi lokal, kemudian 6 orang inti jika mengembangkan multiplayer online.** Prototipe dapat dibuat oleh 1–3 orang, tetapi jumlah pekerjaan tidak berkurang: beberapa orang harus merangkap desain aturan, pemrograman, visual, dan pengujian.
+
+Bagian 36–44 adalah **usulan perencanaan pengembangan**, bukan informasi dari video atau aturan resmi board game. Estimasi belum merupakan komitmen jadwal. Status repositori tetap dokumentasi; penambahan rencana tidak berarti fitur sudah tersedia.
+
+### Pilihan skala tim
+
+| Target | Jumlah yang disarankan | Pembagian | Konsekuensi |
+| --- | ---: | --- | --- |
+| Eksperimen pribadi | 1 orang | Semua peran dirangkap | Cocok belajar dan menguji mekanik; konten, kualitas visual, dan jadwal harus dibatasi |
+| Prototipe lokal | 3 orang | Desainer/QA/produser; programmer; artist/UI | Cepat membuktikan alur inti, tetapi programmer menjadi titik ketergantungan |
+| MVP lokal yang rapi | **5 orang** | Desainer/produser; 2 programmer; artist/UI; QA | Rekomendasi awal untuk proyek ini |
+| MVP online | **6 orang** | Lima peran lokal + programmer jaringan/backend | Membutuhkan sinkronisasi, koneksi putus, keamanan aksi, dan pengujian beberapa perangkat |
+| Produksi konten lebih besar | 7–8 orang | Tim online + artist/animator tambahan dan/atau audio | Hanya diperlukan jika target aset, platform, dan jadwal membenarkannya |
+
+MVP berarti versi minimum yang sudah dapat dimainkan dan dievaluasi sebagai satu pengalaman utuh. Prototipe yang memakai sebagian kartu atau aturan sementara harus menyebutkan keterbatasannya; jangan dipasarkan sebagai implementasi lengkap aturan asli.
+
+Jumlah pemain dalam satu sesi belum ditetapkan di sini. **Jumlah anggota tim pengembang berbeda dari jumlah pemain.**
+
+### Asumsi estimasi
+
+- Godot, papan 2D, animasi sederhana, antarmuka berbahasa Indonesia.
+- Mulai dari satu platform desktop dan permainan lokal bergiliran pada satu perangkat.
+- Tidak mencakup dunia 3D, kampanye cerita, AI lawan kompleks, ranked matchmaking, voice chat, pembayaran dalam aplikasi, atau peluncuran serentak banyak platform.
+- Anggota memiliki pengalaman dasar yang relevan dan bekerja mendekati penuh waktu.
+- Data aturan minimum dapat dikunci pada tahap awal. Aturan yang belum terbukti harus diselesaikan atau menjadi keputusan adaptasi yang dinyatakan jelas.
+- Pengerjaan aset dan kode dapat berjalan bersamaan setelah format data dan kebutuhan tampilan disepakati.
+
+Jika tim masih belajar Godot atau bekerja paruh waktu, gunakan hasil dua minggu pertama untuk memperbarui perkiraan. Menambah orang tidak otomatis membagi durasi secara lurus karena ada koordinasi dan pekerjaan yang harus berurutan.
+
+## 37. Job desk dan hasil kerja setiap anggota
+
+| Peran | Jumlah | Tanggung jawab utama | Hasil kerja yang dapat diperiksa |
+| --- | ---: | --- | --- |
+| Game designer + producer | 1 | Menyatukan aturan, menentukan scope, memprioritaskan backlog, memutuskan adaptasi, mengatur playtest dan jadwal | Spesifikasi aturan, daftar pertanyaan, keputusan adaptasi, backlog, kriteria penerimaan |
+| Lead/gameplay programmer | 1 | Membuat model permainan, giliran, transaksi, kepemilikan, pergerakan, efek kartu, serta integrasi sistem | Logika permainan yang dapat diuji, data state, penyelesaian efek, log kejadian |
+| UI/client programmer | 1 | Menghubungkan tampilan dengan state, input, papan/pion, panel properti, pilihan target, animasi, save/load dan build | Antarmuka yang dapat dimainkan, navigasi, penyimpanan sesi, paket build |
+| 2D artist + UI/UX designer | 1 | Membuat gaya visual, papan digital, ikon, pion, kartu, tata letak, dan aset animasi sederhana | Panduan visual, mockup, atlas/aset, komponen UI dengan keadaan normal/aktif/nonaktif |
+| QA/game tester | 1 | Menurunkan aturan menjadi skenario uji, menguji kombinasi efek, mencatat bug, memeriksa perbaikan dan pengalaman pemain | Matriks pengujian, laporan bug yang dapat diulang, hasil playtest, daftar kelayakan rilis |
+| Network/backend programmer, untuk online | +1 | Otoritas state, room/lobby, validasi aksi, sinkronisasi, reconnect, deployment dan pemantauan layanan | Sesi online konsisten, pemulihan koneksi, log server, panduan operasi |
+
+Pembagian ini adalah kepemilikan pekerjaan, bukan larangan membantu anggota lain. Kedua programmer perlu saling memahami bagian kritis agar proyek tidak berhenti ketika satu orang tidak tersedia.
+
+**Audio:** untuk MVP, gunakan satu paket audio yang sesuai kebutuhan atau freelancer dengan lingkup jelas: dadu, langkah pion, transaksi, kartu, peringatan, serta musik latar. Tidak harus menjadi anggota penuh waktu. Catat asal dan izin penggunaan aset sebelum distribusi.
+
+**Siapa memutuskan apa?** Desainer memutuskan perilaku aturan dan adaptasi; lead programmer memutuskan rancangan teknis; artist/UI memutuskan konsistensi visual; QA memverifikasi hasil terhadap kriteria penerimaan. Producer menyelesaikan konflik prioritas. Jika penggagas proyek merangkap desainer/produser, ia termasuk dalam lima orang, bukan otomatis orang keenam.
+
+### Prioritas jika hanya tersedia tiga orang
+
+| Anggota | Peran gabungan | Fokus pertama |
+| --- | --- | --- |
+| A | Desainer, produser, QA manual | Aturan, data properti/kartu, backlog, sesi uji |
+| B | Programmer gameplay dan UI | Giliran, ekonomi, input, penyimpanan |
+| C | Artist, UI/UX, audio sederhana | Papan, pion, kartu, keterbacaan, integrasi aset bersama B |
+
+Batasi versi tiga orang pada lokal terlebih dahulu. Jangan memasukkan online, AI, dan banyak platform ke milestone awal yang sama.
+
+## 38. Scope dan urutan prioritas fitur
+
+### P0 — fondasi yang wajib benar
+
+- Data papan dan urutan petak, posisi khusus Bekasi, identitas properti dan kartu.
+- Konfigurasi sesi, pemain aktif, dadu, gerakan, pergantian giliran.
+- Uang integer, transfer uang, kepemilikan, pembelian, sewa dan pembangunan.
+- Perbedaan berjalan, teleportasi, tol, kunjungan LAPAS dan penahanan.
+- Antrean efek kartu, pilihan target, batas waktu efek dan kekurangan uang.
+- Log yang menjelaskan siapa membayar, kepada siapa, jumlahnya dan alasannya.
+- Definisi kondisi selesai untuk mode yang sedang diuji.
+
+### P1 — MVP lokal
+
+- Menu awal, mulai/lanjutkan sesi, aturan singkat, pengaturan audio.
+- Visual yang terbaca, konfirmasi aksi penting, informasi properti dan status.
+- Seluruh aturan dan kartu yang disepakati untuk scope MVP.
+- Save/load pada batas aksi yang aman dan tidak menggandakan efek.
+- Penanganan input berulang, target tidak valid, dan sesi yang dimuat kembali.
+- Playtest sesi lengkap beserta pemeriksaan ekonomi dan kebuntuan.
+
+### P2 — online dan pengembangan berikutnya
+
+- Lobby/room, identitas peserta sesi, siap bermain, pembagian tempat pemain.
+- State otoritatif, pengiriman perintah, sinkronisasi hasil, reconnect.
+- Kebijakan pemain terputus dan host keluar.
+- Pengujian latency, duplikasi pesan, kehilangan koneksi dan versi klien.
+- Port mobile, AI, kosmetik, achievement atau mode tambahan hanya melalui keputusan scope berikutnya.
+
+**Keputusan data yang belum lengkap:** prototipe boleh memakai subset kartu yang lengkap atau nilai sementara berlabel `prototype_only`. Nilai sementara harus terpisah dari katalog bukti. Build tidak boleh diam-diam menganggap nominal yang belum diketahui sebagai nol. MVP lengkap memerlukan seluruh data dalam scope sudah diputuskan.
+
+## 39. Roadmap, perkiraan waktu, dan gerbang kelulusan
+
+Perkiraan awal untuk tim lokal lima orang: **prototipe 4–6 minggu; MVP lokal sekitar 10–14 minggu total**. Untuk tim enam orang dengan online: **sekitar 16–24 minggu total sejak awal proyek**, bergantung pada kebutuhan room, hosting dan pemulihan sesi. Rentang ini adalah penilaian perencanaan, bukan hasil pengukuran proyek yang sudah berjalan.
+
+| Tahap | Jendela waktu lokal | Pekerjaan utama | Syarat untuk lanjut |
+| --- | --- | --- | --- |
+| 1. Penetapan scope dan aturan | Minggu 1–2 | Tetapkan platform, mode, data minimum, daftar aturan terbuka, keputusan prototipe | Tim dapat menjelaskan satu giliran dan satu sesi tanpa asumsi tersembunyi |
+| 2. Prototipe inti | Minggu 3–4 | Papan sederhana, giliran, dadu, START, beli tanah, sewa, transaksi | Beberapa pemain dapat bergiliran tanpa edit state manual |
+| 3. Vertical slice | Minggu 5–6 | Satu contoh lengkap setiap keluarga efek, UI dasar, log, pemilihan target | Satu skenario dari awal sampai akhir dapat dimainkan dan diulang |
+| 4. Penyelesaian konten MVP | Minggu 7–9 | Isi data dalam scope, bangunan, petak khusus, kartu, save/load | Semua fitur scope terhubung; aturan sementara terlihat jelas |
+| 5. Alpha dan playtest | Minggu 10–11 | Uji sesi lengkap, kombinasi efek, kebuntuan, keterbacaan | Tidak ada kerusakan saldo/aset, softlock, atau kehilangan simpanan yang diketahui |
+| 6. Beta dan kandidat rilis | Minggu 12–14 | Perbaikan prioritas tinggi, audio, onboarding, pemeriksaan paket build | Checklist rilis terpenuhi dan hasil uji tercatat |
+
+Tahap dapat tumpang tindih; jendela waktu bukan janji tanggal. Vertical slice berarti potongan kecil yang sudah lengkap dari logika hingga UI, bukan seluruh isi deck. Jika aturan penting belum selesai pada minggu kedua, sesuaikan scope atau jadwal secara eksplisit.
+
+Untuk online, engineer jaringan dapat meninjau arsitektur sejak awal, kemudian mengintegrasikan setelah alur lokal stabil. Tambahan waktu dipakai untuk lobby, otoritas state, reconnect, pengujian multi-perangkat dan operasi layanan; jangan menganggap online hanya menambahkan tombol undangan.
+
+### Cara memperbarui estimasi
+
+1. Pecah fitur menjadi pekerjaan kecil dengan hasil yang dapat diperiksa.
+2. Tandai ketergantungan dan pemilik setiap pekerjaan.
+3. Catat waktu aktual dua minggu pertama, termasuk review dan perbaikan.
+4. Hitung ulang pekerjaan tersisa berdasarkan kapasitas aktual, bukan jumlah orang saja.
+5. Sisakan kapasitas untuk bug dan ketidakpastian aturan; jangan menjadwalkan semua orang 100% pada fitur baru.
+6. Jika target tidak muat, kurangi scope atau ubah jadwal dengan keputusan yang dicatat.
+
+Anggaran belum dihitung karena honor, komitmen jam, aset dan biaya layanan belum diketahui. Model sederhana: biaya tenaga tiap peran × durasi keterlibatan + aset/audio + perangkat/layanan + cadangan. Jangan menganggap lima orang selalu berarti lima gaji penuh sepanjang semua tahap.
+
+## 40. Alur kerja tim dari referensi hingga fitur selesai
+
+### Alur pekerjaan
+
+1. **Kumpulkan bukti:** desainer mencatat sumber, timestamp, teks, dan tingkat kepastian.
+2. **Tentukan perilaku:** pisahkan aturan terverifikasi, pertanyaan terbuka, dan keputusan adaptasi.
+3. **Buat issue:** tulis tujuan pemain, perilaku sistem, batas scope, dependensi dan contoh hasil yang benar.
+4. **Tentukan kontrak data:** programmer dan desainer menyepakati ID, parameter efek, target, durasi, serta error yang mungkin terjadi.
+5. **Buat mockup:** artist/UI dan programmer client menyepakati informasi yang harus tampil serta kapan pemain dapat bertindak.
+6. **Implementasikan:** gameplay menghasilkan perubahan state; client menampilkan hasil dan menerima pilihan.
+7. **Review:** programmer lain memeriksa integrasi; desainer memeriksa kesesuaian aturan.
+8. **Verifikasi:** QA menjalankan kasus normal, batas dan interaksi yang relevan.
+9. **Gabungkan dan buat build:** setelah pemeriksaan lolos, fitur masuk build pengujian.
+10. **Playtest dan perbaiki:** perubahan aturan kembali ke spesifikasi dan data, bukan hanya ditambal di UI.
+
+### Contoh issue yang cukup jelas
+
+**Judul:** Penggeledahan KPK hasil 3–4 menonaktifkan sewa.
+
+- Sumber: bagian 3 README.
+- Pemicu: pemain menarik KPK dan memperoleh dadu 3 atau 4.
+- Hasil: sewa seluruh properti pemain tidak berlaku hingga awal giliran berikutnya milik pemain tersebut.
+- Kepemilikan tanah dan bangunan tetap.
+- UI memperlihatkan status dan waktu berakhirnya efek.
+- Kriteria penerimaan: lawan yang mendarat saat efek aktif tidak ditagih; setelah efek berakhir, sewa kembali sesuai aturan yang berlaku.
+- Kasus terblokir: prioritas terhadap status LAPAS bersamaan belum diputuskan.
+- Bukti penyelesaian: hasil uji dan log sebelum/sesudah.
+
+### Ritme kerja yang disarankan
+
+| Frekuensi | Aktivitas | Tujuan |
+| --- | --- | --- |
+| Harian, singkat | Status pekerjaan dan hambatan | Membuka ketergantungan tanpa rapat panjang |
+| Mingguan | Perencanaan dan demo build | Memastikan kemajuan berupa permainan yang bisa diuji |
+| Mingguan | Playtest terarah | Menguji satu risiko konkret dan mencatat temuannya |
+| Akhir milestone | Review scope, bug dan estimasi | Memutuskan lanjut, perbaiki atau kurangi scope |
+
+Board pekerjaan dapat memakai status Backlog → Siap → Dikerjakan → Review → Uji → Selesai; status Terblokir harus mencantumkan pertanyaan atau dependensi yang menghalangi.
+
+## 41. Alur pemain dan satu giliran
+
+Semua alur di bagian ini adalah rancangan implementasi. Detail yang belum pasti pada bagian analisis tetap memerlukan keputusan aturan.
+
+### Alur satu sesi
+
+| Tahap | Aksi pemain | Tanggung jawab sistem |
+| --- | --- | --- |
+| Menu | Mulai baru, lanjutkan, baca panduan, atur audio | Menampilkan pilihan yang tersedia |
+| Pengaturan | Isi pemain dan pilih konfigurasi mode | Memvalidasi konfigurasi dan versi aturan |
+| Persiapan | Lihat urutan pemain dan ringkasan aturan | Membuat state awal dan deck sesuai keputusan desain |
+| Bermain | Lempar dadu, memilih pembelian/target, menyelesaikan efek | Menjaga giliran dan transaksi sah |
+| Kekurangan dana | Memilih tindakan yang diizinkan | Menyelesaikan utang/likuidasi menurut aturan mode |
+| Akhir sesi | Melihat hasil dan ringkasan | Menilai kondisi selesai yang telah ditetapkan |
+| Setelah sesi | Main ulang atau kembali ke menu | Membuat sesi baru tanpa membawa efek sesi lama |
+
+Modal awal, urutan pemain, jumlah pemain yang didukung dan kondisi akhir harus masuk konfigurasi yang diputuskan. Jangan menyalin asumsi umum Monopoly ke permainan ini. Mode demo berdurasi tertentu boleh dibuat sebagai **mode adaptasi**, dengan syarat berhentinya sendiri; itu tidak membuktikan aturan resmi berakhir.
+
+### Tahap satu giliran
+
+1. Tentukan pemain aktif dan jalankan pemicu awal giliran, termasuk efek yang berakhir saat giliran itu datang.
+2. Periksa status khusus: skip terjadwal, tahanan atau lokasi khusus. Urutan konflik status harus ditetapkan di tabel prioritas.
+3. Jika boleh bertindak, buka pilihan sebelum dadu yang sah, misalnya kartu Kabur Aja Dulu.
+4. Hasilkan dadu gerak, lalu gerakkan pion sesuai jenis perpindahan.
+5. Jika gerakan memenuhi syarat START, selesaikan gaji dan kesempatan pembangunan sebelum melanjutkan efek tujuan sesuai catatan tutorial; detail pembangunan masih perlu dikunci.
+6. Selesaikan fungsi petak aktif: properti, tol, pajak, Pengadilan, LAPAS atau petak kartu.
+7. Jika perlu pilihan target, hentikan penyelesaian sementara sampai pilihan sah diterima.
+8. Setiap pembayaran memeriksa kemampuan bayar dan membuka alur kekurangan dana bila diperlukan.
+9. Selesaikan efek lanjutan. Catatan tutorial menyebut dadu kembar memicu Takdir setelah lokasi, bukan giliran tambahan.
+10. Periksa efek akhir giliran dan kondisi selesai, simpan pada batas aman, lalu pindah ke pemain berikutnya.
+
+Kartu yang memindahkan pemain harus membawa aturan eksplisit tentang START dan aktivasi tujuan. Bila penyelesaian mengirim pemain ke tahanan atau menyebabkan bangkrut sebelum bonus Takdir, jangan menentukan kelanjutannya tanpa kebijakan prioritas yang disetujui.
+
+### Cabang transaksi dan pilihan
+
+```mermaid
+flowchart TD
+    A["Efek berikutnya"] --> B{"Butuh pilihan?"}
+    B -->|Ya| C["Tunggu pilihan sah"]
+    C --> D["Validasi aksi"]
+    B -->|Tidak| D
+    D --> E{"Ada pembayaran?"}
+    E -->|Tidak| F["Terapkan perubahan"]
+    E -->|Ya| G{"Dana cukup?"}
+    G -->|Ya| F
+    G -->|Tidak| H["Alur kekurangan dana"]
+    H --> I{"Masih dapat membayar?"}
+    I -->|Ya| F
+    I -->|Tidak| J["Selesaikan kegagalan bayar"]
+    F --> K["Catat hasil dan lanjut"]
+    J --> K
+```
+
+Diagram bukan izin membiarkan saldo negatif atau menjual aset otomatis. Pilihan tindakan, urutan penjualan dan konsekuensi bangkrut harus mengikuti aturan yang telah diputuskan.
+
+## 42. Alur teknis Godot dan perluasan online
+
+### Pembagian sistem yang diusulkan
+
+| Sistem | Tanggung jawab | Pemilik utama |
+| --- | --- | --- |
+| RulesCatalog | Definisi petak, properti, kartu, sumber dan versi aturan | Desainer + gameplay programmer |
+| GameState | Saldo, aset, lokasi, deck, status dan giliran sesi | Gameplay programmer |
+| TurnController | Tahap giliran dan perpindahan kendali | Gameplay programmer |
+| EffectResolver | Antrean efek, pilihan target, prioritas dan durasi | Gameplay programmer |
+| EconomyService | Transaksi, kekurangan dana dan perubahan aset | Gameplay programmer |
+| BoardView dan HUD | Tampilan papan, pion, uang, status dan detail | UI programmer + artist |
+| ChoiceDialog | Pilihan yang sah dan konfirmasi | UI programmer |
+| SaveService | Snapshot sesi dan kompatibilitas versi | UI programmer, review lead |
+| SessionAuthority, online | Validasi perintah dan distribusi hasil resmi | Network programmer |
+| ActionLog | Riwayat aksi untuk pemain dan reproduksi bug | Kedua programmer |
+
+Ini pembagian tanggung jawab, bukan kewajiban membuat setiap sistem sebagai singleton. Struktur proyek final ditetapkan saat implementasi.
+
+**Alur data:** input pemain menghasilkan permintaan aksi; sistem memvalidasi pemain aktif, fase dan target; resolver menghasilkan perubahan state; UI merender state dan animasi hasil. Animasi tidak menentukan pembayaran atau hasil dadu.
+
+State perlu menyimpan versi aturan, urutan deck/pembuangan, hasil atau keadaan RNG yang diperlukan, giliran, antrean efek, status sementara, dan pilihan tertunda jika penyimpanan di tengah aksi didukung. Untuk MVP, lebih sederhana menyimpan setelah satu aksi selesai sepenuhnya; tampilkan jika simpan sementara tidak tersedia.
+
+### Mengapa efek tidak cukup berupa animasi
+
+- KPK mengubah hak sewa hingga pemicu tertentu.
+- LAPAS mengubah penerima sewa tanpa mengubah pemilik.
+- Pembebasan Lahan mengubah fungsi petak secara permanen.
+- Tukar Nasib membaca beberapa saldo sekaligus sebelum menulis hasil.
+- PHK memengaruhi beberapa pemain dan bisa menimbulkan efek berantai.
+- Bekasi adalah lokasi khusus, bukan indeks lintasan biasa.
+
+Karena itu, UI dan aturan perlu dipisahkan sejak prototipe agar penambahan kartu tidak mengharuskan penulisan ulang seluruh papan.
+
+### Alur online yang disarankan
+
+1. Pemain bergabung ke room dengan versi aturan yang cocok.
+2. Host/server menetapkan state awal dan memberi tiap peserta identitas sesi.
+3. Klien mengirim niat aksi, misalnya membeli properti atau memilih target.
+4. Otoritas memvalidasi giliran, fase, biaya, target dan ID aksi.
+5. Otoritas menentukan hasil acak serta perubahan state satu kali.
+6. Semua klien menerima hasil berurutan dan menampilkan animasinya.
+7. Saat reconnect, klien menerima snapshot resmi dan melanjutkan dari fase yang sah.
+
+Klien tidak boleh mengirim saldo akhir atau hasil dadu sebagai kebenaran. ID aksi dan nomor urut membantu mencegah pesan ganda menghasilkan transaksi ganda.
+
+| Pilihan infrastruktur | Kelebihan | Pekerjaan tambahan / batas |
+| --- | --- | --- |
+| Host sebagai otoritas | Cocok untuk eksperimen sesi teman | Kebijakan host keluar, konektivitas dan kepercayaan kepada host |
+| Server khusus sebagai otoritas | Sesi tidak bergantung pada satu perangkat pemain | Hosting, deployment, pemantauan dan biaya operasi |
+
+Pilihan ini belum ditetapkan. Jangan menjanjikan host migration, reconnect tanpa batas, atau matchmaking sebelum masuk scope dan estimasi.
+
+## 43. Pengujian, GitHub, dan kriteria selesai
+
+### Pengujian yang paling bernilai
+
+| Area | Contoh risiko | Pemeriksaan |
+| --- | --- | --- |
+| Ekonomi | Uang tertagih dua kali | Satu ID aksi menghasilkan satu transaksi |
+| Giliran | Efek habis terlalu cepat/lambat | Periksa batas giliran pemain terdampak dan skip |
+| Properti | Pemilik berubah saat seharusnya hanya sewa berubah | Bandingkan pemilik, bangunan, fungsi petak dan penerima |
+| Perpindahan | Teleport memberikan gaji tanpa dasar | Uji setiap alasan perpindahan beserta START/tujuan |
+| Kartu | Pemilihan target tidak sah | Daftar target sesuai state; aksi usang ditolak |
+| Efek gabungan | LAPAS dan KPK bertabrakan | Terapkan keputusan prioritas yang terdokumentasi |
+| Save/load | Efek terulang atau hilang | Muat snapshot batas aman dan bandingkan state/log |
+| Sesi penuh | Permainan tidak pernah selesai | Playtest durasi, kebuntuan dan kondisi akhir mode |
+| Online | Pesan tertunda atau reconnect menggandakan aksi | Kirim ulang aksi dan cocokkan state seluruh peserta |
+
+Gunakan uji otomatis pada transaksi, resolver, batas giliran dan snapshot karena kerusakannya sulit dilihat dari visual. Gunakan QA manual untuk keterbacaan, animasi, navigasi dan pengalaman bermain. Daftar kasus aturan rinci tetap merujuk bagian 8, 17, 26 dan 35.
+
+### Workflow GitHub
+
+- Satu issue menjelaskan satu perubahan dengan kriteria penerimaan.
+- Buat branch singkat per fitur atau perbaikan; hindari semua orang mengubah satu scene besar bersamaan.
+- Pisahkan scene papan, HUD, kartu dan dialog agar pembagian kerja lebih aman.
+- Pull request memuat alasan perubahan, perilaku baru, bukti pengujian dan aturan yang masih terbuka.
+- Review oleh anggota lain sebelum penggabungan; periksa logika bersama desainer jika menyangkut interpretasi aturan.
+- Buat build milestone dengan versi dan catatan perubahan.
+- Setiap perubahan aturan memperbarui katalog data, contoh pengujian dan dokumentasi terkait.
+- Laporan bug mencantumkan versi build/aturan, langkah, hasil harapan, hasil aktual, serta log/save jika tersedia.
+
+### Definition of Done untuk fitur
+
+Fitur dinyatakan selesai jika memenuhi kriteria issue, perilakunya sesuai spesifikasi atau adaptasi berlabel, tidak memiliki bug penghambat, tampilan status dan pilihan dapat dipahami, kasus penting telah diverifikasi, serta perubahan telah direview dan terintegrasi dalam build.
+
+### Syarat rilis MVP
+
+- Satu sesi scope MVP dapat dimulai, dimainkan dan diakhiri tanpa bantuan developer.
+- Tidak ada bug kritis yang diketahui pada uang, kepemilikan, giliran atau penyimpanan.
+- Seluruh data yang digunakan sudah diputuskan; konten belum lengkap tidak muncul sebagai aturan final.
+- Panduan membedakan aturan referensi dan adaptasi digital.
+- Build telah diperiksa pada perangkat target; input, teks, audio dan keluar/lanjut sesi bekerja.
+- Aset siap didistribusikan sesuai izin penggunaannya.
+- Untuk online: reconnect dan kebijakan peserta keluar sudah diuji dan dijelaskan.
+
+## 44. Risiko utama dan keputusan pertama yang perlu dibuat
+
+| Risiko / keputusan | Dampak | Tindakan | Pemilik |
+| --- | --- | --- | --- |
+| Modal awal, peta lengkap, akhir permainan belum terkunci | Fondasi sesi tidak dapat divalidasi | Lengkapi sumber atau tetapkan aturan prototipe berlabel sebelum milestone inti | Desainer |
+| Cabang kartu/nominal belum terbaca | Implementasi berpotensi mengarang aturan | Pisahkan dari deck aktif sampai datanya diputuskan | Desainer + QA |
+| Efek bertumpuk | Giliran atau transaksi salah | Buat tabel prioritas dan skenario kombinasi | Gameplay programmer + desainer |
+| Baterai Sekarat memakai kondisi HP nyata | Tidak selalu cocok dengan desktop | Putuskan input manual atau mekanik pengganti sebagai adaptasi | Desainer |
+| Dibungkam bergantung interaksi sosial | Deteksi otomatis tidak sederhana | Mulai dari pelaporan manual dengan aturan konfirmasi yang jelas | Desainer + UI |
+| Pemain termuda/tertua | Kasus usia seri atau pemain sebagai target belum jelas | Putuskan penentuan urutan usia dan kasus seri tanpa mewajibkan data pribadi rinci | Desainer |
+| Online terlalu dini | Debug aturan bercampur debug jaringan | Buktikan resolver lokal dahulu; review kebutuhan jaringan sejak awal | Lead + network |
+| Satu orang memegang semua pengetahuan | Pekerjaan berhenti saat tidak tersedia | Dokumentasi, review silang dan demo rutin | Producer |
+| Papan dan kartu sulit dibaca | Pemain tidak memahami pilihan | Zoom/detail panel, ikon konsisten, uji keterbacaan | Artist/UI + QA |
+| Scope bertambah terus | Jadwal tidak selesai | Bekukan scope milestone; ide baru masuk backlog | Producer |
+
+**Urutan keputusan awal:** pilih target lokal dahulu atau online; tetapkan platform dan jumlah pemain yang didukung; tentukan apakah tujuan adaptasi setia atau mode terinspirasi; kunci aturan minimum sesi; sepakati komitmen waktu anggota; lalu susun backlog dua minggu pertama.
+
+Rekomendasi pelaksanaan untuk proyek ini: mulai dengan **lima orang inti, MVP lokal 2D, dan logika aturan terpisah dari tampilan**. Setelah satu sesi lokal terbukti berjalan dengan aturan yang disepakati, tambahkan programmer jaringan sebagai orang keenam jika online tetap menjadi target. Fokus pertama adalah permainan yang konsisten dan dapat dijelaskan, kemudian kelengkapan konten serta presentasinya.
