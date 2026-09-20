@@ -16,6 +16,8 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 
 - [Target online, lobby, matchmaking dan tim](#45-target-online-dengan-lobby-matchmaking-dan-mode-tim): bagian 45–49, menggantikan rencana online sebagai fitur opsional.
 
+- [Saran penyempurnaan dan scope MVP](#50-saran-penyempurnaan-pengalaman-bermain-dan-prioritas-mvp): tempo, kerja sama tim, tutorial, pemain bangkrut, deck online dan rematch.
+
 ## Referensi
 
 - Unggahan “WNI cobain WNI Simulator” (76,97 detik, 720 × 1280): `SaveInta.com_AQMkEuO1zA2rB2TPUfk1RzyhfV9q1_XLrNLZFHBsx9fH-BwDdW7SnckO4sBdjeAEKaLKl2A1w-HDGlWNjQ6pQOvZXjo6OBThw1Ga1j8(1).mp4`. Identik secara SHA-256 dengan unggahan bernama sama tanpa `(1)`; dihitung sebagai satu sumber, bukan dua bukti independen. Analisis melalui frame, teks kartu, dan subtitle, bukan transkripsi audio lengkap.
@@ -1667,3 +1669,82 @@ Pengerjaan tampilan, konten dan backend dapat tumpang tindih. Bagian lokal adala
 - Batas waktu, durasi permainan nyata dan daftar kartu publik setelah playtest.
 
 Kebutuhan lobby, matchmaking dan tim sudah menjadi target. Pilihan teknis dan angka usulan di atas dapat disempurnakan melalui prototipe tanpa menganggapnya aturan asli board game.
+
+
+## 50. Saran penyempurnaan pengalaman bermain dan prioritas MVP
+
+Bagian ini mendokumentasikan saran yang telah disetujui pengguna untuk dimasukkan ke rencana proyek. Angka penyeimbangan dan mekanik tambahan tetap merupakan **usulan adaptasi untuk playtest**, bukan aturan resmi WNI Simulator atau fitur yang sudah diimplementasikan.
+
+### Prioritas pengembangan
+
+| Prioritas | Saran | Penerapan untuk WNI Simulator |
+| --- | --- | --- |
+| Utama | Kendalikan durasi pertandingan | Target awal playtest 15–25 menit; sesuaikan jumlah ronde, uang awal dan timer berdasarkan hasil uji |
+| Utama | Kerja sama tim terasa nyata | Ping strategi: “beli tanah ini”, “simpan uang” dan “hati-hati pajak” |
+| Utama | Kurangi waktu menganggur | Animasi lawan ringkas, indikator pemain berikutnya, dan detail sertifikat dapat dibuka sambil menunggu |
+| Utama | Jelaskan perubahan uang | Tampilkan jumlah, penerima dan alasan setiap transaksi |
+| Utama | Tutorial interaktif singkat | Latihan lempar dadu, membeli tanah, membayar sewa, mengambil kartu dan bekerja sama |
+| Utama | Pisahkan aturan tiap mode | Matchmaking publik menggunakan ruleset baku; room privat dapat menguji aturan pilihan yang didukung |
+| Berikutnya | Bantuan rekan terbatas | Eksperimen dana darurat sekali per pertandingan setelah besaran, sumber dana dan konsekuensinya ditetapkan |
+| Berikutnya | Karakter kosmetik dahulu | Variasi penampilan, ekspresi, pion dan efek dadu; kemampuan khusus menunggu ekonomi dasar stabil |
+| Berikutnya | Rematch dan party tetap bersama | Pemain dapat bermain kembali dengan teman tanpa mengulang undangan |
+| Setelah populasi cukup | Ranked dan leaderboard | Ditambahkan setelah aturan, koneksi dan penyeimbangan terbukti stabil |
+
+### Tempo dan target durasi
+
+Target 15–25 menit adalah sasaran pengalaman, bukan batas waktu paksa atau durasi yang sudah terukur. Usulan 20 ronde pada bagian 47 masih parameter awal; playtest menentukan apakah jumlah ronde tersebut sesuai target. Jangan menjanjikan bahwa 20 ronde selalu selesai dalam 25 menit.
+
+Catat durasi pertandingan, waktu menunggu giliran, jumlah timeout, waktu sampai pemain pertama bangkrut, serta lama pemain tersebut menunggu hingga pertandingan selesai. Pisahkan waktu pencarian lawan dari durasi pertandingan agar masalah populasi antrean tidak tertukar dengan tempo permainan.
+
+Animasi boleh dipercepat, tetapi kartu, keputusan wajib dan alasan transaksi harus tetap dapat dibaca. Tampilan detail sertifikat selama giliran lawan bersifat informatif; tidak memberi hak melakukan aksi di luar giliran.
+
+### Kerja sama dan komunikasi tim
+
+Ping strategi ditujukan kepada rekan setim dan dapat menunjuk petak yang relevan. Tampilkan pengirim dan batasi frekuensinya agar tidak menjadi spam. Ping memberi saran, bukan mengeksekusi pembelian atau mengendalikan pion rekan.
+
+Dana darurat adalah eksperimen berikutnya, **belum masuk MVP**. Aturan MVP pada bagian 47 tetap tanpa transfer bantuan bebas. Sebelum mengaktifkan eksperimen, tentukan apakah uang berasal dari rekan atau Negara, batas nominal, siapa yang menyetujui, waktu penggunaan, dan arti “sekali” per pemain atau per tim. Uji apakah bantuan meningkatkan kerja sama atau justru membuat pertandingan terlalu lama.
+
+### Pemain yang bangkrut lebih awal
+
+Usulan awal: pemain yang telah bangkrut tetap dapat menyaksikan pertandingan dan memberi ping kepada rekan. Ia tidak dapat melempar dadu, membayar, membeli, menggunakan kartu atau mengendalikan pion pemain lain.
+
+Mode menonton tidak membuka kartu tersembunyi, urutan deck, seed RNG, atau informasi lawan yang tidak boleh diketahui. Tampilan mengikuti batas informasi pertandingan, bukan akses debug server. Jika penonton keluar, rekan yang masih aktif tetap melanjutkan sesi menurut aturan tim.
+
+Pengujian harus mencatat apakah menunggu sebagai penonton masih menarik. Jika waktu menunggu terlalu panjang, perbaiki tempo atau kondisi akhir; jangan otomatis menghidupkan kembali pemain tanpa aturan adaptasi baru.
+
+### Tutorial dan kejelasan transaksi
+
+Tutorial menggunakan skenario latihan terkontrol yang ditandai sebagai latihan. Urutan awal yang disarankan:
+
+1. Mengenali pion, warna tim, uang pribadi dan pemain aktif.
+2. Melempar dadu dan bergerak.
+3. Membeli tanah dan membaca sertifikat.
+4. Membayar sewa serta memahami penerimanya.
+5. Mengambil kartu dan menyelesaikan pilihan.
+6. Menggunakan ping serta memahami kemenangan tim.
+
+Contoh pesan transaksi: “Bayar Rp700.000 ke Negara karena pemilik sedang di LAPAS.” Pesan aktual harus dibentuk dari hasil resolver, termasuk prioritas KPK/LAPAS yang berlaku, bukan teks tetap yang dapat berbeda dari transaksi sebenarnya.
+
+Sediakan log yang dapat dibuka kembali. Warna tim perlu dilengkapi label atau ikon agar kepemilikan tidak hanya dibedakan melalui warna.
+
+### Deck online dan aturan room
+
+Kartu yang bergantung usia, baterai HP, atau larangan berbicara memerlukan adaptasi digital yang dapat dijelaskan. Untuk matchmaking publik, gunakan hanya efek yang datanya lengkap dan dapat diproses secara konsisten oleh server.
+
+Baterai Sekarat dan Dibungkam tetap mengikuti keputusan pengecualian sementara pada bagian 47. Kartu yang memakai usia tidak otomatis aktif hanya karena namanya sudah tercatat; cara menentukan target dan kasus seri harus ditetapkan dahulu.
+
+Room privat boleh menawarkan preset aturan yang telah diimplementasikan dan diuji. MVP cukup menyediakan preset standar; editor aturan bebas bukan syarat rilis. Setiap perubahan preset sebelum mulai membatalkan status siap, menampilkan ringkasan perubahan, dan membutuhkan kesiapan ulang. Ruleset dikunci setelah pertandingan dimulai.
+
+### Rematch dan progresi
+
+Untuk tahap berikutnya, pertahankan party duo ketika kembali ke lobby. Dalam room privat, rematch dengan roster yang sama memerlukan persetujuan peserta dan membuat Match ID serta state baru. Dalam pertandingan publik, tombol Main Lagi mengantrekan party kembali; tidak menjanjikan lawan yang sama.
+
+Saldo, kepemilikan, hukuman dan efek sesi sebelumnya tidak terbawa ke match baru. Karakter kosmetik tidak mengubah peluang dadu, modal awal atau tarif sewa. Kemampuan khusus, ranked dan leaderboard memerlukan milestone serta pengujian keseimbangan tersendiri.
+
+### Scope versi pertama yang direkomendasikan
+
+**Satu papan, satu mode casual 2v2, party duo, room privat, tutorial, reconnect, serta satu deck dengan aturan lengkap untuk scope yang dipilih.** Lengkapi dengan ping tim, log transaksi, timer dan penanganan AFK sebagaimana rancangan sebelumnya.
+
+“Satu deck lengkap” berarti setiap kartu yang diaktifkan memiliki seluruh cabang dan interaksi yang diputuskan; bukan klaim seluruh kartu board game sudah berhasil dikumpulkan. Daftar kartu yang belum aktif harus terlihat.
+
+Fokus evaluasi MVP: apakah satu pertandingan dapat diselesaikan dengan konsisten, dipahami pemain baru, mempunyai kerja sama tim yang terasa, dan tetap nyaman saat koneksi terganggu. Dana darurat, kemampuan karakter, banyak papan/mode dan ranked masuk backlog berikutnya.
