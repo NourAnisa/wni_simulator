@@ -6,6 +6,8 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 
 ## Referensi
 
+- Unggahan “WNI cobain WNI Simulator” (76,97 detik, 720 × 1280): `SaveInta.com_AQMkEuO1zA2rB2TPUfk1RzyhfV9q1_XLrNLZFHBsx9fH-BwDdW7SnckO4sBdjeAEKaLKl2A1w-HDGlWNjQ6pQOvZXjo6OBThw1Ga1j8(1).mp4`. Identik secara SHA-256 dengan unggahan bernama sama tanpa `(1)`; dihitung sebagai satu sumber, bukan dua bukti independen. Analisis melalui frame, teks kartu, dan subtitle, bukan transkripsi audio lengkap.
+
 - Unggahan “WNI cobain WNI Simulator pt.2”: `SaveInta.com_AQP6AVbEItUK3Jjxqq1RCNe7Ja1rhaI4FNdt8xupr9hbO-Pqy0NOYNM3wffIv_VbHwFlspTuF1FMFYWLE-AXPusijvoypDBOHVJSmyA.mp4` (83,33 detik, 720 × 1280). Analisis berdasarkan frame, tulisan kartu, dan subtitle.
 
 - [Video tutorial](https://www.youtube.com/watch?v=OEyiAVH1OaU)
@@ -17,7 +19,7 @@ Dokumentasi analisis papan dan video referensi untuk pengembangan adaptasi digit
 - Unggahan gameplay “Monopoli versi Indonesia (WNI SIMULATOR) Part 1”.
 - Unggahan gameplay tambahan: `SaveInta.com_AQMHJKqzfz1-5No7M4e2kJLoCoMahKN05RkYVP_ek8p3hWgAqOY0THqoIBQ6tuUW5AstELNNgFm8F9qt5wJmq_mrpG7bksn8gmjgeN4.mp4` (84,52 detik, 720 × 1280). Dianalisis melalui frame, tulisan kartu, dan subtitle; bukan transkripsi audio lengkap.
 
-Timestamp pada bagian 2–4 mengacu pada unggahan unboxing. Timestamp pada bagian 10–17 mengacu pada video gameplay tambahan berdurasi 84,52 detik. Timestamp pada bagian 19–27 mengacu pada video “WNI cobain WNI Simulator pt.2” berdurasi 83,33 detik. Timestamp tidak harus sama dengan versi pada tautan media sosial. Dokumen ini merangkum analisis percakapan; bukan salinan buku aturan resmi. Video, gambar, dan aset visual asli tidak disertakan.
+Timestamp pada bagian 2–4 mengacu pada unggahan unboxing. Timestamp pada bagian 10–17 mengacu pada video gameplay tambahan berdurasi 84,52 detik. Timestamp pada bagian 19–27 mengacu pada video “WNI cobain WNI Simulator pt.2” berdurasi 83,33 detik. Timestamp bagian 28–35 mengacu pada video 76,97 detik tersebut. Timestamp tidak harus sama dengan versi pada tautan media sosial. Dokumen ini merangkum analisis percakapan; bukan salinan buku aturan resmi. Video, gambar, dan aset visual asli tidak disertakan.
 
 ## 1. Bentuk permainan dan papan
 
@@ -28,7 +30,7 @@ Foto memperlihatkan lintasan berbentuk segi lima di atas papan persegi panjang. 
 Urutan kelompok dari START yang dicatat dalam analisis:
 START → Sumatera → LAPAS → Kalimantan → Pajak Tahunan → Sulawesi → Pengadilan → Papua → Parkiran Pungli → Jawa → START.
 
-Urutan lengkap setiap petak belum dikunci. Bekasi terlihat sebagai area terpisah dari lintasan utama, tetapi mekanismenya belum terverifikasi.
+Urutan lengkap setiap petak belum dikunci. Bekasi terlihat sebagai area terpisah dari lintasan utama. Video terbaru menunjukkan Banjir Bandang mengirim pion ke Bekasi dan melewatkan satu giliran; cara kembali ke lintasan belum terverifikasi (bagian 31).
 
 Komponen yang terlihat:
 - Papan, uang permainan, sertifikat tanah, dan buku aturan.
@@ -146,7 +148,7 @@ Bagian ini merupakan catatan lintas referensi. Detail pelaksanaan yang belum jel
 Kartu tambahan dari video gameplay:
 - **Orang Dalam:** sekali pakai, memilih tingkat efek Musibah tanpa lempar dadu; bukan otomatis membatalkan semua efek.
 - **Sengketa:** penjelasan gameplay menunjukkan pengambilan tanah lawan beserta bangunan, tetapi teks lengkap belum terbaca.
-- **Tukar Nasib:** penjelasan menunjukkan pertukaran uang pemain terkaya dan termiskin; bukan seluruh aset. Aturan seri belum jelas.
+- **Tukar Nasib:** pemain dengan uang terbanyak dan paling sedikit bertukar seluruh uang, bukan aset. Teks klausul jumlah uang sama kini terbaca; cakupan dan urutan penyelesaiannya masih perlu verifikasi (bagian 32).
 
 ## 6. Rancangan sistem Godot
 
@@ -236,7 +238,7 @@ Contoh log:
 - Konfirmasi harga Padang yang tertutup jari.
 - Aturan peningkatan bangunan dan likuidasi.
 - Seluruh teks kartu, aturan ikon jam, dan kasus seri.
-- Mekanisme Bekasi.
+- Cara keluar/kembali dari Bekasi setelah efek kehilangan giliran; pemicu masuk melalui Banjir Bandang sudah diamati (bagian 31).
 - Urutan prioritas efek dan kondisi akhir permainan.
 
 Tidak ada harga atau aturan yang belum diketahui yang dianggap final hanya untuk melengkapi implementasi.
@@ -472,7 +474,7 @@ Pertanyaan tambahan:
 - Durasi jika kartu PHK muncul berulang dan interaksi dengan efek lain.
 - Penanganan bangunan dan kepemilikan setelah penyitaan.
 - Pilihan adaptasi baterai untuk komputer, perangkat bersama, atau multiplayer.
-- Seluruh cabang kartu kejadian begal.
+- Rincian cabang Lampung pada Korban Begal yang terpotong di tepi video (bagian 30).
 - Satuan pembulatan pembayaran 50%.
 
 ## 18. Rekap status pengumpulan
@@ -480,7 +482,7 @@ Pertanyaan tambahan:
 - Bentuk papan, kelompok wilayah, dan komponen sudah dicatat; urutan setiap petak belum lengkap.
 - Nominal properti yang terkumpul: Padang (harga sementara), Palu, Jakarta, Surabaya dari analisis gameplay sebelumnya, serta harga papan Gorontalo, Manado, Balikpapan, Palangkaraya, Solo, Bandung, dan Jogja. Pembacaan sertifikat IKN masih sementara.
 - Kartu terdokumentasi: Penggeledahan KPK, Tambang Ilegal, WIBU, Kena PHK, Baterai Sekarat, Pembebasan Lahan, Subsidi BBM Dicabut, Generasi Sandwich, Dibungkam, Kabur Aja Dulu, dan Awas Ada Boomers!!!. Beberapa nominal dan kasus khusus masih perlu verifikasi.
-- Catatan kartu yang belum lengkap: Orang Dalam, Sengketa, Tukar Nasib, dan kejadian begal.
+- Catatan yang belum lengkap mencakup Orang Dalam, Sengketa, rincian kasus seri Tukar Nasib, cabang Lampung Korban Begal, seluruh cabang Banjir Bandang, dan cabang ganjil Buzzer.
 - Koreksi Jakarta Rp4 juta dipertahankan; biaya subsidi Jakarta belum diisi.
 - Aturan teramati dipisahkan dari interpretasi, pertanyaan terbuka, dan usulan adaptasi.
 - Dokumen ini belum merupakan game Godot yang dapat dimainkan.
@@ -761,6 +763,8 @@ Tabel ini merupakan indeks ringkas. Tarif sewa, biaya bangunan, timestamp, serta
 | Properti | Harga tanah | Status / rujukan |
 | --- | ---: | --- |
 | Padang | Rp1.500.000 | Sementara; bagian nominal tertutup, bagian 2 |
+| Batam | Rp1.500.000 | Terbaca pada papan, bagian 34 |
+| Pontianak | Rp2.000.000 | Terbaca pada papan, bagian 34 |
 | IKN | Rp2.000.000 | Sementara; sertifikat kecil/buram, bagian 25 |
 | Balikpapan | Rp2.000.000 | Terbaca pada papan, bagian 25 |
 | Palangkaraya | Rp2.000.000 | Terbaca pada papan, bagian 25 |
@@ -783,16 +787,259 @@ Ini belum melengkapi seluruh 25 properti.
 | Tambang Ilegal | 4 | Efek utama terbaca; beberapa kondisi masih sementara |
 | Orang Dalam | 5 | Catatan gameplay, teks lengkap belum dicatat |
 | Sengketa | 5 | Penjelasan gameplay, teks lengkap belum terbaca |
-| Tukar Nasib | 5 | Mekanisme utama tercatat; aturan seri belum jelas |
+| Tukar Nasib | 5, 32 | Teks pertukaran dan klausul uang sama terbaca; urutan/cakupan kasus seri belum pasti |
 | WIBU | 11 | Cabang terbaca; detail perpindahan/skip belum lengkap |
 | Kena PHK | 12 | Efek utama tercatat; durasi satu putaran belum pasti |
 | Baterai Sekarat | 13 | Tabel terbaca; adaptasi perangkat perlu keputusan |
 | Pembebasan Lahan | 14 | Teks utama jelas; penanganan bangunan belum diketahui |
-| Kejadian begal | 15 | Subtitle pembayaran Rp400 ribu; nama dan cabang belum lengkap |
+| Korban Begal | 15, 30 | Nama kartu dan cabang 5–6 serta nominal 3–4 terbaca; cabang Lampung terpotong |
 | Subsidi BBM Dicabut | 20 | Salah satu nominal tertutup jari |
 | Generasi Sandwich | 21 | Cabang terbaca; kasus target dan aset seri belum diketahui |
 | Dibungkam | 22 | Teks jelas; definisi pelanggaran/adaptasi perlu keputusan |
 | Kabur Aja Dulu | 23 | Teks jelas; kelanjutan giliran belum pasti |
 | Awas Ada Boomers!!! | 24 | Cabang terbaca; durasi dan kasus seri belum diketahui |
+| Mafia Tanah | 29 | Pengambilan gratis satu tanah belum dibeli; semua sudah dibeli: abaikan |
+| Banjir Bandang | 31 | Contoh ke Bekasi dan skip satu giliran; teks/cabang lengkap belum terlihat |
+| Pengalihan Isu | 33 | Langsung masuk LAPAS |
+| Buzzer | 33 | Genap menerima Rp800 ribu; cabang ganjil tertutup |
 
 Semua temuan di atas adalah acuan analisis. Implementasi game belum dibuat dalam repositori ini. Pertanyaan terbuka tidak dianggap sudah terjawab hanya karena rancangan teknis dapat dibuat.
+
+## 28. Indeks bukti video 76,97 detik
+
+Judul dalam video: “WNI cobain WNI Simulator”. Ini montase permainan dan komedi, bukan rekaman satu sesi utuh tanpa potongan. Unggahan ulang dengan akhiran (1) identik dengan unggahan sebelumnya; SHA-256: `cf21ff949398b3c41786f168fdb53ead04ec263d9611db3d21fa96d54cba6642`.
+
+| Waktu perkiraan | Bukti | Temuan |
+| --- | --- | --- |
+| 00:00–00:03 | Pajak Tahunan dan dialog tanah | Pion berada di petak pajak; dialog mengaitkannya dengan kepemilikan tanah |
+| Sekitar 00:04 | Sertifikat Solo | Nama terbaca; nominal kecil/buram, tidak ditambahkan sebagai tarif final |
+| 00:04–00:06 | Mafia Tanah | Pilih satu tanah belum dibeli dan ambil gratis; abaikan jika semua sudah dibeli |
+| 00:06–00:08 | Sertifikat Merauke | Nama terbaca; nominal tidak cukup jelas untuk data final |
+| 00:09–00:11 | Korban Begal | Skip giliran berikutnya, pembayaran Rp400 ribu, dan sebagian cabang Lampung |
+| 00:15–00:19 | Pengadilan | Hasil 6 disebut dan hadiah Rp1 juta diperlihatkan |
+| 00:20–00:27 | Musibah/Banjir Bandang | Pion dipindahkan ke Bekasi; subtitle menyebut skip satu giliran |
+| 00:30–00:32 | Tukar Nasib | Pertukaran seluruh uang serta klausul uang sama |
+| 00:39–00:43 | Pengalihan Isu | Pindah langsung ke LAPAS |
+| 00:46–00:49 | Tilang dan papan Sumatera | Batam Rp1,5 juta; pendaratan Tilang, nominal denda tidak terlihat |
+| 00:50–00:52 | Buzzer | Dadu genap mendapat Rp800 ribu dari Negara; ganjil tertutup jari |
+| 00:56–01:04 | Solo, pemilik di LAPAS | Sewa dibayar kepada Negara, bukan pemilik yang ditahan |
+| Sekitar 01:02 | Papan dekat LAPAS | Pontianak Rp2 juta |
+| 01:07–akhir | Sketsa Bekasi/astronaut | Komedi; tidak menjelaskan mekanisme kembali ke lintasan |
+
+## 29. Takdir: Mafia Tanah
+
+Teks kartu sekitar 00:05 terbaca jelas:
+- Jika semua Surat Tanah telah dibeli, abaikan efek kartu.
+- Pemain dapat memilih satu Surat Tanah yang belum dibeli dan mengambilnya secara gratis.
+- Tidak tercantum instruksi lempar dadu pada kartu yang terlihat.
+- Ikon jam terlihat; penanda cetak T-22 ×1.
+
+Demonstrasi diikuti pemain memperlihatkan sertifikat Merauke. Itu adalah contoh pilihan, bukan instruksi bahwa kartu selalu memberikan Merauke.
+
+### Batas efek
+
+- Tidak mengambil tanah lawan.
+- Tidak membayar harga pembelian.
+- Tidak ada instruksi memindahkan pion ke tanah yang dipilih.
+- Jika seluruh tanah telah dibeli, abaikan; jangan otomatis mengambil kartu pengganti.
+- Status tanah yang pernah dibeli lalu dikembalikan/disita Negara belum dijelaskan oleh frasa “belum dibeli”.
+- Tidak boleh menyamakan tanah yang berubah menjadi tol dengan tanah belum dibeli.
+- Interaksi dengan larangan pembelian dari PHK/Boomers belum terverifikasi: akuisisi gratis perlu dibedakan dari transaksi pembelian.
+
+### Implikasi Godot
+
+Sediakan daftar tanah yang memenuhi kondisi, konfirmasi pilihan, lalu ubah pemilik tanpa debit uang. Pisahkan aksi memperoleh aset dari fungsi pembelian biasa. Simpan riwayat/status tanah agar tanah awal yang tersedia dapat dibedakan dari aset milik Negara akibat penyitaan.
+
+Secara ekonomi, kartu ini menambah aset pemain tanpa mengurangi uang tunai. Keuntungan strategisnya berasal dari pilihan aset, bukan hanya nominal hadiah.
+
+## 30. Musibah: Korban Begal
+
+Nama kartu yang sebelumnya hanya tercatat sebagai “kejadian begal” kini terlihat. Sekitar 00:09–00:10, kartu meminta satu dadu.
+
+| Hasil dadu | Bukti yang dapat dicatat | Batas keterbacaan |
+| --- | --- | --- |
+| 5–6 | Motor hilang; skip giliran berikutnya | Terbaca jelas |
+| 3–4 | Bayar Rp400.000 kepada Negara | Akhir alasan terpotong; video lain menyebut cicilan motor belum lunas |
+| 1–2 | Teks menyebut motor ke Lampung, perpindahan ke lokasi, serta kondisi Lampung belum dimiliki atau dimiliki pemain lain | Sisi kanan dan bagian bawah terpotong; konsekuensi lengkap belum diketahui |
+
+Arah pembacaan cabang 1–2 adalah perpindahan ke Lampung, tetapi aturan pembelian/sewa/denda lanjutannya tidak boleh direkonstruksi dari dugaan.
+
+Berbeda dari WIBU yang waktu skip-nya belum jelas, Korban Begal secara eksplisit menyebut **giliran berikutnya** pada cabang 5–6. Jangan menambahkan pembayaran Rp400 ribu ke cabang 5–6: itu nominal cabang 3–4.
+
+Untuk Godot:
+- Cabang 5–6 menjadwalkan satu giliran berikutnya untuk dilewati.
+- Cabang 3–4 menghasilkan transaksi ke Negara.
+- Cabang 1–2 memerlukan aturan berbasis keadaan kepemilikan Lampung setelah teks lengkap tersedia.
+- Tema kehilangan motor belum menjadi bukti inventaris kendaraan.
+- Belum diketahui apakah cabang Lampung mencakup keadaan pemain sudah memiliki Lampung sendiri.
+
+## 31. Banjir Bandang dan fungsi Bekasi
+
+Sekitar 00:23, nama Banjir Bandang disebut melalui subtitle ketika pemain membaca kartu Musibah. Subtitle berikutnya menyatakan pemain terseret ke Bekasi dan skip satu giliran. Pion terlihat dipindahkan ke lingkaran Bekasi di tengah papan.
+
+**Temuan baru yang didukung demonstrasi:**
+1. Bekasi mempunyai fungsi permainan, bukan sekadar dekorasi.
+2. Setidaknya satu efek Banjir Bandang mengirim pemain ke sana.
+3. Efek yang diperagakan juga menyebabkan kehilangan satu giliran.
+4. Bekasi berada di luar lintasan utama yang terlihat pada papan.
+
+**Belum diketahui:**
+- Hasil dadu/cabang yang menyebabkan efek tersebut.
+- Teks seluruh cabang Banjir Bandang.
+- Giliran mana tepatnya dilewati jika kartu tidak menyebut “berikutnya”.
+- Posisi pion setelah hukuman berakhir.
+- Apakah kembali ke petak asal, petak tertentu, atau menggunakan pilihan lain.
+- Perlakuan START dan sewa selama berada di Bekasi.
+- Apakah ada pemicu lain untuk masuk Bekasi.
+
+Sketsa astronaut pada akhir video tidak menetapkan biaya roket, jumlah putaran perjalanan, atau hukuman tinggal sampai permainan selesai.
+
+### Usulan Godot
+
+Pisahkan posisi pion menjadi lokasi pada lintasan atau area khusus. Catat lokasi asal dan penyebab perpindahan untuk mendukung aturan kembali yang nanti diverifikasi; penyimpanan lokasi asal bukan keputusan bahwa pion pasti kembali ke sana. Status kehilangan giliran terpisah dari status tahanan LAPAS. Jangan menjalankan aritmetika pergerakan lintasan pada indeks Bekasi yang fiktif.
+
+## 32. Takdir: Tukar Nasib — teks klausul seri kini terbaca
+
+Sekitar 00:31–00:32, teks memperjelas:
+- Pemain dengan uang terbanyak dan pemain dengan uang paling sedikit saling menukar seluruh uang mereka.
+- Jika ada dua pemain atau lebih dengan jumlah uang sama, seluruh uang “mereka” diserahkan kepada Negara.
+- Negara memberikan kompensasi Rp50.000 “untuk mereka”.
+- Penanda cetak T-19 ×1 terlihat.
+
+Yang pasti: pertukaran menyangkut **uang**, bukan tanah/bangunan. Pengambil kartu tidak otomatis menjadi salah satu pihak pertukaran.
+
+Contoh tanpa seri:
+A memiliki Rp6 juta, B Rp2 juta, C Rp500 ribu. Setelah pertukaran, A Rp500 ribu, B tetap Rp2 juta, C Rp6 juta. Aset dan posisi pion tetap berdasarkan efek yang tertulis.
+
+### Ketidakjelasan yang masih harus dipertahankan
+
+Teks tidak secara eksplisit membatasi kondisi uang sama pada pemain terkaya/termiskin. Karena itu, jangan menyatakan kondisi tersebut hanya berlaku jika nilai maksimum atau minimum seri.
+
+Kasus yang memerlukan penjelasan aturan:
+- Dua pemain memiliki uang sama di tengah urutan, sementara maksimum dan minimum unik.
+- Ada lebih dari satu kelompok uang sama.
+- Apakah penyitaan menggantikan pertukaran atau berjalan sebelum/sesudahnya.
+- Rujukan “mereka” dalam penyelesaian setiap kelompok.
+- Apakah Rp50.000 diberikan per pemain terdampak atau sebagai kompensasi bersama; tulisan “untuk mereka” belum merinci pembagiannya.
+- Apakah saldo nol beberapa pemain ikut memicu kondisi ini.
+
+Jangan menjalankan efek berulang sampai nilai uang berbeda. Jika kompensasi membuat beberapa pemain sama-sama memegang nominal sama, pemeriksaan ulang rekursif tanpa aturan dapat menciptakan loop.
+
+### Usulan Godot
+
+Ambil satu snapshot seluruh saldo sebelum penyelesaian. Tentukan target dan kelompok seri dari snapshot. Untuk pertukaran biasa, simpan kedua nilai lama sebelum mengubah saldo agar uang tidak tergandakan atau hilang. Selesaikan kasus seri hanya setelah kebijakan resmi/adaptasi ditetapkan dan diberi label.
+
+## 33. Pengalihan Isu dan Buzzer
+
+### Takdir: Pengalihan Isu
+
+Sekitar 00:40, kartu menyatakan pemain langsung masuk Lapas Nusakambangan dan memindahkan pion ke lokasi LAPAS.
+
+- Ini pengiriman sebagai tahanan, bukan sekadar kunjungan biasa.
+- Tidak terlihat instruksi lempar dadu atau denda khusus pada kartu.
+- Jangan menambahkan denda Rp500 ribu KPK atau Rp1,5 juta Pengadilan secara otomatis.
+- Aturan umum tahanan tetap diproses sesuai sumber aturan LAPAS.
+- Takdir biru sekali lagi dapat memberikan kerugian.
+
+Implikasi Godot: gunakan aksi perpindahan paksa disertai status tahanan dan alasan asal kartu. Efek masuk penjara tidak boleh melewati Pengadilan secara implisit.
+
+### Takdir: Buzzer
+
+Sekitar 00:50–00:52, kartu meminta satu dadu.
+
+| Hasil | Pembacaan |
+| --- | --- |
+| 2, 4, 6 | Menerima Rp800.000 dari Negara sebagai insentif |
+| 1, 3, 5 | Bagian penting tertutup dua jari dan subtitle; terlihat narasi “blunder”, tetapi konsekuensi belum cukup terbaca |
+
+Jangan menganggap cabang ganjil tanpa efek, denda nominal tertentu, atau masuk LAPAS sebagai aturan terverifikasi hanya dari potongan huruf.
+
+Dengan asumsi satu dadu adil, peluang cabang genap adalah 3/6 = 50%. Nilai harapan kartu secara keseluruhan belum dapat dihitung karena cabang ganjil belum diketahui. Rp800 ribu setara 80% gaji START Rp1 juta; ini perbandingan analitis, bukan aturan tambahan.
+
+## 34. Penguatan LAPAS, Pengadilan, dan harga papan
+
+### Sewa pemilik yang ditahan
+
+Sekitar 00:56–01:04:
+1. Pion mendarat di Solo.
+2. Pemain lain mengaku sebagai pemilik.
+3. Ditunjukkan bahwa pemilik sedang di LAPAS.
+4. Subtitle menyatakan uang sewanya disita Negara.
+5. Adegan memperagakan pembayaran kepada representasi Negara.
+
+Ini menguatkan catatan tutorial: **sewa tetap dibayar, tetapi penerimanya Negara ketika pemilik ditahan**. Sertifikat masih diperlihatkan pemilik; adegan tidak membuktikan pengalihan kepemilikan tanah kepada Negara.
+
+| Keadaan | Sewa / penerima |
+| --- | --- |
+| Pemilik bebas tanpa efek lain | Pemilik, menurut aturan sewa biasa |
+| Pemilik ditahan di LAPAS | Negara, didukung demonstrasi ini |
+| Sewa dinonaktifkan KPK | Sewa tidak berlaku sampai batas efek |
+| LAPAS dan KPK bersamaan | Prioritas belum diketahui |
+
+Status tahanan perlu dipisahkan dari posisi pion di petak LAPAS. Pengunjung biasa tidak otomatis kehilangan hak menerima sewa.
+
+Tarif Solo tidak terbaca cukup jelas dari sertifikat pada video ini. Jangan menebaknya dari Jakarta atau Surabaya.
+
+### Pengadilan, pajak, dan Tilang
+
+- Sekitar 00:15–00:19, pemain menyebut hasil dadu 6 dan memperlihatkan Rp1 juta. Ini mendukung cabang kemenangan Pengadilan; pendaratan di Pengadilan tidak selalu berujung penjara.
+- Adegan awal menghubungkan Pajak Tahunan dengan kepemilikan tanah, tetapi tidak menunjukkan perhitungan baru. Tarif tetap merujuk sumber sebelumnya.
+- Sekitar 00:46–00:49, pemain mendarat di Tilang setelah pergerakan; subtitle menyebut baru gajian. Nominal denda tidak diperlihatkan secara jelas, sehingga adegan tidak memverifikasi ulang tarif Rp500 ribu.
+- Jangan menyamakan Tilang yang bersebelahan dengan LAPAS sebagai penahanan.
+
+### Harga baru yang terbaca
+
+| Properti | Wilayah | Harga tanah | Sumber |
+| --- | --- | ---: | --- |
+| Batam | Sumatera | Rp1.500.000 | Sekitar 00:48–00:49 |
+| Pontianak | Kalimantan | Rp2.000.000 | Sekitar 01:02 |
+
+Nama Merauke pada sertifikat terbaca, tetapi nominal harga, sewa, dan bangunannya belum cukup jelas untuk ditetapkan. Sertifikat Solo juga terlalu kecil/buram untuk menambah tarif final.
+
+Potongan papan memperlihatkan kedekatan Batam → Tilang → LAPAS → Pontianak menurut urutan lintasan lokal, serta Jakarta → Musibah → Takdir → Solo pada sisi Jawa dalam salah satu orientasi gambar. Arah gerak dan indeks final tetap harus dicocokkan dengan papan lengkap.
+
+## 35. Implikasi implementasi, pengujian, dan batas informasi terbaru
+
+### Pemisahan keadaan yang diperlukan
+
+| Data/aksi | Mengapa dibutuhkan |
+| --- | --- |
+| Tanah belum dibeli vs tanah disita Negara | Mafia Tanah tidak otomatis berlaku untuk semua aset tanpa pemilik pemain |
+| Posisi khusus Bekasi | Area di luar lintasan membutuhkan alur perpindahan tersendiri |
+| Status tahanan vs pengunjung | Menentukan penerima sewa, bukan hanya posisi pion |
+| Jadwal skip giliran | Korban Begal eksplisit tentang giliran berikutnya |
+| Snapshot saldo | Tukar Nasib harus menukar nilai asli secara konsisten |
+| Identitas penerima transaksi | Pemilik, Negara, dan pemain target tidak dapat disamakan |
+| Cabang kartu belum diketahui | Jangan menjalankan cabang ganjil Buzzer/Lampung dengan aturan rekaan |
+| Sumber efek dan prioritas | KPK, LAPAS, dan efek lain dapat bertumpuk |
+
+### Skenario pengujian tambahan
+
+- Mafia Tanah memberi satu tanah yang memenuhi syarat tanpa mengurangi uang.
+- Mafia Tanah tidak mengambil tanah lawan dan tidak otomatis memindahkan pion.
+- Semua tanah sudah dibeli: efek diabaikan, bukan menarik kartu baru.
+- Korban Begal 5–6 melewati tepat satu giliran berikutnya.
+- Korban Begal 3–4 menagih Rp400 ribu kepada Negara; jangan menggabungkan hukuman cabang lain.
+- Bekasi dapat menampung pion tanpa dianggap indeks lintasan normal; aturan kembali masih terbuka.
+- Tukar Nasib tanpa seri menukar dua saldo lama, tidak memindahkan properti.
+- Kasus seri tidak dijalankan berulang secara rekursif setelah kompensasi.
+- Pengalihan Isu mengirim ke LAPAS tanpa menambahkan denda kartu lain.
+- Buzzer genap memberi Rp800 ribu dari Negara; ganjil tetap ditandai belum terverifikasi.
+- Pemilik Solo yang ditahan: sewa dibayarkan kepada Negara tanpa memindahkan sertifikat.
+- Pengunjung LAPAS tidak otomatis diperlakukan sebagai tahanan.
+- Pengadilan hasil 6 memberi Rp1 juta, bukan mengirim pemain ke penjara.
+- Batam Rp1,5 juta dan Pontianak Rp2 juta; sewa/bangunan tidak diisi dari properti lain.
+
+### Pertanyaan yang tersisa dari video ini
+
+1. Apakah tanah yang pernah dibeli kemudian disita dapat dipilih Mafia Tanah?
+2. Apakah larangan pembelian menghalangi akuisisi gratis?
+3. Teks lengkap Korban Begal cabang Lampung.
+4. Seluruh cabang Banjir Bandang serta posisi kembali dari Bekasi.
+5. Cakupan, urutan, dan pembagian kompensasi klausul uang sama Tukar Nasib.
+6. Cabang ganjil Buzzer.
+7. Prioritas LAPAS dan sewa nonaktif KPK ketika bersamaan.
+8. Nominal sertifikat Merauke dan tarif Solo.
+9. Durasi/urutan giliran jika beberapa efek kehilangan giliran bertumpuk.
+
+Analisis ini memperbarui bukti yang sebelumnya belum lengkap, tetapi tidak menjadikan semua pertanyaan aturan sudah terjawab. Dokumentasi tetap berupa acuan pengembangan Godot; tidak ada klaim bahwa game sudah diimplementasikan.
