@@ -118,26 +118,33 @@ local cardToast = waitFor(root, "CardToast") :: Frame
 local cardToastTitle = waitFor(cardToast, "Title") :: TextLabel
 local cardToastMessage = waitFor(cardToast, "Message") :: TextLabel
 local cardModal = waitFor(root, "CardDrawModal") :: Frame
-local cardModalDeck = waitFor(cardModal, "DeckLabel") :: TextLabel
-local cardModalTitle = waitFor(cardModal, "CardTitle") :: TextLabel
-local cardModalDice = waitFor(cardModal, "DiceBadge") :: TextLabel
-local cardModalDesc = waitFor(cardModal, "CardDesc") :: TextLabel
-local cardModalConfirm = waitFor(cardModal, "Confirm") :: TextButton
-local cardModalStroke = waitFor(cardModal, "ModalStroke") :: UIStroke
-local cardModalScale = waitFor(cardModal, "ModalScale") :: UIScale
+local cardModalUI = {
+	deck = waitFor(cardModal, "DeckLabel") :: TextLabel,
+	title = waitFor(cardModal, "CardTitle") :: TextLabel,
+	dice = waitFor(cardModal, "DiceBadge") :: TextLabel,
+	desc = waitFor(cardModal, "CardDesc") :: TextLabel,
+	confirm = waitFor(cardModal, "Confirm") :: TextButton,
+	stroke = waitFor(cardModal, "ModalStroke") :: UIStroke,
+	scale = waitFor(cardModal, "ModalScale") :: UIScale,
+}
 local specialToast = waitFor(root, "SpecialTileToast") :: Frame
-local specialToastIcon = waitFor(specialToast, "Icon") :: TextLabel
-local specialToastTitle = waitFor(specialToast, "Title") :: TextLabel
-local specialToastMessage = waitFor(specialToast, "Message") :: TextLabel
-local specialToastStroke = waitFor(specialToast, "AccentStroke") :: UIStroke
+local specialToastUI = {
+	icon = waitFor(specialToast, "Icon") :: TextLabel,
+	title = waitFor(specialToast, "Title") :: TextLabel,
+	message = waitFor(specialToast, "Message") :: TextLabel,
+	stroke = waitFor(specialToast, "AccentStroke") :: UIStroke,
+}
 local victoryPanel = waitFor(root, "VictoryPanel") :: Frame
 local victoryContent = waitFor(victoryPanel, "Content") :: CanvasGroup
-local victoryScale = waitFor(victoryContent, "VictoryScale") :: UIScale
-local victoryTitle = waitFor(victoryContent, "Title") :: TextLabel
-local victoryStatus = waitFor(victoryContent, "Status") :: TextLabel
-local victoryScores = waitFor(victoryContent, "Scores") :: TextLabel
-local victoryRematch = waitFor(victoryContent, "Rematch") :: TextButton
-local victoryReturnLobby = waitFor(victoryContent, "ReturnLobby") :: TextButton
+local victoryUI = {
+	content = victoryContent,
+	scale = waitFor(victoryContent, "VictoryScale") :: UIScale,
+	title = waitFor(victoryContent, "Title") :: TextLabel,
+	status = waitFor(victoryContent, "Status") :: TextLabel,
+	scores = waitFor(victoryContent, "Scores") :: TextLabel,
+	rematch = waitFor(victoryContent, "Rematch") :: TextButton,
+	returnLobby = waitFor(victoryContent, "ReturnLobby") :: TextButton,
+}
 local buildPicker = waitFor(propertyPanel, "BuildPicker") :: Frame
 local previousBuild = waitFor(buildPicker, "Previous") :: TextButton
 local nextBuild = waitFor(buildPicker, "Next") :: TextButton
@@ -925,32 +932,32 @@ local function showCardModal(logLine: string)
 	end
 	if not cardName or #cardName == 0 then return end
 	local accent = if deckName == "Musibah" then MODAL_DANGER else MODAL_GOLD
-	cardModalDeck.Text = string.upper(deckName or "KARTU")
-	cardModalDeck.TextColor3 = accent
-	cardModalStroke.Color = accent
-	cardModalTitle.Text = cardName
+	cardModalUI.deck.Text = string.upper(deckName or "KARTU")
+	cardModalUI.deck.TextColor3 = accent
+	cardModalUI.stroke.Color = accent
+	cardModalUI.title.Text = cardName
 	local definition = CardData.get((cardName:gsub(" ", "")))
-	cardModalDesc.Text = if definition and definition.note then definition.note else "Efek kartu diterapkan server. Periksa log untuk detail hasilnya."
+	cardModalUI.desc.Text = if definition and definition.note then definition.note else "Efek kartu diterapkan server. Periksa log untuk detail hasilnya."
 	if die then
-		cardModalDice.Visible = true
-		cardModalDice.Text = "DADU " .. die
+		cardModalUI.dice.Visible = true
+		cardModalUI.dice.Text = "DADU " .. die
 	else
-		cardModalDice.Visible = false
+		cardModalUI.dice.Visible = false
 	end
 	cardModalGeneration += 1
 	local generation = cardModalGeneration
-	cardModalScale.Scale = 1
+	cardModalUI.scale.Scale = 1
 	cardModal.Visible = true
 	playPop(cardModal, 0.82, 1.06)
 	local function closeModal()
 		if generation ~= cardModalGeneration or not cardModal:IsDescendantOf(game) then return end
-		local fade = TweenService:Create(cardModalScale, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.94})
+		local fade = TweenService:Create(cardModalUI.scale, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.94})
 		fade:Play()
 		fade.Completed:Once(function()
 			if generation == cardModalGeneration then cardModal.Visible = false end
 		end)
 	end
-	cardModalConfirm.Activated:Once(closeModal)
+	cardModalUI.confirm.Activated:Once(closeModal)
 	task.delay(4.5, closeModal)
 end
 
@@ -966,16 +973,16 @@ local function showSpecialTileToast(kind: string)
 	if not style then return end
 	specialToastGeneration += 1
 	local generation = specialToastGeneration
-	specialToastIcon.Text = style.icon
-	specialToastIcon.TextColor3 = style.color
-	specialToastTitle.Text = style.title
-	specialToastTitle.TextColor3 = style.color
-	specialToastMessage.Text = style.message
-	specialToastStroke.Color = style.color
+	specialToastUI.icon.Text = style.icon
+	specialToastUI.icon.TextColor3 = style.color
+	specialToastUI.title.Text = style.title
+	specialToastUI.title.TextColor3 = style.color
+	specialToastUI.message.Text = style.message
+	specialToastUI.stroke.Color = style.color
 	specialToast.BackgroundTransparency = 0.18
-	specialToastIcon.TextTransparency = 0
-	specialToastTitle.TextTransparency = 0
-	specialToastMessage.TextTransparency = 0
+	specialToastUI.icon.TextTransparency = 0
+	specialToastUI.title.TextTransparency = 0
+	specialToastUI.message.TextTransparency = 0
 	specialToast.Visible = true
 	playPop(specialToast, 0.84, 1.06)
 	task.delay(2.4, function()
@@ -1035,13 +1042,13 @@ local function refreshVictoryContent(snap: any)
 		if participant.team == "A" then teamA += participant.cash or 0 end
 		if participant.team == "B" then teamB += participant.cash or 0 end
 	end
-	victoryTitle.Text = "PERTANDINGAN SELESAI"
-	victoryStatus.Text = if typeof(snap.result) == "string" and #snap.result > 0 then snap.result else "Hasil pertandingan telah ditetapkan server."
-	victoryScores.Text = "SALDO AKHIR TIM\nTim A  •  " .. Rules.formatMoney(teamA) .. "\nTim B  •  " .. Rules.formatMoney(teamB)
+	victoryUI.title.Text = "PERTANDINGAN SELESAI"
+	victoryUI.status.Text = if typeof(snap.result) == "string" and #snap.result > 0 then snap.result else "Hasil pertandingan telah ditetapkan server."
+	victoryUI.scores.Text = "SALDO AKHIR TIM\nTim A  •  " .. Rules.formatMoney(teamA) .. "\nTim B  •  " .. Rules.formatMoney(teamB)
 	local mySeat = findMySeat(snap)
 	local canRematch = mySeat > 0 and not snap.rematchUnavailable
 	local voted = mySeat > 0 and snap.rematchVotes and snap.rematchVotes[mySeat]
-	victoryRematch.Text = if voted then "BATAL MAIN LAGI" else "MAIN LAGI"
+	victoryUI.rematch.Text = if voted then "BATAL MAIN LAGI" else "MAIN LAGI"
 	setVictoryButton(victoryRematch, canRematch)
 	local canReturn = mySeat > 0 and snap.routing and snap.routing.canReturnToLobby == true
 	setVictoryButton(victoryReturnLobby, canReturn)
@@ -1057,10 +1064,10 @@ local function showVictory(snap: any, animate: boolean)
 	if animate then
 		victoryPanel.BackgroundTransparency = 1
 		victoryContent.GroupTransparency = 1
-		victoryScale.Scale = 0.90
+		victoryUI.scale.Scale = 0.90
 		TweenService:Create(victoryPanel, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.34}):Play()
 		TweenService:Create(victoryContent, TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
-		TweenService:Create(victoryScale, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		TweenService:Create(victoryUI.scale, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 	end
 end
 
@@ -1069,7 +1076,7 @@ local function hideVictory()
 	victoryClosing = true
 	TweenService:Create(victoryPanel, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
 	local fade = TweenService:Create(victoryContent, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1})
-	TweenService:Create(victoryScale, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
+	TweenService:Create(victoryUI.scale, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
 	fade:Play()
 	fade.Completed:Once(function()
 		victoryPanel.Visible = false
@@ -1077,13 +1084,13 @@ local function hideVictory()
 	end)
 end
 
-victoryRematch.Activated:Connect(function()
-	if victoryRematch.Active and latest and latest.phase == "Finished" and allowed.Ready then
+victoryUI.rematch.Activated:Connect(function()
+	if victoryUI.rematch.Active and latest and latest.phase == "Finished" and allowed.Ready then
 		send("Rematch")
 	end
 end)
-victoryReturnLobby.Activated:Connect(function()
-	if victoryReturnLobby.Active and latest and latest.phase == "Finished" and allowed.ReturnLobby then
+victoryUI.returnLobby.Activated:Connect(function()
+	if victoryUI.returnLobby.Active and latest and latest.phase == "Finished" and allowed.ReturnLobby then
 		send("ReturnLobby")
 	end
 end)
@@ -1340,12 +1347,16 @@ end)
 local tutorial = waitFor(root, "TutorialPanel") :: Frame
 local tutorialFade = waitFor(tutorial, "FadeGroup") :: CanvasGroup
 local tutorialCard = waitFor(tutorialFade, "Card") :: Frame
-local tutorialPage = waitFor(tutorialCard, "Page") :: TextLabel
-local tutorialBody = waitFor(tutorialCard, "Body") :: TextLabel
-local tutorialPrevious = waitFor(tutorialCard, "Previous") :: TextButton
-local tutorialNext = waitFor(tutorialCard, "Next") :: TextButton
-local tutorialSkip = waitFor(tutorialCard, "Skip") :: TextButton
-local tutorialScale = feedbackScale(tutorialCard)
+local tutorialUI = {
+	fade = tutorialFade,
+	card = tutorialCard,
+	page = waitFor(tutorialCard, "Page") :: TextLabel,
+	body = waitFor(tutorialCard, "Body") :: TextLabel,
+	previous = waitFor(tutorialCard, "Previous") :: TextButton,
+	next = waitFor(tutorialCard, "Next") :: TextButton,
+	skip = waitFor(tutorialCard, "Skip") :: TextButton,
+	scale = feedbackScale(tutorialCard),
+}
 local tutorialPages = {
 	"Tujuanmu adalah membangun kekayaan bersama tim dan bertahan sampai pertandingan selesai. Semua uang, tanah, kartu, dan giliran ditentukan server.",
 	"Masuk atau buat room, pilih Tim A atau Tim B, lalu tekan SIAP. Pertandingan dimulai setelah empat pemain siap dan susunan tim valid.",
@@ -1358,13 +1369,13 @@ local tutorialClosing = false
 
 local function refreshTutorial()
 	tutorialIndex = math.clamp(tutorialIndex, 1, #tutorialPages)
-	tutorialPage.Text = string.format("LANGKAH %d / %d", tutorialIndex, #tutorialPages)
-	tutorialBody.Text = tutorialPages[tutorialIndex]
-	tutorialPrevious.Active = tutorialIndex > 1
-	tutorialPrevious.Selectable = tutorialPrevious.Active
-	tutorialPrevious.AutoButtonColor = tutorialPrevious.Active
-	tutorialPrevious.TextTransparency = if tutorialPrevious.Active then 0 else 0.55
-	tutorialNext.Text = if tutorialIndex == #tutorialPages then "SELESAI" else "LANJUT"
+	tutorialUI.page.Text = string.format("LANGKAH %d / %d", tutorialIndex, #tutorialPages)
+	tutorialUI.body.Text = tutorialPages[tutorialIndex]
+	tutorialUI.previous.Active = tutorialIndex > 1
+	tutorialUI.previous.Selectable = tutorialUI.previous.Active
+	tutorialUI.previous.AutoButtonColor = tutorialUI.previous.Active
+	tutorialUI.previous.TextTransparency = if tutorialUI.previous.Active then 0 else 0.55
+	tutorialUI.next.Text = if tutorialIndex == #tutorialPages then "SELESAI" else "LANJUT"
 end
 
 local function showTutorial()
@@ -1373,11 +1384,11 @@ local function showTutorial()
 	refreshTutorial()
 	tutorial.BackgroundTransparency = 1
 	tutorialFade.GroupTransparency = 1
-	tutorialScale.Scale = 0.94
+	tutorialUI.scale.Scale = 0.94
 	tutorial.Visible = true
 	TweenService:Create(tutorial, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.28}):Play()
 	TweenService:Create(tutorialFade, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
-	TweenService:Create(tutorialScale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+	TweenService:Create(tutorialUI.scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 end
 
 local function hideTutorial()
@@ -1385,7 +1396,7 @@ local function hideTutorial()
 	tutorialClosing = true
 	TweenService:Create(tutorial, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
 	local fadeTween = TweenService:Create(tutorialFade, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1})
-	TweenService:Create(tutorialScale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
+	TweenService:Create(tutorialUI.scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
 	fadeTween:Play()
 	fadeTween.Completed:Connect(function()
 		tutorial.Visible = false
@@ -1393,13 +1404,13 @@ local function hideTutorial()
 	end)
 end
 
-tutorialPrevious.Activated:Connect(function()
+tutorialUI.previous.Activated:Connect(function()
 	if tutorialIndex > 1 then
 		tutorialIndex -= 1
 		refreshTutorial()
 	end
 end)
-tutorialNext.Activated:Connect(function()
+tutorialUI.next.Activated:Connect(function()
 	if tutorialIndex >= #tutorialPages then
 		hideTutorial()
 	else
@@ -1407,7 +1418,7 @@ tutorialNext.Activated:Connect(function()
 		refreshTutorial()
 	end
 end)
-tutorialSkip.Activated:Connect(hideTutorial)
+tutorialUI.skip.Activated:Connect(hideTutorial)
 
 stateUpdated.OnClientEvent:Connect(function(payload)
 	if typeof(payload) ~= "table" then return end
