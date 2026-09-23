@@ -1465,80 +1465,84 @@ if muteButton then
 		end
 	end)
 end
-local tutorialFade = waitFor(tutorial, "FadeGroup") :: CanvasGroup
-local tutorialCard = waitFor(tutorialFade, "Card") :: Frame
-local tutorialUI = {
-	fade = tutorialFade,
-	card = tutorialCard,
-	page = waitFor(tutorialCard, "Page") :: TextLabel,
-	body = waitFor(tutorialCard, "Body") :: TextLabel,
-	previous = waitFor(tutorialCard, "Previous") :: TextButton,
-	next = waitFor(tutorialCard, "Next") :: TextButton,
-	skip = waitFor(tutorialCard, "Skip") :: TextButton,
-	scale = feedbackScale(tutorialCard),
+local tutorialState = {
+	fade = waitFor(tutorial, "FadeGroup") :: CanvasGroup,
+	card = nil :: any,
+	ui = nil :: any,
+	pages = {
+		"Tujuanmu adalah membangun kekayaan bersama tim dan bertahan sampai pertandingan selesai. Semua uang, tanah, kartu, dan giliran ditentukan server.",
+		"Masuk atau buat room, pilih Tim A atau Tim B, lalu tekan SIAP. Pertandingan dimulai setelah empat pemain siap dan susunan tim valid.",
+		"Saat giliranmu, tekan LEMPAR DADU. Jika mendarat di tanah kosong, kamu dapat membeli. Tanah milikmu dapat ditingkatkan saat fase pembangunan jika saldo mencukupi.",
+		"Kartu Takdir dan Musibah dapat memberi efek langsung atau disimpan di tangan. Perhatikan LAPAS, Pengadilan, pajak, parkiran, dan informasi sewa pada panel properti."
+	},
+	index = 1,
+	pending = true,
+	closing = false,
 }
-local tutorialPages = {
-	"Tujuanmu adalah membangun kekayaan bersama tim dan bertahan sampai pertandingan selesai. Semua uang, tanah, kartu, dan giliran ditentukan server.",
-	"Masuk atau buat room, pilih Tim A atau Tim B, lalu tekan SIAP. Pertandingan dimulai setelah empat pemain siap dan susunan tim valid.",
-	"Saat giliranmu, tekan LEMPAR DADU. Jika mendarat di tanah kosong, kamu dapat membeli. Tanah milikmu dapat ditingkatkan saat fase pembangunan jika saldo mencukupi.",
-	"Kartu Takdir dan Musibah dapat memberi efek langsung atau disimpan di tangan. Perhatikan LAPAS, Pengadilan, pajak, parkiran, dan informasi sewa pada panel properti."
+tutorialState.card = waitFor(tutorialState.fade, "Card") :: Frame
+tutorialState.ui = {
+	fade = tutorialState.fade,
+	card = tutorialState.card,
+	page = waitFor(tutorialState.card, "Page") :: TextLabel,
+	body = waitFor(tutorialState.card, "Body") :: TextLabel,
+	previous = waitFor(tutorialState.card, "Previous") :: TextButton,
+	next = waitFor(tutorialState.card, "Next") :: TextButton,
+	skip = waitFor(tutorialState.card, "Skip") :: TextButton,
+	scale = feedbackScale(tutorialState.card),
 }
-local tutorialIndex = 1
-local tutorialPending = true
-local tutorialClosing = false
 
 local function refreshTutorial()
-	tutorialIndex = math.clamp(tutorialIndex, 1, #tutorialPages)
-	tutorialUI.page.Text = string.format("LANGKAH %d / %d", tutorialIndex, #tutorialPages)
-	tutorialUI.body.Text = tutorialPages[tutorialIndex]
-	tutorialUI.previous.Active = tutorialIndex > 1
-	tutorialUI.previous.Selectable = tutorialUI.previous.Active
-	tutorialUI.previous.AutoButtonColor = tutorialUI.previous.Active
-	tutorialUI.previous.TextTransparency = if tutorialUI.previous.Active then 0 else 0.55
-	tutorialUI.next.Text = if tutorialIndex == #tutorialPages then "SELESAI" else "LANJUT"
+	tutorialState.index = math.clamp(tutorialState.index, 1, #tutorialState.pages)
+	tutorialState.ui.page.Text = string.format("LANGKAH %d / %d", tutorialState.index, #tutorialState.pages)
+	tutorialState.ui.body.Text = tutorialState.pages[tutorialState.index]
+	tutorialState.ui.previous.Active = tutorialState.index > 1
+	tutorialState.ui.previous.Selectable = tutorialState.ui.previous.Active
+	tutorialState.ui.previous.AutoButtonColor = tutorialState.ui.previous.Active
+	tutorialState.ui.previous.TextTransparency = if tutorialState.ui.previous.Active then 0 else 0.55
+	tutorialState.ui.next.Text = if tutorialState.index == #tutorialState.pages then "SELESAI" else "LANJUT"
 end
 
 local function showTutorial()
 	if tutorial.Visible then return end
-	tutorialClosing = false
+	tutorialState.closing = false
 	refreshTutorial()
 	tutorial.BackgroundTransparency = 1
-	tutorialFade.GroupTransparency = 1
-	tutorialUI.scale.Scale = 0.94
+	tutorialState.fade.GroupTransparency = 1
+	tutorialState.ui.scale.Scale = 0.94
 	tutorial.Visible = true
 	TweenService:Create(tutorial, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.28}):Play()
-	TweenService:Create(tutorialFade, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
-	TweenService:Create(tutorialUI.scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+	TweenService:Create(tutorialState.fade, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
+	TweenService:Create(tutorialState.ui.scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 end
 
 local function hideTutorial()
-	if not tutorial.Visible or tutorialClosing then return end
-	tutorialClosing = true
+	if not tutorial.Visible or tutorialState.closing then return end
+	tutorialState.closing = true
 	TweenService:Create(tutorial, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
-	local fadeTween = TweenService:Create(tutorialFade, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1})
-	TweenService:Create(tutorialUI.scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
+	local fadeTween = TweenService:Create(tutorialState.fade, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1})
+	TweenService:Create(tutorialState.ui.scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
 	fadeTween:Play()
 	fadeTween.Completed:Connect(function()
 		tutorial.Visible = false
-		tutorialClosing = false
+		tutorialState.closing = false
 	end)
 end
 
-tutorialUI.previous.Activated:Connect(function()
-	if tutorialIndex > 1 then
-		tutorialIndex -= 1
+tutorialState.ui.previous.Activated:Connect(function()
+	if tutorialState.index > 1 then
+		tutorialState.index -= 1
 		refreshTutorial()
 	end
 end)
-tutorialUI.next.Activated:Connect(function()
-	if tutorialIndex >= #tutorialPages then
+tutorialState.ui.next.Activated:Connect(function()
+	if tutorialState.index >= #tutorialState.pages then
 		hideTutorial()
 	else
-		tutorialIndex += 1
+		tutorialState.index += 1
 		refreshTutorial()
 	end
 end)
-tutorialUI.skip.Activated:Connect(hideTutorial)
+tutorialState.ui.skip.Activated:Connect(hideTutorial)
 
 muteButton.Activated:Connect(function()
 	local muted = root:GetAttribute("AudioMuted") == true
@@ -1546,37 +1550,39 @@ muteButton.Activated:Connect(function()
 	muteButton.Text = if not muted then "\u{1F507}" else "\u{1F50A}"
 end)
 
-local cameraToggle = Instance.new("TextButton")
-cameraToggle.Name = "CameraToggle"
-cameraToggle.AnchorPoint = Vector2.new(0, 1)
-cameraToggle.Position = UDim2.new(0.012, 0, 0.98, 0)
-cameraToggle.Size = UDim2.new(0.210, 0, 0.060, 0)
-cameraToggle.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
-cameraToggle.Font = Enum.Font.GothamBold
-cameraToggle.Text = "KAMERA BEBAS"
-cameraToggle.TextColor3 = Color3.fromRGB(210, 224, 214)
-cameraToggle.TextScaled = true
-cameraToggle.Parent = root
-local cameraToggleCorner = Instance.new("UICorner")
-cameraToggleCorner.CornerRadius = UDim.new(0, 8)
-cameraToggleCorner.Parent = cameraToggle
-local cameraToggleConstraint = Instance.new("UISizeConstraint")
-cameraToggleConstraint.Name = "MobileMinTouchTarget"
-cameraToggleConstraint.MinSize = Vector2.new(44, 44)
-cameraToggleConstraint.Parent = cameraToggle
-cameraToggle.Activated:Connect(function()
-	cameraFollow = not cameraFollow
-	if cameraFollow then
-		overviewCF = overviewCFrame()
-		cameraToggle.Text = "IKUTI PION"
-		local seatNow = findMySeat(latest or {})
-		local posNow = if seatNow > 0 and latest and latest.players[seatNow] then latest.players[seatNow].position else nil
-		if posNow then focusTile(posNow) else restoreOverview() end
-	else
-		cameraToggle.Text = "KAMERA BEBAS"
-		tweenCameraTo(overviewCFrame(), 0.7)
-	end
-end)
+do
+	local cameraToggle = Instance.new("TextButton")
+	cameraToggle.Name = "CameraToggle"
+	cameraToggle.AnchorPoint = Vector2.new(0, 1)
+	cameraToggle.Position = UDim2.new(0.012, 0, 0.98, 0)
+	cameraToggle.Size = UDim2.new(0.210, 0, 0.060, 0)
+	cameraToggle.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
+	cameraToggle.Font = Enum.Font.GothamBold
+	cameraToggle.Text = "KAMERA BEBAS"
+	cameraToggle.TextColor3 = Color3.fromRGB(210, 224, 214)
+	cameraToggle.TextScaled = true
+	cameraToggle.Parent = root
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = cameraToggle
+	local constraint = Instance.new("UISizeConstraint")
+	constraint.Name = "MobileMinTouchTarget"
+	constraint.MinSize = Vector2.new(44, 44)
+	constraint.Parent = cameraToggle
+	cameraToggle.Activated:Connect(function()
+		cameraFollow = not cameraFollow
+		if cameraFollow then
+			overviewCF = overviewCFrame()
+			cameraToggle.Text = "IKUTI PION"
+			local seatNow = findMySeat(latest or {})
+			local posNow = if seatNow > 0 and latest and latest.players[seatNow] then latest.players[seatNow].position else nil
+			if posNow then focusTile(posNow) else restoreOverview() end
+		else
+			cameraToggle.Text = "KAMERA BEBAS"
+			tweenCameraTo(overviewCFrame(), 0.7)
+		end
+	end)
+end
 
 stateUpdated.OnClientEvent:Connect(function(payload)
 	if typeof(payload) ~= "table" then return end
@@ -1596,8 +1602,8 @@ stateUpdated.OnClientEvent:Connect(function(payload)
 	updateVictory(previous, payload)
 	playSnapshotFeedback(previous, payload)
 	if typeof(previous) == "table" and previous.phase ~= payload.phase then restoreOverview() end
-	if tutorialPending then
-		tutorialPending = false
+	if tutorialState.pending then
+		tutorialState.pending = false
 		if payload.phase ~= "Finished" and payload.phase ~= "Cancelled" then
 			task.defer(showTutorial)
 		end
