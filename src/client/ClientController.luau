@@ -567,9 +567,9 @@ local function refresh(snap: any)
 	hConn.Text = "🟢 Online"
 	local profile = snap.profile
 	if typeof(profile) == "table" then
-		hProfile.Text = string.format("🏆 %d Menang  •  💀 %d Kalah  (Main: %d)", profile.wins or 0, profile.losses or 0, profile.matches or 0)
+		hProfile.Text = string.format("🏆 %d Menang • 💀 %d Kalah (Main: %d)", profile.wins or 0, profile.losses or 0, profile.matches or 0)
 	else
-		hProfile.Text = "🏆 0 Menang  •  💀 0 Kalah  (Main: 0)"
+		hProfile.Text = "🏆 0 Menang • 💀 0 Kalah"
 	end
 
 	local readyCount = 0
@@ -1536,6 +1536,44 @@ tutorialUI.next.Activated:Connect(function()
 	end
 end)
 tutorialUI.skip.Activated:Connect(hideTutorial)
+
+muteButton.Activated:Connect(function()
+	local muted = root:GetAttribute("AudioMuted") == true
+	root:SetAttribute("AudioMuted", not muted)
+	muteButton.Text = if not muted then "\u{1F507}" else "\u{1F50A}"
+end)
+
+local cameraToggle = Instance.new("TextButton")
+cameraToggle.Name = "CameraToggle"
+cameraToggle.AnchorPoint = Vector2.new(0, 1)
+cameraToggle.Position = UDim2.fromScale(0.02, 0.98)
+cameraToggle.Size = UDim2.fromScale(0.14, 0.055)
+cameraToggle.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
+cameraToggle.Font = Enum.Font.GothamBold
+cameraToggle.Text = "KAMERA BEBAS"
+cameraToggle.TextColor3 = Color3.fromRGB(210, 224, 214)
+cameraToggle.TextScaled = true
+cameraToggle.Parent = root
+local cameraToggleCorner = Instance.new("UICorner")
+cameraToggleCorner.CornerRadius = UDim.new(0, 8)
+cameraToggleCorner.Parent = cameraToggle
+local cameraToggleConstraint = Instance.new("UISizeConstraint")
+cameraToggleConstraint.Name = "MobileMinTouchTarget"
+cameraToggleConstraint.MinSize = Vector2.new(44, 44)
+cameraToggleConstraint.Parent = cameraToggle
+cameraToggle.Activated:Connect(function()
+	cameraFollow = not cameraFollow
+	if cameraFollow then
+		overviewCF = overviewCFrame()
+		cameraToggle.Text = "IKUTI PION"
+		local seatNow = findMySeat(latest or {})
+		local posNow = if seatNow > 0 and latest and latest.players[seatNow] then latest.players[seatNow].position else nil
+		if posNow then focusTile(posNow) else restoreOverview() end
+	else
+		cameraToggle.Text = "KAMERA BEBAS"
+		tweenCameraTo(overviewCFrame(), 0.7)
+	end
+end)
 
 stateUpdated.OnClientEvent:Connect(function(payload)
 	if typeof(payload) ~= "table" then return end
