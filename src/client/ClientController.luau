@@ -646,7 +646,13 @@ local function refresh(snap: any)
 	end
 
 	local d1, d2 = snap.dice[1], snap.dice[2]
-	diceText.Text = if d1 > 0 then string.format("\u{1F3B2}  %d + %d  =  %d", d1, d2, d1 + d2) else "\u{1F3B2}  -"
+	local newDiceText = if d1 > 0 then string.format("\u{1F3B2}  %d + %d  =  %d", d1, d2, d1 + d2) else "\u{1F3B2}  -"
+	if diceText.Text ~= newDiceText then
+		diceText.Text = newDiceText
+		if d1 > 0 then
+			playPop(dicePanel, 0.82, 1.15)
+		end
+	end
 
 	logText.Text = table.concat(snap.logs, "\n")
 

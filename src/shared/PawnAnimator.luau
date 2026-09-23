@@ -9,15 +9,30 @@ local HOP_HEIGHT = 1.4
 local STEP_TIME = 0.55
 local MOVE_EPS = 0.03
 
-type Track = {last: Vector3, startedAt: number, moving: boolean}
+type Track = {last: Vector3, startedAt: number, moving: boolean, soundOnly: boolean}
 
 local PawnAnimator = {}
 local tracked: {[BasePart]: Track} = {}
 local connection: RBXScriptConnection? = nil
 
-local function trackPart(part: BasePart)
+local function trackPart(part: BasePart, soundOnly: boolean?)
 	if tracked[part] then return end
-	tracked[part] = {last = part.Position, startedAt = 0, moving = false}
+	tracked[part] = {last = part.Position, startedAt = 0, moving = false, soundOnly = soundOnly == true}
+end
+
+local function trackInstance(child: Instance)
+	if child:IsA("BasePart") then
+		trackPart(child, false)
+	elseif child:IsA("Model") then
+		local root = child.PrimaryPart or child:FindFirstChild("HumanoidRootPart")
+		if root and root:IsA("BasePart") then
+			trackPart(root, true)
+		else
+			child:GetPropertyChangedSignal("PrimaryPart"):Once(function()
+				if child.PrimaryPart then trackPart(child.PrimaryPart, true) end
+			end)
+		end
+	end
 end
 
 local function playHopSound(part: BasePart)
@@ -32,10 +47,10 @@ end
 
 function PawnAnimator.watch(pawnsContainer: Instance)
 	for _, child in ipairs(pawnsContainer:GetChildren()) do
-		if child:IsA("BasePart") then trackPart(child) end
+		trackInstance(child)
 	end
 	pawnsContainer.ChildAdded:Connect(function(child)
-		if child:IsA("BasePart") then trackPart(child) end
+		trackInstance(child)
 	end)
 	if connection then return end
 	connection = RunService.RenderStepped:Connect(function()
@@ -52,10 +67,12 @@ function PawnAnimator.watch(pawnsContainer: Instance)
 					state.startedAt = now
 					playHopSound(part)
 				end
-				local progress = math.clamp((now - state.startedAt) / STEP_TIME, 0, 1)
-				local offset = HOP_HEIGHT * math.sin(progress * math.pi)
-				if offset > 0.01 then
-					part.CFrame = CFrame.new(pos + Vector3.new(0, offset, 0)) * part.CFrame.Rotation
+				if not state.soundOnly then
+					local progress = math.clamp((now - state.startedAt) / STEP_TIME, 0, 1)
+					local offset = HOP_HEIGHT * math.sin(progress * math.pi)
+					if offset > 0.01 then
+						part.CFrame = CFrame.new(pos + Vector3.new(0, offset, 0)) * part.CFrame.Rotation
+					end
 				end
 			else
 				state.moving = false
