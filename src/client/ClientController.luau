@@ -171,6 +171,7 @@ local lastQueueRequest = -math.huge
 local latest: any = nil
 local errUntil = 0
 local errText = ""
+local audio: any = nil
 
 local function send(action: string)
 	local snap = latest
@@ -988,9 +989,9 @@ local function showSpecialTileToast(kind: string)
 	task.delay(2.4, function()
 		if generation ~= specialToastGeneration or not specialToast:IsDescendantOf(game) then return end
 		local fade = TweenService:Create(specialToast, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 1})
-		TweenService:Create(specialToastIcon, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
-		TweenService:Create(specialToastTitle, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
-		TweenService:Create(specialToastMessage, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+		TweenService:Create(specialToastUI.icon, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+		TweenService:Create(specialToastUI.title, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
+		TweenService:Create(specialToastUI.message, TweenInfo.new(0.25), {TextTransparency = 1}):Play()
 		fade:Play()
 		fade.Completed:Once(function()
 			if generation == specialToastGeneration then specialToast.Visible = false end
@@ -1043,15 +1044,26 @@ local function refreshVictoryContent(snap: any)
 		if participant.team == "B" then teamB += participant.cash or 0 end
 	end
 	victoryUI.title.Text = "PERTANDINGAN SELESAI"
+	local resultText = tostring(snap.result or "")
+	local winnerA = string.find(resultText, "TIM A MENANG", 1, true) ~= nil
+	local winnerB = string.find(resultText, "TIM B MENANG", 1, true) ~= nil
+	if winnerA or winnerB then
+		trophyBanner.Text = "\u{1F3C6}  " .. resultText
+		trophyBanner.TextColor3 = if winnerA then Color3.fromRGB(174, 221, 202) else Color3.fromRGB(242, 196, 167)
+		trophyStroke.Color = if winnerA then Color3.fromRGB(80, 170, 140) else Color3.fromRGB(214, 130, 90)
+		trophyBanner.Visible = true
+	else
+		trophyBanner.Visible = false
+	end
 	victoryUI.status.Text = if typeof(snap.result) == "string" and #snap.result > 0 then snap.result else "Hasil pertandingan telah ditetapkan server."
 	victoryUI.scores.Text = "SALDO AKHIR TIM\nTim A  •  " .. Rules.formatMoney(teamA) .. "\nTim B  •  " .. Rules.formatMoney(teamB)
 	local mySeat = findMySeat(snap)
 	local canRematch = mySeat > 0 and not snap.rematchUnavailable
 	local voted = mySeat > 0 and snap.rematchVotes and snap.rematchVotes[mySeat]
 	victoryUI.rematch.Text = if voted then "BATAL MAIN LAGI" else "MAIN LAGI"
-	setVictoryButton(victoryRematch, canRematch)
+	setVictoryButton(victoryUI.rematch, canRematch)
 	local canReturn = mySeat > 0 and snap.routing and snap.routing.canReturnToLobby == true
-	setVictoryButton(victoryReturnLobby, canReturn)
+	setVictoryButton(victoryUI.returnLobby, canReturn)
 end
 
 local function showVictory(snap: any, animate: boolean)
@@ -1123,7 +1135,34 @@ local function playSnapshotFeedback(previous: any, current: any)
 	local previousSeat = findMySeat(previous)
 	local previousParticipant = if previousSeat > 0 then previous.players[previousSeat] else nil
 	local currentParticipant = current.players[currentSeat]
+
+	if previousParticipant and currentParticipant and audio then
+		local oldCash = previousParticipant.cash or 0
+		local newCash = currentParticipant.cash or 0
+		if newCash < oldCash then
+			audio:playSfx("CashSpend", true)
+		elseif newCash > oldCash then
+			audio:playSfx("CashIncome", true)
+		end
+
+		if previousParticipant.inJail ~= true and currentParticipant.inJail == true then
+			audio:playSfx("SirenLapas", false)
+		end
+
+		if typeof(previous.buildings) == "table" and typeof(current.buildings) == "table" then
+			for tileIndex = 1, Rules.TileCount do
+				local oldLevel = previous.buildings[tileIndex] or 0
+				local newLevel = current.buildings[tileIndex] or 0
+				if newLevel > oldLevel and current.owners[tileIndex] == currentSeat then
+					audio:playSfx("BuildUpgrade", true)
+					break
+				end
+			end
+		end
+	end
+
 	if previousParticipant and currentParticipant and previousParticipant.position ~= currentParticipant.position then
+		focusTile(currentParticipant.position)
 		local board = WS:FindFirstChild("WNIBoard")
 		local tilesFolder = board and board:FindFirstChild("Tiles")
 		local tile = tilesFolder and tilesFolder:FindFirstChild(string.format("Tile_%02d", currentParticipant.position))
@@ -1147,7 +1186,24 @@ local function playSnapshotFeedback(previous: any, current: any)
 		if mentionsPlayer and drewCard then
 			showCardToast(currentNewest)
 			showCardModal(currentNewest)
+			if audio then audio:playSfx("CardDraw", true) end
 		end
+	end
+
+	if audio and previous.phase ~= "Finished" and current.phase == "Finished" then
+		audio:stopBgm()
+		local teamA, teamB = 0, 0
+		for _, participant in current.players do
+			if participant.team == "A" then teamA += participant.cash or 0 end
+			if participant.team == "B" then teamB += participant.cash or 0 end
+		end
+		local myTeam = currentParticipant.team
+		local won = (myTeam == "A" and teamA > teamB) or (myTeam == "B" and teamB > teamA)
+		if teamA ~= teamB then
+			audio:playSfx(if won then "WinJingle" else "LoseJingle", false)
+		end
+	elseif audio and previous.phase == "Finished" and current.phase ~= "Finished" then
+		audio:startBgm()
 	end
 end
 
@@ -1315,12 +1371,19 @@ bindViewport()
 
 -- Phase 2 client polish: local-only SFX, onboarding, and panel transitions.
 local uiSounds = waitFor(gui, "UISounds")
+local AudioHelper = require(waitFor(gui, "AudioHelper") :: ModuleScript)
+audio = AudioHelper.new(uiSounds)
+audio:startBgm()
 local clickSound = waitFor(uiSounds, "Click") :: Sound
-local diceSound = waitFor(uiSounds, "Dice") :: Sound
-local cardSound = waitFor(uiSounds, "Card") :: Sound
+local diceSound = waitFor(uiSounds, "RollDice") :: Sound
+local cardSound = waitFor(uiSounds, "CardDraw") :: Sound
 
 local function playUISound(sound: Sound)
 	if root:GetAttribute("AudioMuted") == true then return end
+	if audio then
+		audio:playSfx(sound.Name, sound.Name == "Click" or sound.Name == "RollDice")
+		return
+	end
 	sound:Stop()
 	sound.TimePosition = 0
 	sound:Play()
@@ -1373,9 +1436,7 @@ for _, descendant in root:GetDescendants() do
 	bindButtonSfx(descendant)
 end
 root.DescendantAdded:Connect(bindButtonSfx)
-cardToast:GetPropertyChangedSignal("Visible"):Connect(function()
-	if cardToast.Visible then playUISound(cardSound) end
-end)
+-- CardDraw SFX is driven by the authoritative snapshot transition in playSnapshotFeedback.
 
 local tutorial = waitFor(root, "TutorialPanel") :: Frame
 local muteButton = header:FindFirstChild("MuteButton") :: TextButton?
@@ -1386,6 +1447,8 @@ if muteButton then
 		local isMuted = muteButton:GetAttribute("Muted") == true
 		isMuted = not isMuted
 		muteButton:SetAttribute("Muted", isMuted)
+		root:SetAttribute("AudioMuted", isMuted)
+		if audio then audio:setMuted(isMuted) end
 		muteButton.Text = if isMuted then "🔇" else "🔊"
 		if soundsFolder then
 			for _, s in ipairs(soundsFolder:GetChildren()) do
@@ -1491,6 +1554,7 @@ stateUpdated.OnClientEvent:Connect(function(payload)
 	updateAvatarIndicators(previous, payload)
 	updateVictory(previous, payload)
 	playSnapshotFeedback(previous, payload)
+	if typeof(previous) == "table" and previous.phase ~= payload.phase then restoreOverview() end
 	if tutorialPending then
 		tutorialPending = false
 		if payload.phase ~= "Finished" and payload.phase ~= "Cancelled" then
