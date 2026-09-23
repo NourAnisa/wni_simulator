@@ -45,6 +45,42 @@ local function playHopSound(part: BasePart)
 	Debris:AddItem(sound, 1)
 end
 
+local function playLandingPuff(part: BasePart)
+	if not part:IsDescendantOf(workspace) then return end
+	local att = Instance.new("Attachment")
+	att.Position = Vector3.new(0, -part.Size.Y * 0.45, 0)
+	att.Parent = part
+
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Rate = 0
+	emitter.Lifetime = NumberRange.new(0.3, 0.5)
+	emitter.Speed = NumberRange.new(0.8, 1.8)
+	emitter.SpreadAngle = Vector2.new(90, 90)
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.25),
+		NumberSequenceKeypoint.new(0.7, 0.65),
+		NumberSequenceKeypoint.new(1, 0.85),
+	})
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.35),
+		NumberSequenceKeypoint.new(0.6, 0.6),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Color = ColorSequence.new(Color3.fromRGB(225, 218, 198))
+	emitter.LightEmission = 0.2
+	emitter.Parent = att
+	emitter:Emit(6)
+
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxasset://sounds/switch.wav"
+	sound.Volume = 0.25
+	sound.PlaybackSpeed = 0.85 + (math.random() * 0.1)
+	sound.Parent = part
+	sound:Play()
+
+	Debris:AddItem(att, 0.6)
+end
+
 function PawnAnimator.watch(pawnsContainer: Instance)
 	for _, child in ipairs(pawnsContainer:GetChildren()) do
 		trackInstance(child)
@@ -75,7 +111,10 @@ function PawnAnimator.watch(pawnsContainer: Instance)
 					end
 				end
 			else
-				state.moving = false
+				if state.moving then
+					state.moving = false
+					playLandingPuff(part)
+				end
 			end
 			state.last = pos
 		end
