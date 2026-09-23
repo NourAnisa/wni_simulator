@@ -97,7 +97,8 @@ end
 
 local propTile = waitFor(waitFor(root, "PropertyPanel"), "TileName") :: TextLabel
 local propDetail = waitFor(waitFor(root, "PropertyPanel"), "Details") :: TextLabel
-local diceText = waitFor(waitFor(root, "DicePanel"), "Result") :: TextLabel
+local dicePanel = waitFor(root, "DicePanel") :: Frame
+local diceText = waitFor(dicePanel, "Result") :: TextLabel
 local logText = waitFor(waitFor(root, "LogPanel"), "Entries") :: TextLabel
 
 local TEAMC: {[string]: Color3} = {A = Color3.fromRGB(174, 221, 202), B = Color3.fromRGB(242, 196, 167)}
@@ -577,7 +578,8 @@ local function refresh(snap: any)
 	else
 		hRound.Text = "Ronde " .. snap.round .. " / " .. Rules.MaxRounds
 	end
-	hSub.Text = if over and #snap.result > 0 then snap.result else (PHASES[phase] or phase)
+	dicePanel.Visible = phase ~= "Waiting"
+	hSub.Text = if over and #snap.result > 0 then snap.result else "NUSANTARA • 2v2"
 	hConn.Text = "🟢 Online"
 	local profile = snap.profile
 	if typeof(profile) == "table" then
@@ -1657,21 +1659,26 @@ local function initPolishUI()
 	do
 		local cameraToggle = Instance.new("TextButton")
 		cameraToggle.Name = "CameraToggle"
-		cameraToggle.AnchorPoint = Vector2.new(0, 1)
-		cameraToggle.Position = UDim2.new(0.012, 0, 0.98, 0)
-		cameraToggle.Size = UDim2.new(0.210, 0, 0.060, 0)
+		cameraToggle.AnchorPoint = Vector2.new(1, 1)
+		cameraToggle.Position = UDim2.new(1, -20, 1, -112)
+		cameraToggle.Size = UDim2.new(0, 140, 0, 34)
 		cameraToggle.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
 		cameraToggle.Font = Enum.Font.GothamBold
 		cameraToggle.Text = "KAMERA BEBAS"
 		cameraToggle.TextColor3 = Color3.fromRGB(210, 224, 214)
-		cameraToggle.TextScaled = true
+		cameraToggle.TextSize = 12
+		cameraToggle.TextScaled = false
 		cameraToggle.Parent = root
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 8)
 		corner.Parent = cameraToggle
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(56, 98, 88)
+		stroke.Thickness = 1
+		stroke.Parent = cameraToggle
 		local constraint = Instance.new("UISizeConstraint")
 		constraint.Name = "MobileMinTouchTarget"
-		constraint.MinSize = Vector2.new(44, 44)
+		constraint.MinSize = Vector2.new(44, 34)
 		constraint.Parent = cameraToggle
 		cameraToggle.Activated:Connect(function() 
 			cameraFollow = not cameraFollow
