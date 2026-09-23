@@ -373,10 +373,12 @@ local function refreshMatchmaking(snap: any)
 	local room = snap.room
 	if typeof(mm) ~= "table" or typeof(room) ~= "table" then
 		matchmakingPanel.Visible = false
+		propertyPanel.Visible = true
 		return
 	end
 	local canShow = room.member ~= true
 	matchmakingPanel.Visible = canShow
+	propertyPanel.Visible = not canShow
 	if not canShow then return end
 	local queued = mm.queued == true
 	local matchFound = mm.matchFound == true
@@ -433,6 +435,7 @@ local function refreshRoom(snap: any)
 	local preparation = room.phase == "Waiting"
 	local finished = room.phase == "Finished" or room.phase == "Cancelled"
 	roomPanel.Visible = not member or preparation or finished
+	panel.Visible = member
 	roomCode.Visible = not member
 	local function control(button: TextButton, visible: boolean, enabled: boolean)
 		button.Visible = visible
