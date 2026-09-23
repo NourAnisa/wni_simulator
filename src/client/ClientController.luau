@@ -188,7 +188,7 @@ local allowed: {[string]: boolean} = {}
 local function setButton(key: string, enabled: boolean, text: string?)
 	local b = buttons[key]
 	allowed[key] = enabled
-	b.Visible = if mobileTouchMode then enabled else (if key == "Ready" or key == "Roll" then true else enabled)
+	b.Visible = enabled
 	b.AutoButtonColor = enabled
 	b.Active = enabled
 	b.Selectable = enabled
