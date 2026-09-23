@@ -566,6 +566,14 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		synchronize(player, "Pertandingan sedang dipause menunggu pemain reconnect.")
 		return
 	end
+	if action == "FillBots" then
+		if not isMatchPlace and engine.phase == "Waiting" and rooms:count() < Rules.PlayerCount then
+			botAI:fillEmptySeats(rooms, now)
+			botAI:readyWaitingBots(rooms, now)
+			broadcast()
+		end
+		return
+	end
 	if action ~= "Ready" and action ~= "Roll" and action ~= "Buy" and action ~= "Skip" and action ~= "Build" and action ~= "SkipBuild" and action ~= "Bail" and action ~= "Rematch" and action ~= "PlayCard" and action ~= "SelectCardLand" and action ~= "SkipCardChoice" and action ~= "ChooseTeam" and action ~= "RequestTeamSwap" and action ~= "AcceptTeamSwap" and action ~= "CancelTeamSwap" then return end
 	if typeof(revision) ~= "number" or revision ~= revision or revision % 1 ~= 0 or revision < 0 or revision > 1000000000 then return end
 	if typeof(version) ~= "string" or version ~= Rules.Version then
