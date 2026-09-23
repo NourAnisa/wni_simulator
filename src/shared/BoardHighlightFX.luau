@@ -61,6 +61,20 @@ function BoardHighlightFX.triggerJailStrobe(pawnOrTile: Instance)
 	light.Parent = part
 	Debris:AddItem(h, 2)
 	Debris:AddItem(light, 2)
+
+	-- Putar audio sirine LAPAS jika tersedia
+	local Players = game:GetService("Players")
+	local localPlayer = Players.LocalPlayer
+	local playerGui = localPlayer and localPlayer:FindFirstChild("PlayerGui")
+	local gameUI = playerGui and playerGui:FindFirstChild("WNIGameUI")
+	local uiSounds = gameUI and gameUI:FindFirstChild("UISounds")
+	local sirenTemplate = uiSounds and (uiSounds:FindFirstChild("JailSiren") or uiSounds:FindFirstChild("SirenLapas"))
+	if sirenTemplate and sirenTemplate:IsA("Sound") and sirenTemplate.SoundId ~= "" then
+		local s = sirenTemplate:Clone()
+		s.Parent = part
+		s:Play()
+		Debris:AddItem(s, 3)
+	end
 	task.spawn(function()
 		local red = Color3.fromRGB(255, 60, 60)
 		local blue = Color3.fromRGB(70, 130, 255)
