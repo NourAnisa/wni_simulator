@@ -1485,9 +1485,7 @@ local function initPolishUI()
 		local old = seatGlowTweens[seat]
 		if old then old:Cancel() seatGlowTweens[seat] = nil end
 		if on then
-			local t = TweenService:Create(stroke, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Thickness = 2.4, Transparency = 0.25})
-			t.Reversed = true
-			t.Looped = true
+			local t = TweenService:Create(stroke, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Thickness = 2.4, Transparency = 0.25})
 			t:Play()
 			seatGlowTweens[seat] = t
 		else
@@ -1502,9 +1500,7 @@ local function initPolishUI()
 		local scale = feedbackScale(buttons.Roll)
 		if on then
 			scale.Scale = 1
-			local t = TweenService:Create(scale, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Scale = 1.07})
-			t.Reversed = true
-			t.Looped = true
+			local t = TweenService:Create(scale, TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Scale = 1.07})
 			t:Play()
 			rollPulse = t
 		else
