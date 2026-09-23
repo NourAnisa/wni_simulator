@@ -1261,7 +1261,7 @@ local function refreshHand()
 	end
 	local inMatch = latest and latest.phase ~= "Waiting" and latest.phase ~= "Finished" and latest.phase ~= "Cancelled"
 	handButton.Visible = participant ~= nil and inMatch == true
-	handButton.Text = "KARTU SAYA (" .. #hand .. ")"
+	handButton.Text = "🃏 KARTU SAYA (" .. #hand .. ")"
 	if not handButton.Visible or handMatchId ~= latest.matchId then
 		handPanel.Visible = false
 		handOrdinal = 1
