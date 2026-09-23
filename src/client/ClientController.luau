@@ -178,6 +178,7 @@ local errUntil = 0
 local errText = ""
 local audio: any = nil
 -- Late-bound UI helpers: forward-declared so early-defined refresh functions can call them.
+local playPop: any = nil
 local setRollPulse: any = nil
 local setSeatGlow: any = nil
 local refreshBotButton: any = nil
@@ -1198,7 +1199,7 @@ local function feedbackScale(target: GuiObject): UIScale
 	return scale
 end
 
-local function playPop(target: GuiObject, startScale: number, peakScale: number)
+playPop = function(target: GuiObject, startScale: number, peakScale: number)
 	local scale = feedbackScale(target)
 	scale.Scale = startScale
 	local rise = TweenService:Create(scale, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = peakScale})
