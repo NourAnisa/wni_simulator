@@ -76,7 +76,7 @@ local function enforceMinimumTouchTarget(instance: Instance)
 		constraint.Name = "MobileMinTouchTarget"
 		constraint.Parent = instance
 	end
-	constraint.MinSize = if mobileTouchMode then Vector2.new(44, 44) else Vector2.zero
+	constraint.MinSize = if mobileTouchMode then Vector2.new(44, 28) else Vector2.zero
 end
 
 for _, descendant in root:GetDescendants() do
@@ -156,6 +156,7 @@ local originalDetailSize = propDetail.Size
 local selectedBuildTile: number? = nil
 local buildChoices: {number} = {}
 local roomPanel = waitFor(root, "RoomPanel") :: Frame
+local roomHeading = waitFor(roomPanel, "Heading") :: TextLabel
 local roomInfo = waitFor(roomPanel, "RoomInfo") :: TextLabel
 local roomMessage = waitFor(roomPanel, "Message") :: TextLabel
 local roomCode = waitFor(roomPanel, "CodeInput") :: TextBox
@@ -208,35 +209,8 @@ local function setButton(key: string, enabled: boolean, text: string?)
 end
 
 local function applyActionLayout()
-	if mobileTouchMode then
-		panel.Position = UDim2.fromScale(0.245, 0.68)
-		panel.Size = UDim2.fromScale(0.51, 0.32)
-		status.Position = UDim2.fromScale(0.04, 0.06)
-		status.Size = UDim2.fromScale(0.92, 0.17)
-		hint.Position = UDim2.fromScale(0.04, 0.27)
-		hint.Size = UDim2.fromScale(0.92, 0.17)
-		local primaryPosition = UDim2.fromScale(0.04, 0.52)
-		local secondaryPosition = UDim2.fromScale(0.52, 0.52)
-		local touchSize = UDim2.fromScale(0.44, 0.42)
-		for _, key in {"Ready", "Roll", "Buy", "Build"} do
-			buttons[key].Position = primaryPosition
-			buttons[key].Size = touchSize
-		end
-		for _, key in {"Skip", "SkipBuild", "Bail", "ReturnLobby"} do
-			buttons[key].Position = secondaryPosition
-			buttons[key].Size = touchSize
-		end
-	else
-		panel.Position = desktopActionPanelPosition
-		panel.Size = desktopActionPanelSize
-		status.Position = desktopStatusPosition
-		status.Size = desktopStatusSize
-		hint.Position = desktopHintPosition
-		hint.Size = desktopHintSize
-		for key, original in desktopActionButtons do
-			buttons[key].Position = original.position
-			buttons[key].Size = original.size
-		end
+	if applyResponsiveLayout and WS.CurrentCamera then
+		applyResponsiveLayout(WS.CurrentCamera.ViewportSize)
 	end
 end
 applyActionLayout()
@@ -451,6 +425,10 @@ local function refreshRoom(snap: any)
 	roomPanel.Visible = not member or preparation or finished
 	panel.Visible = member
 	roomCode.Visible = not member
+
+	if applyResponsiveLayout and WS.CurrentCamera then
+		applyResponsiveLayout(WS.CurrentCamera.ViewportSize)
+	end
 	local function control(button: TextButton, visible: boolean, enabled: boolean)
 		button.Visible = visible
 		button.Active = enabled
@@ -789,6 +767,14 @@ local skipCardChoice = waitFor(handPanel, "SkipChoice") :: TextButton
 local desktopLayout = {
 	headerPos = header.Position,
 	headerSize = header.Size,
+	roundPos = hRound.Position,
+	roundSize = hRound.Size,
+	profilePos = hProfile.Position,
+	profileSize = hProfile.Size,
+	connPos = hConn.Position,
+	connSize = hConn.Size,
+	mutePos = if header:FindFirstChild("MuteButton") then (header:FindFirstChild("MuteButton") :: any).Position else UDim2.new(1, -14, 0.5, 0),
+	muteSize = if header:FindFirstChild("MuteButton") then (header:FindFirstChild("MuteButton") :: any).Size else UDim2.new(0, 32, 0, 32),
 	rosterPos = roster.Position,
 	rosterSize = roster.Size,
 	logPos = logPanel.Position,
@@ -797,6 +783,12 @@ local desktopLayout = {
 	seatSize = {} :: {[number]: UDim2},
 	roomPos = roomPanel.Position,
 	roomSize = roomPanel.Size,
+	roomHeadPos = roomHeading.Position,
+	roomHeadSize = roomHeading.Size,
+	roomDescPos = roomDescription.Position,
+	roomDescSize = roomDescription.Size,
+	roomInfoPos = roomInfo.Position,
+	roomInfoSize = roomInfo.Size,
 	roomCodePos = roomCode.Position,
 	roomCodeSize = roomCode.Size,
 	createRoomPos = createRoom.Position,
@@ -811,8 +803,24 @@ local desktopLayout = {
 	teamBSize = teamButtons.B.Size,
 	roomMessagePos = roomMessage.Position,
 	roomMessageSize = roomMessage.Size,
+	swapPos = swapControls.Position,
+	swapSize = swapControls.Size,
+	swapTargetPos = swapTarget.Position,
+	swapTargetSize = swapTarget.Size,
+	swapPrevPos = swapPrevious.Position,
+	swapPrevSize = swapPrevious.Size,
+	swapNextPos = swapNext.Position,
+	swapNextSize = swapNext.Size,
+	swapReqPos = swapRequest.Position,
+	swapReqSize = swapRequest.Size,
+	swapAccPos = swapAccept.Position,
+	swapAccSize = swapAccept.Size,
+	swapCanPos = swapCancel.Position,
+	swapCanSize = swapCancel.Size,
 	mmPos = matchmakingPanel.Position,
 	mmSize = matchmakingPanel.Size,
+	mmModePos = if matchmakingPanel:FindFirstChild("Mode") then (matchmakingPanel:FindFirstChild("Mode") :: any).Position else UDim2.fromScale(0.08, 0.22),
+	mmModeSize = if matchmakingPanel:FindFirstChild("Mode") then (matchmakingPanel:FindFirstChild("Mode") :: any).Size else UDim2.fromScale(0.84, 0.16),
 	mmStatusPos = matchmakingStatus.Position,
 	mmStatusSize = matchmakingStatus.Size,
 	queueBtnPos = queueButton.Position,
@@ -823,6 +831,8 @@ local desktopLayout = {
 	acceptBtnSize = acceptMatchButton.Size,
 	declineBtnPos = declineMatchButton.Position,
 	declineBtnSize = declineMatchButton.Size,
+	botBtnPos = if panel:FindFirstChild("BotButton") then (panel:FindFirstChild("BotButton") :: any).Position else UDim2.fromScale(0.68, 0.74),
+	botBtnSize = if panel:FindFirstChild("BotButton") then (panel:FindFirstChild("BotButton") :: any).Size else UDim2.fromScale(0.28, 0.24),
 	handPanelPos = handPanel.Position,
 	handPanelSize = handPanel.Size,
 	handButtonPos = handButton.Position,
@@ -837,77 +847,160 @@ applyResponsiveLayout = function(viewport: Vector2)
 	local isMobile = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or viewport.Y <= 550 or viewport.X <= 1000
 	mobileTouchMode = isMobile
 
+	local muteBtn = header:FindFirstChild("MuteButton")
+	local mmMode = matchmakingPanel:FindFirstChild("Mode")
+	local botBtn = panel:FindFirstChild("BotButton")
+
 	if isMobile then
 		-- Header: offset past Roblox TopBar buttons (Roblox menu + Chat)
 		header.Position = UDim2.new(0, 115, 0, 6)
 		header.Size = UDim2.new(1, -135, 0, 42)
 
-		-- Roster & LogPanel: both fit neatly vertically on left side
-		roster.Position = UDim2.new(0.015, 0, 0, 52)
-		roster.Size = UDim2.new(0.19, 0, 0.48, 0)
-		for seat = 1, Rules.PlayerCount do
-			seats[seat].frame.Position = UDim2.new(0.05, 0, 0.12 + (seat - 1) * 0.22, 0)
-			seats[seat].frame.Size = UDim2.new(0.90, 0, 0.19, 0)
+		-- Header internal items: no collision between round, stats, online, and mute
+		hRound.Position = UDim2.new(0.30, 0, 0.5, 0)
+		hRound.Size = UDim2.new(0, 75, 0, 24)
+
+		hProfile.Position = UDim2.new(1, -180, 0.5, 0)
+		hProfile.Size = UDim2.new(0, 105, 0, 24)
+		hProfile.TextScaled = true
+
+		hConn.Position = UDim2.new(1, -66, 0.5, 0)
+		hConn.Size = UDim2.new(0, 48, 0, 24)
+		hConn.TextScaled = true
+
+		if muteBtn and muteBtn:IsA("GuiObject") then
+			muteBtn.Position = UDim2.new(1, -15, 0.5, 0)
+			muteBtn.Size = UDim2.new(0, 24, 0, 24)
 		end
 
-		logPanel.Position = UDim2.new(0.015, 0, 0.52, 0)
-		logPanel.Size = UDim2.new(0.19, 0, 0.45, 0)
+		-- Roster & LogPanel: perfectly calculated so Roster bottom never touches LogPanel top
+		roster.Position = UDim2.new(0.015, 0, 0, 52)
+		roster.Size = UDim2.new(0.19, 0, 0.44, 0)
+		for seat = 1, Rules.PlayerCount do
+			seats[seat].frame.Position = UDim2.new(0.05, 0, 0.12 + (seat - 1) * 0.215, 0)
+			seats[seat].frame.Size = UDim2.new(0.90, 0, 0.185, 0)
+		end
+
+		-- LogPanel starts at 44% + 56px (4px below Roster bottom) and extends to 8px before screen bottom
+		logPanel.Position = UDim2.new(0.015, 0, 0.44, 56)
+		logPanel.Size = UDim2.new(0.19, 0, 0.56, -64)
 
 		-- RoomPanel (center): cleanly below Header, no overlap with MatchmakingPanel
-		roomPanel.Position = UDim2.fromScale(0.22, 0.15)
-		roomPanel.Size = UDim2.fromScale(0.48, 0.77)
-		roomCode.Position = UDim2.fromScale(0.08, 0.44)
-		roomCode.Size = UDim2.fromScale(0.84, 0.14)
-		createRoom.Position = UDim2.fromScale(0.08, 0.62)
-		createRoom.Size = UDim2.fromScale(0.40, 0.16)
-		joinRoom.Position = UDim2.fromScale(0.52, 0.62)
-		joinRoom.Size = UDim2.fromScale(0.40, 0.16)
-		leaveRoom.Position = UDim2.fromScale(0.20, 0.62)
-		leaveRoom.Size = UDim2.fromScale(0.60, 0.16)
-		teamButtons.A.Position = UDim2.fromScale(0.08, 0.62)
-		teamButtons.A.Size = UDim2.fromScale(0.40, 0.16)
-		teamButtons.B.Position = UDim2.fromScale(0.52, 0.62)
-		teamButtons.B.Size = UDim2.fromScale(0.40, 0.16)
-		roomMessage.Position = UDim2.fromScale(0.06, 0.81)
-		roomMessage.Size = UDim2.fromScale(0.88, 0.16)
+		local inWaitingRoom = latest and latest.room and latest.room.member and latest.room.phase == "Waiting"
+		if inWaitingRoom then
+			roomPanel.AnchorPoint = Vector2.new(0.5, 0)
+			roomPanel.Position = UDim2.new(0.5, 0, 0, 48)
+			roomPanel.Size = UDim2.new(0.52, 0, 0, 142)
+			panel.AnchorPoint = Vector2.new(0.5, 1)
+			panel.Position = UDim2.new(0.5, 0, 1, -6)
+			panel.Size = UDim2.new(0.52, 0, 0, 92)
+
+			roomHeading.Position = UDim2.new(0.04, 0, 0, 4)
+			roomHeading.Size = UDim2.new(0.92, 0, 0, 16)
+			roomInfo.Position = UDim2.new(0.04, 0, 0, 22)
+			roomInfo.Size = UDim2.new(0.92, 0, 0, 15)
+
+			swapControls.Position = UDim2.new(0.04, 0, 0, 39)
+			swapControls.Size = UDim2.new(0.92, 0, 0, 38)
+			swapTarget.Position = UDim2.new(0.12, 0, 0, 0)
+			swapTarget.Size = UDim2.new(0.76, 0, 0, 14)
+			swapPrevious.Position = UDim2.new(0, 0, 0, 0)
+			swapPrevious.Size = UDim2.new(0.10, 0, 0, 14)
+			swapNext.Position = UDim2.new(0.90, 0, 0, 0)
+			swapNext.Size = UDim2.new(0.10, 0, 0, 14)
+			swapRequest.Position = UDim2.new(0.20, 0, 0, 16)
+			swapRequest.Size = UDim2.new(0.60, 0, 0, 20)
+			swapAccept.Position = UDim2.new(0.05, 0, 0, 16)
+			swapAccept.Size = UDim2.new(0.42, 0, 0, 20)
+			swapCancel.Position = UDim2.new(0.53, 0, 0, 16)
+			swapCancel.Size = UDim2.new(0.42, 0, 0, 20)
+
+			teamButtons.A.Position = UDim2.new(0.04, 0, 0, 80)
+			teamButtons.A.Size = UDim2.new(0.32, 0, 0, 26)
+			leaveRoom.Position = UDim2.new(0.38, 0, 0, 80)
+			leaveRoom.Size = UDim2.new(0.24, 0, 0, 26)
+			teamButtons.B.Position = UDim2.new(0.64, 0, 0, 80)
+			teamButtons.B.Size = UDim2.new(0.32, 0, 0, 26)
+
+			roomMessage.Position = UDim2.new(0.04, 0, 0, 108)
+			roomMessage.Size = UDim2.new(0.92, 0, 0, 30)
+		else
+			roomPanel.AnchorPoint = Vector2.new(0, 0)
+			roomPanel.Position = UDim2.fromScale(0.22, 0.15)
+			roomPanel.Size = UDim2.fromScale(0.48, 0.77)
+			panel.AnchorPoint = Vector2.new(0.5, 1)
+			panel.Position = UDim2.new(0.5, 0, 1, -6)
+			panel.Size = UDim2.new(0.52, 0, 0, 92)
+
+			roomHeading.Position = UDim2.fromScale(0.06, 0.04)
+			roomHeading.Size = UDim2.fromScale(0.88, 0.11)
+			roomDescription.Position = UDim2.fromScale(0.06, 0.16)
+			roomDescription.Size = UDim2.fromScale(0.88, 0.13)
+			roomInfo.Position = UDim2.fromScale(0.06, 0.30)
+			roomInfo.Size = UDim2.fromScale(0.88, 0.11)
+			roomCode.Position = UDim2.fromScale(0.08, 0.43)
+			roomCode.Size = UDim2.fromScale(0.84, 0.14)
+			createRoom.Position = UDim2.fromScale(0.08, 0.60)
+			createRoom.Size = UDim2.fromScale(0.40, 0.16)
+			joinRoom.Position = UDim2.fromScale(0.52, 0.60)
+			joinRoom.Size = UDim2.fromScale(0.40, 0.16)
+			roomMessage.Position = UDim2.fromScale(0.06, 0.79)
+			roomMessage.Size = UDim2.fromScale(0.88, 0.17)
+		end
 
 		-- MatchmakingPanel (right): cleanly below Header, no overlap with RoomPanel
 		matchmakingPanel.Position = UDim2.fromScale(0.72, 0.15)
 		matchmakingPanel.Size = UDim2.fromScale(0.26, 0.77)
-		matchmakingStatus.Position = UDim2.fromScale(0.06, 0.28)
-		matchmakingStatus.Size = UDim2.fromScale(0.88, 0.24)
+		if mmMode and mmMode:IsA("GuiObject") then
+			mmMode.Position = UDim2.fromScale(0.08, 0.18)
+			mmMode.Size = UDim2.fromScale(0.84, 0.12)
+		end
+		matchmakingStatus.Position = UDim2.fromScale(0.06, 0.32)
+		matchmakingStatus.Size = UDim2.fromScale(0.88, 0.22)
 		queueButton.Position = UDim2.fromScale(0.08, 0.58)
-		queueButton.Size = UDim2.fromScale(0.84, 0.18)
+		queueButton.Size = UDim2.fromScale(0.84, 0.17)
 		cancelQueueButton.Position = UDim2.fromScale(0.08, 0.78)
-		cancelQueueButton.Size = UDim2.fromScale(0.84, 0.18)
+		cancelQueueButton.Size = UDim2.fromScale(0.84, 0.17)
 		acceptMatchButton.Position = UDim2.fromScale(0.08, 0.58)
-		acceptMatchButton.Size = UDim2.fromScale(0.84, 0.18)
+		acceptMatchButton.Size = UDim2.fromScale(0.84, 0.17)
 		declineMatchButton.Position = UDim2.fromScale(0.08, 0.78)
-		declineMatchButton.Size = UDim2.fromScale(0.84, 0.18)
+		declineMatchButton.Size = UDim2.fromScale(0.84, 0.17)
 
 		-- ActionPanel (bottom center)
-		panel.Position = UDim2.fromScale(0.23, 0.70)
-		panel.Size = UDim2.fromScale(0.50, 0.27)
-		status.Position = UDim2.fromScale(0.04, 0.04)
-		status.Size = UDim2.fromScale(0.92, 0.18)
-		hint.Position = UDim2.fromScale(0.04, 0.24)
-		hint.Size = UDim2.fromScale(0.92, 0.16)
-		local primaryPos = UDim2.fromScale(0.04, 0.44)
-		local secondaryPos = UDim2.fromScale(0.52, 0.44)
-		local halfSize = UDim2.fromScale(0.44, 0.50)
-		local fullSize = UDim2.fromScale(0.92, 0.50)
+		status.Position = UDim2.new(0.04, 0, 0, 3)
+		status.Size = UDim2.new(0.92, 0, 0, 15)
+		hint.Position = UDim2.new(0.04, 0, 0, 18)
+		hint.Size = UDim2.new(0.92, 0, 0, 13)
 
+		local primaryPos = UDim2.new(0.50, 0, 0, 33)
+		local leftPos = UDim2.new(0.26, 0, 0, 33)
+		local rightPos = UDim2.new(0.74, 0, 0, 33)
+		local halfSize = UDim2.new(0.44, 0, 0, 30)
+		local fullSize = UDim2.new(0.92, 0, 0, 30)
+
+		buttons.Ready.AnchorPoint = Vector2.new(0.5, 0)
 		buttons.Ready.Position = primaryPos
 		buttons.Ready.Size = fullSize
+
+		buttons.Roll.AnchorPoint = Vector2.new(0.5, 0)
 		buttons.Roll.Position = primaryPos
 		buttons.Roll.Size = fullSize
+
 		for _, key in {"Buy", "Build"} do
-			buttons[key].Position = primaryPos
+			buttons[key].AnchorPoint = Vector2.new(0.5, 0)
+			buttons[key].Position = leftPos
 			buttons[key].Size = halfSize
 		end
 		for _, key in {"Skip", "SkipBuild", "Bail", "ReturnLobby"} do
-			buttons[key].Position = secondaryPos
+			buttons[key].AnchorPoint = Vector2.new(0.5, 0)
+			buttons[key].Position = rightPos
 			buttons[key].Size = halfSize
+		end
+
+		if botBtn and botBtn:IsA("GuiObject") then
+			botBtn.AnchorPoint = Vector2.new(0.5, 0)
+			botBtn.Position = UDim2.new(0.50, 0, 0, 66)
+			botBtn.Size = UDim2.new(0.92, 0, 0, 22)
 		end
 
 		-- HandPanel
@@ -955,6 +1048,17 @@ applyResponsiveLayout = function(viewport: Vector2)
 		-- Desktop layout
 		header.Position = desktopLayout.headerPos
 		header.Size = desktopLayout.headerSize
+		hRound.Position = desktopLayout.roundPos
+		hRound.Size = desktopLayout.roundSize
+		hProfile.Position = desktopLayout.profilePos
+		hProfile.Size = desktopLayout.profileSize
+		hConn.Position = desktopLayout.connPos
+		hConn.Size = desktopLayout.connSize
+		if muteBtn and muteBtn:IsA("GuiObject") then
+			muteBtn.Position = desktopLayout.mutePos
+			muteBtn.Size = desktopLayout.muteSize
+		end
+
 		roster.Position = desktopLayout.rosterPos
 		roster.Size = desktopLayout.rosterSize
 		for seat = 1, Rules.PlayerCount do
@@ -964,8 +1068,15 @@ applyResponsiveLayout = function(viewport: Vector2)
 		logPanel.Position = desktopLayout.logPos
 		logPanel.Size = desktopLayout.logSize
 
+		roomPanel.AnchorPoint = Vector2.new(0, 0)
 		roomPanel.Position = desktopLayout.roomPos
 		roomPanel.Size = desktopLayout.roomSize
+		roomHeading.Position = desktopLayout.roomHeadPos
+		roomHeading.Size = desktopLayout.roomHeadSize
+		roomDescription.Position = desktopLayout.roomDescPos
+		roomDescription.Size = desktopLayout.roomDescSize
+		roomInfo.Position = desktopLayout.roomInfoPos
+		roomInfo.Size = desktopLayout.roomInfoSize
 		roomCode.Position = desktopLayout.roomCodePos
 		roomCode.Size = desktopLayout.roomCodeSize
 		createRoom.Position = desktopLayout.createRoomPos
@@ -981,8 +1092,27 @@ applyResponsiveLayout = function(viewport: Vector2)
 		roomMessage.Position = desktopLayout.roomMessagePos
 		roomMessage.Size = desktopLayout.roomMessageSize
 
+		swapControls.Position = desktopLayout.swapPos
+		swapControls.Size = desktopLayout.swapSize
+		swapTarget.Position = desktopLayout.swapTargetPos
+		swapTarget.Size = desktopLayout.swapTargetSize
+		swapPrevious.Position = desktopLayout.swapPrevPos
+		swapPrevious.Size = desktopLayout.swapPrevSize
+		swapNext.Position = desktopLayout.swapNextPos
+		swapNext.Size = desktopLayout.swapNextSize
+		swapRequest.Position = desktopLayout.swapReqPos
+		swapRequest.Size = desktopLayout.swapReqSize
+		swapAccept.Position = desktopLayout.swapAccPos
+		swapAccept.Size = desktopLayout.swapAccSize
+		swapCancel.Position = desktopLayout.swapCanPos
+		swapCancel.Size = desktopLayout.swapCanSize
+
 		matchmakingPanel.Position = desktopLayout.mmPos
 		matchmakingPanel.Size = desktopLayout.mmSize
+		if mmMode and mmMode:IsA("GuiObject") then
+			mmMode.Position = desktopLayout.mmModePos
+			mmMode.Size = desktopLayout.mmModeSize
+		end
 		matchmakingStatus.Position = desktopLayout.mmStatusPos
 		matchmakingStatus.Size = desktopLayout.mmStatusSize
 		queueButton.Position = desktopLayout.queueBtnPos
@@ -994,6 +1124,7 @@ applyResponsiveLayout = function(viewport: Vector2)
 		declineMatchButton.Position = desktopLayout.declineBtnPos
 		declineMatchButton.Size = desktopLayout.declineBtnSize
 
+		panel.AnchorPoint = Vector2.new(0.5, 1)
 		panel.Position = desktopActionPanelPosition
 		panel.Size = desktopActionPanelSize
 		status.Position = desktopStatusPosition
@@ -1001,8 +1132,14 @@ applyResponsiveLayout = function(viewport: Vector2)
 		hint.Position = desktopHintPosition
 		hint.Size = desktopHintSize
 		for key, original in desktopActionButtons do
+			buttons[key].AnchorPoint = Vector2.new(0.5, 0)
 			buttons[key].Position = original.position
 			buttons[key].Size = original.size
+		end
+		if botBtn and botBtn:IsA("GuiObject") then
+			botBtn.AnchorPoint = Vector2.new(0.5, 0)
+			botBtn.Position = desktopLayout.botBtnPos
+			botBtn.Size = desktopLayout.botBtnSize
 		end
 
 		handPanel.Position = desktopLayout.handPanelPos
