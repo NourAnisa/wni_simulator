@@ -2,6 +2,7 @@
 -- BuildingVisualService.luau
 -- Bertanggung jawab membuat dan memperbarui visualisasi 3D bangunan properti dan gerbang tol di atas petak WNI Simulator.
 -- Tingkat Bangunan:
+-- Level 0: Bendera Tim (Tiang bendera & kain bendera tim tanda klaim kavling tanah)
 -- Level 1: Rumah Subsidi 1 (Rumah mungil atap genteng bata, pintu kayu, lis tim)
 -- Level 2: Rumah Subsidi 2 (Ekspansi rumah + kanopi baja ringan/carport, AC outdoor)
 -- Level 3: Rumah OKB (Villa modern mewah 2 lantai, balkon kaca, atap miring arsitektur)
@@ -44,6 +45,65 @@ local function makeWedge(parent: Instance, name: string, size: Vector3, cf: CFra
 	w.CastShadow = true
 	w.Parent = parent
 	return w
+end
+
+-- =========================================================================
+-- LEVEL 0: BENDERA KEPEMILIKAN TIM (Team Ownership Flag)
+-- =========================================================================
+-- Muncul saat kavling tanah kosong telah dibeli oleh tim (Level 0),
+-- menandai klaim teritorial sebelum didirikan Rumah Subsidi.
+local function createTeamFlag(tileCF: CFrame, teamColor: Color3, teamName: string): Model
+	local m = Instance.new("Model")
+	m.Name = "BenderaTim"
+
+	local origin = tileCF * CFrame.new(0, 0.4, 1.7)
+
+	-- Dudukan Tiang (Pedestal beton kokoh di atas petak)
+	local base = makePart(m, "FlagBase", Vector3.new(1.0, 0.25, 1.0), origin * CFrame.new(0, 0.125, 0), Color3.fromRGB(225, 225, 230), Enum.Material.Concrete)
+
+	-- Ring Pengikat Tiang (Stainless collar)
+	makePart(m, "PoleCollar", Vector3.new(0.35, 0.15, 0.35), origin * CFrame.new(0, 0.3, 0), Color3.fromRGB(180, 185, 190), Enum.Material.Metal)
+
+	-- Tiang Bendera Stainless Steel (Tinggi 2.8 stud)
+	makePart(m, "FlagPole", Vector3.new(0.14, 2.8, 0.14), origin * CFrame.new(0, 1.65, 0), Color3.fromRGB(235, 240, 245), Enum.Material.Metal)
+
+	-- Finial Puncak Tiang (Bola Emas Mengkilap)
+	makePart(m, "PoleFinial", Vector3.new(0.32, 0.32, 0.32), origin * CFrame.new(0, 3.12, 0), Color3.fromRGB(255, 215, 50), Enum.Material.Neon)
+
+	-- Kain Bendera Tim (Warna tim berkibar ke arah samping)
+	local flag = makePart(m, "FlagCloth", Vector3.new(1.5, 0.9, 0.06), origin * CFrame.new(0.75, 2.5, 0), teamColor, Enum.Material.Fabric)
+
+	-- Garis Aksen Putih pada Bendera
+	makePart(m, "FlagStripe", Vector3.new(1.5, 0.16, 0.08), origin * CFrame.new(0.75, 2.5, 0), Color3.fromRGB(255, 255, 255), Enum.Material.SmoothPlastic)
+
+	-- SurfaceGui depan & belakang menampilkan identitas Tim (A / B)
+	local function createFlagFace(face: Enum.NormalId)
+		local sg = Instance.new("SurfaceGui")
+		sg.Name = "FlagGui_" .. face.Name
+		sg.Face = face
+		sg.CanvasSize = Vector2.new(150, 90)
+		sg.AlwaysOnTop = false
+		sg.Parent = flag
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Text = "TIM " .. teamName
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		label.TextStrokeColor3 = Color3.fromRGB(20, 20, 20)
+		label.TextStrokeTransparency = 0.2
+		label.TextScaled = true
+		label.Font = Enum.Font.GothamBold
+		label.Parent = sg
+	end
+	createFlagFace(Enum.NormalId.Front)
+	createFlagFace(Enum.NormalId.Back)
+
+	-- Lis Pembatas Wilayah Tim (Plang / border neon kecil di tanah)
+	makePart(m, "TerritoryBorder", Vector3.new(2.4, 0.06, 0.3), origin * CFrame.new(0, 0.03, -0.85), teamColor, Enum.Material.Neon)
+
+	m.PrimaryPart = base
+	return m
 end
 
 -- =========================================================================
@@ -248,8 +308,8 @@ function BuildingVisualService.update(
 	local modelName = "B_" .. tostring(index)
 	local existing = buildingsFolder:FindFirstChild(modelName)
 
-	-- Jika tidak ada bangunan dan bukan tol, bersihkan jika ada
-	if level == 0 and not isToll then
+	-- Jika tidak ada bangunan, bukan tol, dan bukan milik tim, bersihkan jika ada
+	if level == 0 and not isToll and not team then
 		if existing then
 			existing:Destroy()
 		end
@@ -274,6 +334,8 @@ function BuildingVisualService.update(
 
 	if isToll then
 		newModel = createGerbangTol(tile.CFrame)
+	elseif level == 0 and team then
+		newModel = createTeamFlag(tile.CFrame, teamColor, team)
 	elseif level == 1 then
 		newModel = createSubsidi1(tile.CFrame, teamColor)
 	elseif level == 2 then
