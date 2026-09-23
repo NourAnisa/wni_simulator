@@ -34,9 +34,13 @@ local originalColors: {Color3} = {}
 local tileSubtitles: {[number]: TextLabel} = {}
 local originalSubtitles: {[number]: string} = {}
 local originalSubtitleColors: {[number]: Color3} = {}
-local buildingsFolder = Instance.new("Folder")
-buildingsFolder.Name = "Buildings"
-buildingsFolder.Parent = board
+local buildingsFolder = (board:FindFirstChild("Buildings") :: Folder?)
+if not buildingsFolder or not buildingsFolder:IsA("Folder") then
+	local created = Instance.new("Folder")
+	created.Name = "Buildings"
+	created.Parent = board
+	buildingsFolder = created
+end
 local definitions: {Engine.Tile} = {}
 for index = 1, Rules.TileCount do
 	local tile = child(tileFolder, string.format("Tile_%02d", index))
