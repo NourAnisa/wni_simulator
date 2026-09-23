@@ -563,12 +563,12 @@ local function refresh(snap: any)
 		hRound.Text = "Ronde " .. snap.round .. " / " .. Rules.MaxRounds
 	end
 	hSub.Text = if over and #snap.result > 0 then snap.result else (PHASES[phase] or phase)
-	hConn.Text = "Server tersinkron (rev " .. snap.revision .. ")"
+	hConn.Text = "🟢 Online"
 	local profile = snap.profile
 	if typeof(profile) == "table" then
-		hProfile.Text = string.format("Match %d  •  W %d  L %d  D %d", profile.matches or 0, profile.wins or 0, profile.losses or 0, profile.draws or 0)
+		hProfile.Text = string.format("🏆 %d Menang  •  💀 %d Kalah  (Main: %d)", profile.wins or 0, profile.losses or 0, profile.matches or 0)
 	else
-		hProfile.Text = "Match 0  •  W 0  L 0  D 0"
+		hProfile.Text = "🏆 0 Menang  •  💀 0 Kalah  (Main: 0)"
 	end
 
 	local readyCount = 0
