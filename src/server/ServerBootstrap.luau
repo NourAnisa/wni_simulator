@@ -98,9 +98,13 @@ local MatchAdmissionService = require(admissionModule)
 local MatchRoutingService = require(routingModule)
 local GlobalMatchmakingService = require(globalMatchmakingModule)
 local avatarPawnModule = child(script.Parent, "AvatarPawnService")
+local botAIModule = child(script.Parent, "BotAIService")
 assert(avatarPawnModule:IsA("ModuleScript"), "AvatarPawnService missing")
+assert(botAIModule:IsA("ModuleScript"), "BotAIService missing")
 local AvatarPawnService = require(avatarPawnModule)
+local BotAIService = require(botAIModule)
 local avatarPawns = AvatarPawnService.new()
+local botAI = BotAIService.new()
 local rooms = RoomService.new(function() return Engine.new(definitions) end)
 local profiles = ProfileService.new()
 local routing = MatchRoutingService.new()
@@ -242,6 +246,7 @@ local function recordFinishedMatch()
 		winningTeam = "B"
 	end
 	for _, participant in engine.players do
+		if participant.isBot == true then continue end
 		local outcome = if winningTeam == nil then "draw" elseif participant.team == winningTeam then "win" else "loss"
 		task.spawn(function()
 			profiles:recordMatch(participant.userId, matchId, outcome)
@@ -602,6 +607,15 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		synchronize(player, "Target tanah tidak berlaku untuk aksi ini.")
 		return
 	end
+	if action == "Ready" and not isMatchPlace and engine.phase == "Waiting" and rooms:count() < Rules.PlayerCount then
+		if revision ~= engine.revision then
+			synchronize(player, "Keadaan berubah; coba kembali.")
+			return
+		end
+		botAI:fillEmptySeats(rooms, now)
+		botAI:readyWaitingBots(rooms, now)
+		revision = engine.revision
+	end
 	local ok, message = engine:handle(player.UserId, action, revision, now, targetTile)
 	if ok then broadcast() else synchronize(player, message) end
 end)
@@ -753,7 +767,8 @@ task.spawn(function()
 		end
 		local engineChanged = false
 		if not rooms:hasReconnectGrace() then
-			engineChanged = engine:tick(now)
+			engineChanged = botAI:tick(rooms, now)
+			if not engineChanged then engineChanged = engine:tick(now) end
 		end
 		local matchmakingChanged = false
 		if useGlobalMatchmaking then
