@@ -147,6 +147,8 @@ local victoryUI = {
 	rematch = waitFor(victoryContent, "Rematch") :: TextButton,
 	returnLobby = waitFor(victoryContent, "ReturnLobby") :: TextButton,
 }
+local trophyBanner = victoryContent:FindFirstChild("TrophyBanner") :: TextLabel?
+local trophyStroke = if trophyBanner then trophyBanner:FindFirstChild("TrophyStroke") :: UIStroke? else nil
 local buildPicker = waitFor(propertyPanel, "BuildPicker") :: Frame
 local previousBuild = waitFor(buildPicker, "Previous") :: TextButton
 local nextBuild = waitFor(buildPicker, "Next") :: TextButton
@@ -1359,13 +1361,17 @@ local function refreshVictoryContent(snap: any)
 	local resultText = tostring(snap.result or "")
 	local winnerA = string.find(resultText, "TIM A MENANG", 1, true) ~= nil
 	local winnerB = string.find(resultText, "TIM B MENANG", 1, true) ~= nil
-	if winnerA or winnerB then
-		trophyBanner.Text = "\u{1F3C6}  " .. resultText
-		trophyBanner.TextColor3 = if winnerA then Color3.fromRGB(174, 221, 202) else Color3.fromRGB(242, 196, 167)
-		trophyStroke.Color = if winnerA then Color3.fromRGB(80, 170, 140) else Color3.fromRGB(214, 130, 90)
-		trophyBanner.Visible = true
-	else
-		trophyBanner.Visible = false
+	if trophyBanner then
+		if winnerA or winnerB then
+			trophyBanner.Text = "\u{1F3C6}  " .. resultText
+			trophyBanner.TextColor3 = if winnerA then Color3.fromRGB(174, 221, 202) else Color3.fromRGB(242, 196, 167)
+			if trophyStroke then
+				trophyStroke.Color = if winnerA then Color3.fromRGB(80, 170, 140) else Color3.fromRGB(214, 130, 90)
+			end
+			trophyBanner.Visible = true
+		else
+			trophyBanner.Visible = false
+		end
 	end
 	victoryUI.status.Text = if typeof(snap.result) == "string" and #snap.result > 0 then snap.result else "Hasil pertandingan telah ditetapkan server."
 	victoryUI.scores.Text = "SALDO AKHIR TIM\nTim A  •  " .. Rules.formatMoney(teamA) .. "\nTim B  •  " .. Rules.formatMoney(teamB)
