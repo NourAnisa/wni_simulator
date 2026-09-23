@@ -1320,11 +1320,44 @@ local diceSound = waitFor(uiSounds, "Dice") :: Sound
 local cardSound = waitFor(uiSounds, "Card") :: Sound
 
 local function playUISound(sound: Sound)
+	if root:GetAttribute("AudioMuted") == true then return end
 	sound:Stop()
 	sound.TimePosition = 0
 	sound:Play()
 end
 
+local cameraFollow = false
+local cameraTween: Tween? = nil
+local overviewCF: CFrame? = nil
+local function overviewCFrame(): CFrame
+	local cam = WS.CurrentCamera
+	if cam and overviewCF then return overviewCF end
+	local board = WS:FindFirstChild("WNIBoard")
+	local pivot = board and board:GetPivot() or CFrame.new(9, 9, 8)
+	return CFrame.new(pivot.Position + Vector3.new(0, 132, 72), pivot.Position)
+end
+local function tweenCameraTo(targetCF: CFrame, duration: number)
+	local cam = WS.CurrentCamera
+	if not cam then return end
+	if cameraTween then cameraTween:Cancel() end
+	cameraTween = TweenService:Create(cam, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {CFrame = targetCF})
+	cameraTween:Play()
+end
+local function focusTile(position: number)
+	if not cameraFollow then return end
+	local board = WS:FindFirstChild("WNIBoard")
+	local tilesFolder = board and board:FindFirstChild("Tiles")
+	local tile = tilesFolder and tilesFolder:FindFirstChild(string.format("Tile_%02d", position))
+	local anchor = tile and tile:FindFirstChild("PawnAnchor")
+	local cam = WS.CurrentCamera
+	if not (anchor and cam) then return end
+	local tilePos = anchor.WorldPosition
+	tweenCameraTo(CFrame.new(tilePos + Vector3.new(0, 9, 9), tilePos), 0.5)
+end
+local function restoreOverview()
+	if not cameraFollow then return end
+	tweenCameraTo(overviewCFrame(), 0.7)
+end
 local boundSfxButtons: {[TextButton]: boolean} = {}
 local function bindButtonSfx(instance: Instance)
 	if not instance:IsA("TextButton") or boundSfxButtons[instance] then return end
@@ -1345,6 +1378,27 @@ cardToast:GetPropertyChangedSignal("Visible"):Connect(function()
 end)
 
 local tutorial = waitFor(root, "TutorialPanel") :: Frame
+local muteButton = header:FindFirstChild("MuteButton") :: TextButton?
+if muteButton then
+	muteButton.Activated:Connect(function()
+		local gui = root.Parent
+		local soundsFolder = gui and gui:FindFirstChild("UISounds")
+		local isMuted = muteButton:GetAttribute("Muted") == true
+		isMuted = not isMuted
+		muteButton:SetAttribute("Muted", isMuted)
+		muteButton.Text = if isMuted then "🔇" else "🔊"
+		if soundsFolder then
+			for _, s in ipairs(soundsFolder:GetChildren()) do
+				if s:IsA("Sound") then
+					if not s:GetAttribute("OriginalVol") then
+						s:SetAttribute("OriginalVol", s.Volume)
+					end
+					s.Volume = if isMuted then 0 else (s:GetAttribute("OriginalVol") or 0.5)
+				end
+			end
+		end
+	end)
+end
 local tutorialFade = waitFor(tutorial, "FadeGroup") :: CanvasGroup
 local tutorialCard = waitFor(tutorialFade, "Card") :: Frame
 local tutorialUI = {
