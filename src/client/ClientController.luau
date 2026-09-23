@@ -597,10 +597,10 @@ local function refresh(snap: any)
 			v.team.TextColor3 = TEAMC[p.team] or Color3.new(1, 1, 1)
 			v.frame.BackgroundColor3 = if seat == activeSeat then v.base:Lerp(Color3.new(1, 1, 1), 0.35) else v.base
 		else
-			v.name.Text = "Kursi kosong"
-			v.balance.Text = "-"
-			v.team.Text = "Kursi " .. seat
-			v.team.TextColor3 = OFFC
+			v.name.Text = "Kursi " .. seat
+			v.balance.Text = "Menunggu pemain..."
+			v.team.Text = if seat % 2 == 1 then "TIM A" else "TIM B"
+			v.team.TextColor3 = TEAMC[if seat % 2 == 1 then "A" else "B"] or OFFC
 			v.frame.BackgroundColor3 = v.base
 		end
 	end
