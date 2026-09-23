@@ -434,6 +434,11 @@ declineMatchButton.Activated:Connect(function() if declineMatchButton.Active the
 local function refreshRoom(snap: any)
 	local room = snap.room
 	if typeof(room) ~= "table" then roomPanel.Visible = false; return end
+	local inMatch = snap.phase ~= "Waiting" and snap.phase ~= "Finished" and snap.phase ~= "Cancelled"
+	if inMatch then
+		roomPanel.Visible = false
+		return
+	end
 	local mm = snap.matchmaking
 	local matchmakingLocked = typeof(mm) == "table" and (mm.queued == true or mm.matchFound == true)
 	local member = room.member == true
@@ -1509,7 +1514,8 @@ local function initPolishUI()
 	local lastBotRequest = -math.huge
 	refreshBotButton = function(snap: any)
 		local room = snap.room
-		local show = typeof(room) == "table" and room.member == true and room.phase == "Waiting" and room.count < room.capacity
+		local inMatch = snap.phase ~= "Waiting" and snap.phase ~= "Finished" and snap.phase ~= "Cancelled"
+		local show = not inMatch and typeof(room) == "table" and room.member == true and room.phase == "Waiting" and room.count < room.capacity
 		botButton.Visible = show
 		botButton.Active = show
 		botButton.Selectable = show
