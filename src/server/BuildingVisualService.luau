@@ -31,6 +31,40 @@ local function makePart(parent: Instance, name: string, size: Vector3, cf: CFram
 	return p
 end
 
+local function makeCylinder(parent: Instance, name: string, length: number, radius: number, cf: CFrame, color: Color3, mat: Enum.Material?): Part
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Shape = Enum.PartType.Cylinder
+	p.Size = Vector3.new(length, radius * 2, radius * 2)
+	p.CFrame = cf * CFrame.Angles(0, 0, math.rad(90))
+	p.Color = color
+	p.Material = mat or Enum.Material.SmoothPlastic
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanTouch = false
+	p.CanQuery = false
+	p.CastShadow = true
+	p.Parent = parent
+	return p
+end
+
+local function makeSphere(parent: Instance, name: string, diameter: number, cf: CFrame, color: Color3, mat: Enum.Material?): Part
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Shape = Enum.PartType.Ball
+	p.Size = Vector3.new(diameter, diameter, diameter)
+	p.CFrame = cf
+	p.Color = color
+	p.Material = mat or Enum.Material.SmoothPlastic
+	p.Anchored = true
+	p.CanCollide = false
+	p.CanTouch = false
+	p.CanQuery = false
+	p.CastShadow = true
+	p.Parent = parent
+	return p
+end
+
 local function makeWedge(parent: Instance, name: string, size: Vector3, cf: CFrame, color: Color3, mat: Enum.Material?): WedgePart
 	local w = Instance.new("WedgePart")
 	w.Name = name
@@ -58,17 +92,17 @@ local function createTeamFlag(tileCF: CFrame, teamColor: Color3, teamName: strin
 
 	local origin = tileCF * CFrame.new(0, 0.4, 1.7)
 
-	-- Dudukan Tiang (Pedestal beton kokoh di atas petak)
-	local base = makePart(m, "FlagBase", Vector3.new(1.0, 0.25, 1.0), origin * CFrame.new(0, 0.125, 0), Color3.fromRGB(225, 225, 230), Enum.Material.Concrete)
+	-- Dudukan Tiang (Pedestal silinder beton halus di atas petak)
+	local base = makeCylinder(m, "FlagBase", 0.25, 0.6, origin * CFrame.new(0, 0.125, 0), Color3.fromRGB(225, 225, 230), Enum.Material.Concrete)
 
-	-- Ring Pengikat Tiang (Stainless collar)
-	makePart(m, "PoleCollar", Vector3.new(0.35, 0.15, 0.35), origin * CFrame.new(0, 0.3, 0), Color3.fromRGB(180, 185, 190), Enum.Material.Metal)
+	-- Ring Pengikat Tiang (Stainless collar silinder)
+	makeCylinder(m, "PoleCollar", 0.15, 0.22, origin * CFrame.new(0, 0.3, 0), Color3.fromRGB(180, 185, 190), Enum.Material.Metal)
 
-	-- Tiang Bendera Stainless Steel (Tinggi 2.8 stud)
-	makePart(m, "FlagPole", Vector3.new(0.14, 2.8, 0.14), origin * CFrame.new(0, 1.65, 0), Color3.fromRGB(235, 240, 245), Enum.Material.Metal)
+	-- Tiang Bendera Stainless Steel (Silinder mulus, tinggi 2.8 stud)
+	makeCylinder(m, "FlagPole", 2.8, 0.08, origin * CFrame.new(0, 1.65, 0), Color3.fromRGB(235, 240, 245), Enum.Material.Metal)
 
 	-- Finial Puncak Tiang (Bola Emas Mengkilap)
-	makePart(m, "PoleFinial", Vector3.new(0.32, 0.32, 0.32), origin * CFrame.new(0, 3.12, 0), Color3.fromRGB(255, 215, 50), Enum.Material.Neon)
+	makeSphere(m, "PoleFinial", 0.36, origin * CFrame.new(0, 3.12, 0), Color3.fromRGB(255, 215, 50), Enum.Material.Neon)
 
 	-- Kain Bendera Tim (Warna tim berkibar ke arah samping)
 	local flag = makePart(m, "FlagCloth", Vector3.new(1.5, 0.9, 0.06), origin * CFrame.new(0.75, 2.5, 0), teamColor, Enum.Material.Fabric)
@@ -227,8 +261,8 @@ local function createOKB(tileCF: CFrame, teamColor: Color3): Model
 	-- Pintu Mewah Utama Lantai 1 (Pintu geser kayu lebar)
 	makePart(m, "LuxuryDoor", Vector3.new(0.85, 0.95, 0.05), origin * CFrame.new(-0.65, -0.75, -1.11), Color3.fromRGB(45, 25, 15), Enum.Material.WoodPlanks)
 
-	-- Pilar Teras Marmer
-	makePart(m, "Pillar", Vector3.new(0.2, 1.2, 0.2), origin * CFrame.new(1.2, -0.65, -1.1), Color3.fromRGB(230, 230, 230), Enum.Material.Marble)
+	-- Pilar Teras Marmer (Silinder marmer mulus)
+	makeCylinder(m, "Pillar", 1.2, 0.12, origin * CFrame.new(1.2, -0.65, -1.1), Color3.fromRGB(230, 230, 230), Enum.Material.Marble)
 
 	-- Lampu Warm / Sorot Fasad
 	makePart(m, "WarmLightStrip", Vector3.new(1.5, 0.08, 0.08), origin * CFrame.new(0.2, -0.1, -1.11), Color3.fromRGB(255, 230, 160), Enum.Material.Neon)
@@ -251,9 +285,9 @@ local function createGerbangTol(tileCF: CFrame): Model
 	-- Diletakkan melintang pas di atas petak
 	local origin = tileCF * CFrame.new(0, 0.4 + 1.2, 0)
 
-	-- Tiang Kiri & Kanan (Hazard Yellow / Black Striped)
-	local pL = makePart(m, "PillarLeft", Vector3.new(0.5, 2.4, 0.5), origin * CFrame.new(-2.2, 0, 0), Color3.fromRGB(240, 190, 30), Enum.Material.Metal)
-	local pR = makePart(m, "PillarRight", Vector3.new(0.5, 2.4, 0.5), origin * CFrame.new(2.2, 0, 0), Color3.fromRGB(240, 190, 30), Enum.Material.Metal)
+	-- Tiang Kiri & Kanan (Pilar pipa baja silinder melingkar)
+	local pL = makeCylinder(m, "PillarLeft", 2.4, 0.25, origin * CFrame.new(-2.2, 0, 0), Color3.fromRGB(240, 190, 30), Enum.Material.Metal)
+	local pR = makeCylinder(m, "PillarRight", 2.4, 0.25, origin * CFrame.new(2.2, 0, 0), Color3.fromRGB(240, 190, 30), Enum.Material.Metal)
 
 	-- Palang Atap Gantry Tol (Biru Highway PUPR)
 	local gantry = makePart(m, "GantryBeam", Vector3.new(5.2, 0.7, 0.9), origin * CFrame.new(0, 1.2, 0), Color3.fromRGB(25, 75, 165), Enum.Material.Metal)
@@ -277,12 +311,12 @@ local function createGerbangTol(tileCF: CFrame): Model
 	tb.Font = Enum.Font.GothamBlack
 	tb.Parent = sg
 
-	-- Palang Tol (Boom Barrier) Merah Putih Menutup Jalan
-	local barrierBar = makePart(m, "BoomBarrier", Vector3.new(3.8, 0.18, 0.18), origin * CFrame.new(0, -0.4, -0.3), Color3.fromRGB(220, 40, 30), Enum.Material.Neon)
+	-- Palang Tol (Boom Barrier) Merah Putih Menutup Jalan (Silinder pipa palang bulat)
+	local barrierBar = makeCylinder(m, "BoomBarrier", 3.8, 0.1, origin * CFrame.new(0, -0.4, -0.3) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(220, 40, 30), Enum.Material.Neon)
 
-	-- Garis Putih pada Palang Tol
-	makePart(m, "Stripe1", Vector3.new(0.6, 0.2, 0.2), origin * CFrame.new(-1.0, -0.4, -0.3), Color3.fromRGB(255, 255, 255), Enum.Material.SmoothPlastic)
-	makePart(m, "Stripe2", Vector3.new(0.6, 0.2, 0.2), origin * CFrame.new(0.3, -0.4, -0.3), Color3.fromRGB(255, 255, 255), Enum.Material.SmoothPlastic)
+	-- Garis Putih pada Palang Tol (Silinder cincin putih)
+	makeCylinder(m, "Stripe1", 0.6, 0.11, origin * CFrame.new(-1.0, -0.4, -0.3) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(255, 255, 255), Enum.Material.SmoothPlastic)
+	makeCylinder(m, "Stripe2", 0.6, 0.11, origin * CFrame.new(0.3, -0.4, -0.3) * CFrame.Angles(0, 0, math.rad(90)), Color3.fromRGB(255, 255, 255), Enum.Material.SmoothPlastic)
 
 	-- Mesin Tapping Kartu Tol
 	makePart(m, "TapBooth", Vector3.new(0.4, 0.8, 0.5), origin * CFrame.new(-1.6, -0.8, -0.3), Color3.fromRGB(40, 45, 50), Enum.Material.Metal)

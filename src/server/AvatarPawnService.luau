@@ -50,6 +50,39 @@ local function createSeatBadge(head: BasePart, seat: number): BillboardGui
 	return badge
 end
 
+local function createPawnPedestal(model: Model, seat: number)
+	local root = model.PrimaryPart
+	if not root then return end
+
+	local teamColor = (seat == 1 or seat == 3) and Color3.fromRGB(75, 215, 195) or Color3.fromRGB(255, 160, 55)
+
+	local base = Instance.new("Part")
+	base.Name = "PawnPedestal"
+	base.Shape = Enum.PartType.Cylinder
+	base.Size = Vector3.new(0.2, 1.8, 1.8)
+	base.CFrame = root.CFrame * CFrame.new(0, -1.1, 0) * CFrame.Angles(0, 0, math.rad(90))
+	base.Color = Color3.fromRGB(30, 36, 45)
+	base.Material = Enum.Material.SmoothPlastic
+	base.Anchored = true
+	base.CanCollide = false
+	base.CanTouch = false
+	base.CanQuery = false
+	base.Parent = model
+
+	local ring = Instance.new("Part")
+	ring.Name = "PedestalNeonRing"
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.08, 1.95, 1.95)
+	ring.CFrame = base.CFrame
+	ring.Color = teamColor
+	ring.Material = Enum.Material.Neon
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.CanTouch = false
+	ring.CanQuery = false
+	ring.Parent = model
+end
+
 local function prepareModel(model: Model)
 	model:ScaleTo(PAWN_SCALE)
 
@@ -137,6 +170,7 @@ function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition
 	if head and head:IsA("BasePart") then
 		createSeatBadge(head, seat)
 	end
+	createPawnPedestal(model, seat)
 
 	model:PivotTo(startPosition)
 	local board = Workspace:WaitForChild("WNIBoard", 5)
