@@ -99,7 +99,8 @@ local propTile = waitFor(waitFor(root, "PropertyPanel"), "TileName") :: TextLabe
 local propDetail = waitFor(waitFor(root, "PropertyPanel"), "Details") :: TextLabel
 local dicePanel = waitFor(root, "DicePanel") :: Frame
 local diceText = waitFor(dicePanel, "Result") :: TextLabel
-local logText = waitFor(waitFor(root, "LogPanel"), "Entries") :: TextLabel
+local logPanel = waitFor(root, "LogPanel") :: Frame
+local logText = waitFor(logPanel, "Entries") :: TextLabel
 
 local TEAMC: {[string]: Color3} = {A = Color3.fromRGB(174, 221, 202), B = Color3.fromRGB(242, 196, 167)}
 local HINTC = hint.TextColor3
@@ -180,6 +181,8 @@ local refreshBotButton: any = nil
 local showActionBanner: any = nil
 local focusTile: any = nil
 local restoreOverview: any = nil
+local cameraToggle: TextButton? = nil
+local applyResponsiveLayout: any = nil
 
 local function send(action: string)
 	local snap = latest
@@ -783,84 +786,235 @@ local nextChoice = waitFor(handPanel, "NextChoice") :: TextButton
 local closeHand = waitFor(handPanel, "Close") :: TextButton
 local skipCardChoice = waitFor(handPanel, "SkipChoice") :: TextButton
 
-if mobileTouchMode then
-	-- Mobile uses landscape only and larger, phase-specific touch targets.
-	matchmakingPanel.Position = UDim2.fromScale(0.72, 0.12)
-	matchmakingPanel.Size = UDim2.fromScale(0.27, 0.70)
-	matchmakingStatus.Position = UDim2.fromScale(0.08, 0.32)
-	matchmakingStatus.Size = UDim2.fromScale(0.84, 0.20)
-	queueButton.Position = UDim2.fromScale(0.08, 0.58)
-	queueButton.Size = UDim2.fromScale(0.84, 0.20)
-	cancelQueueButton.Position = UDim2.fromScale(0.08, 0.79)
-	cancelQueueButton.Size = UDim2.fromScale(0.84, 0.20)
-	acceptMatchButton.Position = UDim2.fromScale(0.08, 0.58)
-	acceptMatchButton.Size = UDim2.fromScale(0.84, 0.20)
-	declineMatchButton.Position = UDim2.fromScale(0.08, 0.79)
-	declineMatchButton.Size = UDim2.fromScale(0.84, 0.20)
+local desktopLayout = {
+	headerPos = header.Position,
+	headerSize = header.Size,
+	rosterPos = roster.Position,
+	rosterSize = roster.Size,
+	logPos = logPanel.Position,
+	logSize = logPanel.Size,
+	seatPos = {} :: {[number]: UDim2},
+	seatSize = {} :: {[number]: UDim2},
+	roomPos = roomPanel.Position,
+	roomSize = roomPanel.Size,
+	roomCodePos = roomCode.Position,
+	roomCodeSize = roomCode.Size,
+	createRoomPos = createRoom.Position,
+	createRoomSize = createRoom.Size,
+	joinRoomPos = joinRoom.Position,
+	joinRoomSize = joinRoom.Size,
+	leaveRoomPos = leaveRoom.Position,
+	leaveRoomSize = leaveRoom.Size,
+	teamAPos = teamButtons.A.Position,
+	teamASize = teamButtons.A.Size,
+	teamBPos = teamButtons.B.Position,
+	teamBSize = teamButtons.B.Size,
+	roomMessagePos = roomMessage.Position,
+	roomMessageSize = roomMessage.Size,
+	mmPos = matchmakingPanel.Position,
+	mmSize = matchmakingPanel.Size,
+	mmStatusPos = matchmakingStatus.Position,
+	mmStatusSize = matchmakingStatus.Size,
+	queueBtnPos = queueButton.Position,
+	queueBtnSize = queueButton.Size,
+	cancelBtnPos = cancelQueueButton.Position,
+	cancelBtnSize = cancelQueueButton.Size,
+	acceptBtnPos = acceptMatchButton.Position,
+	acceptBtnSize = acceptMatchButton.Size,
+	declineBtnPos = declineMatchButton.Position,
+	declineBtnSize = declineMatchButton.Size,
+	handPanelPos = handPanel.Position,
+	handPanelSize = handPanel.Size,
+	handButtonPos = handButton.Position,
+	handButtonSize = handButton.Size,
+}
+for s = 1, Rules.PlayerCount do
+	desktopLayout.seatPos[s] = seats[s].frame.Position
+	desktopLayout.seatSize[s] = seats[s].frame.Size
+end
 
-	roomPanel.Position = UDim2.fromScale(0.245, 0.11)
-	roomPanel.Size = UDim2.fromScale(0.51, 0.70)
-	roomCode.Position = UDim2.fromScale(0.10, 0.50)
-	roomCode.Size = UDim2.fromScale(0.80, 0.16)
-	createRoom.Position = UDim2.fromScale(0.10, 0.70)
-	createRoom.Size = UDim2.fromScale(0.38, 0.20)
-	joinRoom.Position = UDim2.fromScale(0.52, 0.70)
-	joinRoom.Size = UDim2.fromScale(0.38, 0.20)
-	leaveRoom.Position = UDim2.fromScale(0.25, 0.70)
-	leaveRoom.Size = UDim2.fromScale(0.50, 0.20)
-	teamButtons.A.Position = UDim2.fromScale(0.10, 0.56)
-	teamButtons.A.Size = UDim2.fromScale(0.38, 0.20)
-	teamButtons.B.Position = UDim2.fromScale(0.52, 0.56)
-	teamButtons.B.Size = UDim2.fromScale(0.38, 0.20)
-	swapControls.Position = UDim2.fromScale(0.06, 0.10)
-	swapControls.Size = UDim2.fromScale(0.88, 0.42)
-	swapPrevious.Position = UDim2.fromScale(0, 0)
-	swapPrevious.Size = UDim2.fromScale(0.14, 0.50)
-	swapNext.Position = UDim2.fromScale(0.86, 0)
-	swapNext.Size = UDim2.fromScale(0.14, 0.50)
-	swapTarget.Position = UDim2.fromScale(0.16, 0)
-	swapTarget.Size = UDim2.fromScale(0.68, 0.50)
-	swapRequest.Position = UDim2.fromScale(0.20, 0.54)
-	swapRequest.Size = UDim2.fromScale(0.60, 0.46)
-	swapAccept.Position = UDim2.fromScale(0.02, 0.54)
-	swapAccept.Size = UDim2.fromScale(0.46, 0.46)
-	swapCancel.Position = UDim2.fromScale(0.52, 0.54)
-	swapCancel.Size = UDim2.fromScale(0.46, 0.46)
+applyResponsiveLayout = function(viewport: Vector2)
+	local isMobile = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or viewport.Y <= 550 or viewport.X <= 1000
+	mobileTouchMode = isMobile
 
-	buildPicker.Position = UDim2.fromScale(0.06, 0.66)
-	buildPicker.Size = UDim2.fromScale(0.88, 0.28)
-	previousBuild.Size = UDim2.fromScale(0.30, 1)
-	nextBuild.Position = UDim2.fromScale(0.70, 0)
-	nextBuild.Size = UDim2.fromScale(0.30, 1)
-	buildCount.Position = UDim2.fromScale(0.32, 0)
-	buildCount.Size = UDim2.fromScale(0.36, 1)
+	if isMobile then
+		-- Header: offset past Roblox TopBar buttons (Roblox menu + Chat)
+		header.Position = UDim2.new(0, 115, 0, 6)
+		header.Size = UDim2.new(1, -135, 0, 42)
 
-	handPanel.Position = UDim2.fromScale(0.20, 0.10)
-	handPanel.Size = UDim2.fromScale(0.60, 0.72)
-	closeHand.Position = UDim2.fromScale(0.84, 0.03)
-	closeHand.Size = UDim2.fromScale(0.12, 0.18)
-	previousCard.Position = UDim2.fromScale(0.04, 0.16)
-	previousCard.Size = UDim2.fromScale(0.12, 0.18)
-	nextCard.Position = UDim2.fromScale(0.84, 0.16)
-	nextCard.Size = UDim2.fromScale(0.12, 0.18)
-	previousChoice.Position = UDim2.fromScale(0.04, 0.54)
-	previousChoice.Size = UDim2.fromScale(0.12, 0.18)
-	nextChoice.Position = UDim2.fromScale(0.84, 0.54)
-	nextChoice.Size = UDim2.fromScale(0.12, 0.18)
-	handName.Position = UDim2.fromScale(0.19, 0.16)
-	handName.Size = UDim2.fromScale(0.62, 0.18)
-	handDescription.Position = UDim2.fromScale(0.06, 0.35)
-	handDescription.Size = UDim2.fromScale(0.88, 0.18)
-	handChoice.Position = UDim2.fromScale(0.19, 0.54)
-	handChoice.Size = UDim2.fromScale(0.62, 0.18)
-	handMessage.Position = UDim2.fromScale(0.06, 0.73)
-	handMessage.Size = UDim2.fromScale(0.88, 0.07)
-	useCard.Position = UDim2.fromScale(0.20, 0.81)
-	useCard.Size = UDim2.fromScale(0.60, 0.18)
-	skipCardChoice.Position = UDim2.fromScale(0.58, 0.81)
-	skipCardChoice.Size = UDim2.fromScale(0.38, 0.18)
-	handButton.Position = UDim2.fromScale(0.77, 0.82)
-	handButton.Size = UDim2.fromScale(0.21, 0.14)
+		-- Roster & LogPanel: both fit neatly vertically on left side
+		roster.Position = UDim2.new(0.015, 0, 0, 52)
+		roster.Size = UDim2.new(0.19, 0, 0.48, 0)
+		for seat = 1, Rules.PlayerCount do
+			seats[seat].frame.Position = UDim2.new(0.05, 0, 0.12 + (seat - 1) * 0.22, 0)
+			seats[seat].frame.Size = UDim2.new(0.90, 0, 0.19, 0)
+		end
+
+		logPanel.Position = UDim2.new(0.015, 0, 0.52, 0)
+		logPanel.Size = UDim2.new(0.19, 0, 0.45, 0)
+
+		-- RoomPanel (center): cleanly below Header, no overlap with MatchmakingPanel
+		roomPanel.Position = UDim2.fromScale(0.22, 0.15)
+		roomPanel.Size = UDim2.fromScale(0.48, 0.77)
+		roomCode.Position = UDim2.fromScale(0.08, 0.44)
+		roomCode.Size = UDim2.fromScale(0.84, 0.14)
+		createRoom.Position = UDim2.fromScale(0.08, 0.62)
+		createRoom.Size = UDim2.fromScale(0.40, 0.16)
+		joinRoom.Position = UDim2.fromScale(0.52, 0.62)
+		joinRoom.Size = UDim2.fromScale(0.40, 0.16)
+		leaveRoom.Position = UDim2.fromScale(0.20, 0.62)
+		leaveRoom.Size = UDim2.fromScale(0.60, 0.16)
+		teamButtons.A.Position = UDim2.fromScale(0.08, 0.62)
+		teamButtons.A.Size = UDim2.fromScale(0.40, 0.16)
+		teamButtons.B.Position = UDim2.fromScale(0.52, 0.62)
+		teamButtons.B.Size = UDim2.fromScale(0.40, 0.16)
+		roomMessage.Position = UDim2.fromScale(0.06, 0.81)
+		roomMessage.Size = UDim2.fromScale(0.88, 0.16)
+
+		-- MatchmakingPanel (right): cleanly below Header, no overlap with RoomPanel
+		matchmakingPanel.Position = UDim2.fromScale(0.72, 0.15)
+		matchmakingPanel.Size = UDim2.fromScale(0.26, 0.77)
+		matchmakingStatus.Position = UDim2.fromScale(0.06, 0.28)
+		matchmakingStatus.Size = UDim2.fromScale(0.88, 0.24)
+		queueButton.Position = UDim2.fromScale(0.08, 0.58)
+		queueButton.Size = UDim2.fromScale(0.84, 0.18)
+		cancelQueueButton.Position = UDim2.fromScale(0.08, 0.78)
+		cancelQueueButton.Size = UDim2.fromScale(0.84, 0.18)
+		acceptMatchButton.Position = UDim2.fromScale(0.08, 0.58)
+		acceptMatchButton.Size = UDim2.fromScale(0.84, 0.18)
+		declineMatchButton.Position = UDim2.fromScale(0.08, 0.78)
+		declineMatchButton.Size = UDim2.fromScale(0.84, 0.18)
+
+		-- ActionPanel (bottom center)
+		panel.Position = UDim2.fromScale(0.23, 0.70)
+		panel.Size = UDim2.fromScale(0.50, 0.27)
+		status.Position = UDim2.fromScale(0.04, 0.04)
+		status.Size = UDim2.fromScale(0.92, 0.18)
+		hint.Position = UDim2.fromScale(0.04, 0.24)
+		hint.Size = UDim2.fromScale(0.92, 0.16)
+		local primaryPos = UDim2.fromScale(0.04, 0.44)
+		local secondaryPos = UDim2.fromScale(0.52, 0.44)
+		local halfSize = UDim2.fromScale(0.44, 0.50)
+		local fullSize = UDim2.fromScale(0.92, 0.50)
+
+		buttons.Ready.Position = primaryPos
+		buttons.Ready.Size = fullSize
+		buttons.Roll.Position = primaryPos
+		buttons.Roll.Size = fullSize
+		for _, key in {"Buy", "Build"} do
+			buttons[key].Position = primaryPos
+			buttons[key].Size = halfSize
+		end
+		for _, key in {"Skip", "SkipBuild", "Bail", "ReturnLobby"} do
+			buttons[key].Position = secondaryPos
+			buttons[key].Size = halfSize
+		end
+
+		-- HandPanel
+		handPanel.Position = UDim2.fromScale(0.22, 0.14)
+		handPanel.Size = UDim2.fromScale(0.56, 0.78)
+		closeHand.Position = UDim2.fromScale(0.84, 0.03)
+		closeHand.Size = UDim2.fromScale(0.12, 0.18)
+		previousCard.Position = UDim2.fromScale(0.04, 0.16)
+		previousCard.Size = UDim2.fromScale(0.12, 0.18)
+		nextCard.Position = UDim2.fromScale(0.84, 0.16)
+		nextCard.Size = UDim2.fromScale(0.12, 0.18)
+		previousChoice.Position = UDim2.fromScale(0.04, 0.54)
+		previousChoice.Size = UDim2.fromScale(0.12, 0.18)
+		nextChoice.Position = UDim2.fromScale(0.84, 0.54)
+		nextChoice.Size = UDim2.fromScale(0.12, 0.18)
+		handName.Position = UDim2.fromScale(0.19, 0.16)
+		handName.Size = UDim2.fromScale(0.62, 0.18)
+		handDescription.Position = UDim2.fromScale(0.06, 0.35)
+		handDescription.Size = UDim2.fromScale(0.88, 0.18)
+		handChoice.Position = UDim2.fromScale(0.19, 0.54)
+		handChoice.Size = UDim2.fromScale(0.62, 0.18)
+		handMessage.Position = UDim2.fromScale(0.06, 0.73)
+		handMessage.Size = UDim2.fromScale(0.88, 0.07)
+		useCard.Position = UDim2.fromScale(0.20, 0.81)
+		useCard.Size = UDim2.fromScale(0.60, 0.18)
+		skipCardChoice.Position = UDim2.fromScale(0.58, 0.81)
+		skipCardChoice.Size = UDim2.fromScale(0.38, 0.18)
+
+		handButton.Position = UDim2.new(1, -16, 1, -16)
+		handButton.Size = UDim2.new(0, 140, 0, 36)
+
+		buildPicker.Position = UDim2.fromScale(0.06, 0.66)
+		buildPicker.Size = UDim2.fromScale(0.88, 0.28)
+		previousBuild.Size = UDim2.fromScale(0.30, 1)
+		nextBuild.Position = UDim2.fromScale(0.70, 0)
+		nextBuild.Size = UDim2.fromScale(0.30, 1)
+		buildCount.Position = UDim2.fromScale(0.32, 0)
+		buildCount.Size = UDim2.fromScale(0.36, 1)
+
+		if cameraToggle then
+			cameraToggle.Position = UDim2.new(1, -16, 1, -100)
+			cameraToggle.Size = UDim2.new(0, 130, 0, 32)
+		end
+	else
+		-- Desktop layout
+		header.Position = desktopLayout.headerPos
+		header.Size = desktopLayout.headerSize
+		roster.Position = desktopLayout.rosterPos
+		roster.Size = desktopLayout.rosterSize
+		for seat = 1, Rules.PlayerCount do
+			seats[seat].frame.Position = desktopLayout.seatPos[seat]
+			seats[seat].frame.Size = desktopLayout.seatSize[seat]
+		end
+		logPanel.Position = desktopLayout.logPos
+		logPanel.Size = desktopLayout.logSize
+
+		roomPanel.Position = desktopLayout.roomPos
+		roomPanel.Size = desktopLayout.roomSize
+		roomCode.Position = desktopLayout.roomCodePos
+		roomCode.Size = desktopLayout.roomCodeSize
+		createRoom.Position = desktopLayout.createRoomPos
+		createRoom.Size = desktopLayout.createRoomSize
+		joinRoom.Position = desktopLayout.joinRoomPos
+		joinRoom.Size = desktopLayout.joinRoomSize
+		leaveRoom.Position = desktopLayout.leaveRoomPos
+		leaveRoom.Size = desktopLayout.leaveRoomSize
+		teamButtons.A.Position = desktopLayout.teamAPos
+		teamButtons.A.Size = desktopLayout.teamASize
+		teamButtons.B.Position = desktopLayout.teamBPos
+		teamButtons.B.Size = desktopLayout.teamBSize
+		roomMessage.Position = desktopLayout.roomMessagePos
+		roomMessage.Size = desktopLayout.roomMessageSize
+
+		matchmakingPanel.Position = desktopLayout.mmPos
+		matchmakingPanel.Size = desktopLayout.mmSize
+		matchmakingStatus.Position = desktopLayout.mmStatusPos
+		matchmakingStatus.Size = desktopLayout.mmStatusSize
+		queueButton.Position = desktopLayout.queueBtnPos
+		queueButton.Size = desktopLayout.queueBtnSize
+		cancelQueueButton.Position = desktopLayout.cancelBtnPos
+		cancelQueueButton.Size = desktopLayout.cancelBtnSize
+		acceptMatchButton.Position = desktopLayout.acceptBtnPos
+		acceptMatchButton.Size = desktopLayout.acceptBtnSize
+		declineMatchButton.Position = desktopLayout.declineBtnPos
+		declineMatchButton.Size = desktopLayout.declineBtnSize
+
+		panel.Position = desktopActionPanelPosition
+		panel.Size = desktopActionPanelSize
+		status.Position = desktopStatusPosition
+		status.Size = desktopStatusSize
+		hint.Position = desktopHintPosition
+		hint.Size = desktopHintSize
+		for key, original in desktopActionButtons do
+			buttons[key].Position = original.position
+			buttons[key].Size = original.size
+		end
+
+		handPanel.Position = desktopLayout.handPanelPos
+		handPanel.Size = desktopLayout.handPanelSize
+		handButton.Position = desktopLayout.handButtonPos
+		handButton.Size = desktopLayout.handButtonSize
+
+		if cameraToggle then
+			cameraToggle.Position = UDim2.new(1, -20, 1, -112)
+			cameraToggle.Size = UDim2.new(0, 140, 0, 34)
+		end
+	end
 end
 
 local landOrdinal = 1
@@ -1370,9 +1524,12 @@ end)
 
 local viewportConnection: RBXScriptConnection? = nil
 local function updateInterfaceScale()
-	-- All WNI HUD geometry is scale-based, so shrinking the entire tree on
-	-- mobile double-scales controls and creates undersized touch targets.
 	interfaceScale.Scale = 1
+	local cam = WS.CurrentCamera
+	local vp = if cam then cam.ViewportSize else Vector2.new(1920, 1080)
+	if applyResponsiveLayout then
+		applyResponsiveLayout(vp)
+	end
 end
 
 local function bindViewport()
@@ -1609,11 +1766,12 @@ local function initPolishUI()
 		if tutorial.Visible then return end
 		tutorialState.closing = false
 		refreshTutorial()
+		tutorial.BackgroundColor3 = Color3.fromRGB(10, 16, 18)
 		tutorial.BackgroundTransparency = 1
 		tutorialState.fade.GroupTransparency = 1
 		tutorialState.ui.scale.Scale = 0.94
 		tutorial.Visible = true
-		TweenService:Create(tutorial, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.28}):Play()
+		TweenService:Create(tutorial, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.45}):Play()
 		TweenService:Create(tutorialState.fade, TweenInfo.new(0.24, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
 		TweenService:Create(tutorialState.ui.scale, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 	end
@@ -1657,42 +1815,46 @@ local function initPolishUI()
 	end
 
 	do
-		local cameraToggle = Instance.new("TextButton")
-		cameraToggle.Name = "CameraToggle"
-		cameraToggle.AnchorPoint = Vector2.new(1, 1)
-		cameraToggle.Position = UDim2.new(1, -20, 1, -112)
-		cameraToggle.Size = UDim2.new(0, 140, 0, 34)
-		cameraToggle.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
-		cameraToggle.Font = Enum.Font.GothamBold
-		cameraToggle.Text = "KAMERA BEBAS"
-		cameraToggle.TextColor3 = Color3.fromRGB(210, 224, 214)
-		cameraToggle.TextSize = 12
-		cameraToggle.TextScaled = false
-		cameraToggle.Parent = root
+		local btn = Instance.new("TextButton")
+		cameraToggle = btn
+		btn.Name = "CameraToggle"
+		btn.AnchorPoint = Vector2.new(1, 1)
+		btn.Position = UDim2.new(1, -20, 1, -112)
+		btn.Size = UDim2.new(0, 140, 0, 34)
+		btn.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
+		btn.Font = Enum.Font.GothamBold
+		btn.Text = "KAMERA BEBAS"
+		btn.TextColor3 = Color3.fromRGB(210, 224, 214)
+		btn.TextSize = 12
+		btn.TextScaled = false
+		btn.Parent = root
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0, 8)
-		corner.Parent = cameraToggle
+		corner.Parent = btn
 		local stroke = Instance.new("UIStroke")
 		stroke.Color = Color3.fromRGB(56, 98, 88)
 		stroke.Thickness = 1
-		stroke.Parent = cameraToggle
+		stroke.Parent = btn
 		local constraint = Instance.new("UISizeConstraint")
 		constraint.Name = "MobileMinTouchTarget"
 		constraint.MinSize = Vector2.new(44, 34)
-		constraint.Parent = cameraToggle
-		cameraToggle.Activated:Connect(function() 
+		constraint.Parent = btn
+		btn.Activated:Connect(function() 
 			cameraFollow = not cameraFollow
 			if cameraFollow then
 				overviewCF = overviewCFrame()
-				cameraToggle.Text = "IKUTI PION"
+				btn.Text = "IKUTI PION"
 				local seatNow = findMySeat(latest or {})
 				local posNow = if seatNow > 0 and latest and latest.players[seatNow] then latest.players[seatNow].position else nil
 				if posNow then focusTile(posNow) else restoreOverview() end
 			else
-				cameraToggle.Text = "KAMERA BEBAS"
+				btn.Text = "KAMERA BEBAS"
 				tweenCameraTo(overviewCFrame(), 0.7)
 			end
 		end)
+		if applyResponsiveLayout and WS.CurrentCamera then
+			applyResponsiveLayout(WS.CurrentCamera.ViewportSize)
+		end
 	end
 end
 initPolishUI()
