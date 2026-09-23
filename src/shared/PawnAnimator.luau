@@ -20,6 +20,16 @@ local function trackPart(part: BasePart)
 	tracked[part] = {last = part.Position, startedAt = 0, moving = false}
 end
 
+local function playHopSound(part: BasePart)
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxasset://sounds/switch.wav"
+	sound.Volume = 0.35
+	sound.PlaybackSpeed = 1.15 + (math.random() * 0.18)
+	sound.Parent = part
+	sound:Play()
+	Debris:AddItem(sound, 1)
+end
+
 function PawnAnimator.watch(pawnsContainer: Instance)
 	for _, child in ipairs(pawnsContainer:GetChildren()) do
 		if child:IsA("BasePart") then trackPart(child) end
@@ -40,6 +50,7 @@ function PawnAnimator.watch(pawnsContainer: Instance)
 				if not state.moving then
 					state.moving = true
 					state.startedAt = now
+					playHopSound(part)
 				end
 				local progress = math.clamp((now - state.startedAt) / STEP_TIME, 0, 1)
 				local offset = HOP_HEIGHT * math.sin(progress * math.pi)

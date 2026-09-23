@@ -1398,6 +1398,19 @@ local function showVictory(snap: any, animate: boolean)
 		TweenService:Create(victoryPanel, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.34}):Play()
 		TweenService:Create(victoryContent, TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
 		TweenService:Create(victoryUI.scale, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		if audio then
+			local resultText = tostring(snap.result or "")
+			local winnerA = string.find(resultText, "TIM A MENANG", 1, true) ~= nil
+			local winnerB = string.find(resultText, "TIM B MENANG", 1, true) ~= nil
+			local mySeat = findMySeat(snap)
+			local myTeam = if mySeat > 0 and snap.players and snap.players[mySeat] then snap.players[mySeat].team else ""
+			local won = (winnerA and myTeam == "A") or (winnerB and myTeam == "B")
+			if won then
+				audio:playSfx("WinJingle", false)
+			else
+				audio:playSfx("LoseJingle", false)
+			end
+		end
 	end
 end
 
