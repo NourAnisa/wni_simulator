@@ -170,30 +170,43 @@ function AvatarPawnService:tweenToPosition(seat: number, targetCFrame: CFrame, d
 	local oldValue = self.tweenValues[seat]
 	if oldValue then oldValue:Destroy() end
 
-	local value = Instance.new("CFrameValue")
-	value.Name = "PawnTween"
-	value.Value = model:GetPivot()
-	self.tweenValues[seat] = value
+	local startCFrame = model:GetPivot()
+	local distance = (startCFrame.Position - targetCFrame.Position).Magnitude
+	local hopHeight = math.clamp(distance * 0.35, 1.5, 4.5)
 
-	local connection = value:GetPropertyChangedSignal("Value"):Connect(function()
+	local alphaValue = Instance.new("NumberValue")
+	alphaValue.Name = "PawnTweenAlpha"
+	alphaValue.Value = 0
+	self.tweenValues[seat] = alphaValue :: any
+
+	local connection = alphaValue:GetPropertyChangedSignal("Value"):Connect(function()
 		local current = self.pawns[seat]
 		if current == model and current.Parent then
-			current:PivotTo(value.Value)
+			local a = alphaValue.Value
+			local currentPos = startCFrame.Position:Lerp(targetCFrame.Position, a)
+			local yOffset = math.sin(a * math.pi) * hopHeight
+			local posWithArc = currentPos + Vector3.new(0, yOffset, 0)
+			local rot = startCFrame.Rotation:Lerp(targetCFrame.Rotation, a)
+			current:PivotTo(CFrame.new(posWithArc) * rot)
 		end
 	end)
 
+	local moveDuration = duration or math.clamp(0.45 + distance * 0.015, 0.45, 0.85)
 	local tween = TweenService:Create(
-		value,
-		TweenInfo.new(duration or 0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{Value = targetCFrame}
+		alphaValue,
+		TweenInfo.new(moveDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{Value = 1}
 	)
 	self.animations[seat] = tween
 	tween.Completed:Once(function()
 		connection:Disconnect()
 		if self.animations[seat] == tween then self.animations[seat] = nil end
-		if self.tweenValues[seat] == value then
+		if self.tweenValues[seat] == alphaValue then
 			self.tweenValues[seat] = nil
-			value:Destroy()
+			alphaValue:Destroy()
+		end
+		if self.pawns[seat] == model and model.Parent then
+			model:PivotTo(targetCFrame)
 		end
 	end)
 	tween:Play()

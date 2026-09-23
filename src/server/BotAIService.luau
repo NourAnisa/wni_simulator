@@ -80,19 +80,87 @@ function BotAIService.readyWaitingBots(self: any, rooms: any, now: number): bool
 	return changed
 end
 
-local function chooseBuildTarget(engine: any, seat: number, participant: any): number?
+type BotProfile = {
+	reserve: number,
+	riskTolerance: number,
+	prefersBail: boolean,
+	aggression: string,
+}
+
+local BOT_PROFILES: {[string]: BotProfile} = {
+	["Bot Budi"] = {reserve = 500000, riskTolerance = 0.9, prefersBail = true, aggression = "Aggressive"},
+	["Bot Agus"] = {reserve = 400000, riskTolerance = 0.85, prefersBail = true, aggression = "Aggressive"},
+	["Bot Siti"] = {reserve = 1000000, riskTolerance = 0.6, prefersBail = true, aggression = "Balanced"},
+	["Bot Rina"] = {reserve = 1200000, riskTolerance = 0.65, prefersBail = false, aggression = "Balanced"},
+	["Bot Joko"] = {reserve = 2000000, riskTolerance = 0.35, prefersBail = false, aggression = "Conservative"},
+	["Bot Dewi"] = {reserve = 2200000, riskTolerance = 0.3, prefersBail = false, aggression = "Conservative"},
+}
+
+local DEFAULT_PROFILE: BotProfile = {reserve = 1000000, riskTolerance = 0.5, prefersBail = true, aggression = "Balanced"}
+
+local function getBotProfile(name: string): BotProfile
+	return BOT_PROFILES[name] or DEFAULT_PROFILE
+end
+
+local function chooseBuildTarget(engine: any, seat: number, participant: any, profile: BotProfile): number?
 	local bestTile: number? = nil
-	local bestCost = math.huge
+	local bestScore = -math.huge
 	for tileIndex, ownerSeat in engine.owners do
 		if ownerSeat == seat and engine.tiles[tileIndex].kind == "Property" then
-			local cost = engine:upgradeCost(tileIndex)
-			if cost and participant.cash - cost > CASH_RESERVE and cost < bestCost then
-				bestCost = cost
-				bestTile = tileIndex
+			local level = (engine.buildings and engine.buildings[tileIndex]) or 0
+			if level < 3 then
+				local cost = engine:upgradeCost(tileIndex)
+				if cost and (participant.cash - cost >= profile.reserve) then
+					local tariff = Tarif.get(tileIndex)
+					local nextRent = tariff.rents[level + 2] or 0
+					local currRent = tariff.rents[level + 1] or 0
+					local rentGain = nextRent - currRent
+					local roiScore = (rentGain / math.max(cost, 1)) * 1000 + (level * 2)
+					if roiScore > bestScore then
+						bestScore = roiScore
+						bestTile = tileIndex
+					end
+				end
 			end
 		end
 	end
 	return bestTile
+end
+
+local function chooseCardPlay(engine: any, seat: number, participant: any, profile: BotProfile): (string?, any?)
+	local hand = participant.hand
+	if typeof(hand) ~= "table" or #hand == 0 then return nil, nil end
+
+	-- 1. OrangDalam: bot selalu menyiapkannya dengan dadu tertinggi (6) agar aman
+	if table.find(hand, "OrangDalam") and not participant.insiderDie then
+		return "PlayCard", {cardId = "OrangDalam", choice = 6}
+	end
+
+	-- 2. KaburAjaDulu: teleport taktis
+	if table.find(hand, "KaburAjaDulu") then
+		-- Jika kas kritis, teleport ke START (index 1) untuk ambil gaji
+		if participant.cash < profile.reserve and participant.position ~= 1 then
+			return "PlayCard", {cardId = "KaburAjaDulu", choice = 1}
+		end
+
+		-- Cari tanah kosong bernilai tinggi yang belum dibeli
+		local bestUnowned: number? = nil
+		local bestPrice = 0
+		for index, tile in engine.tiles do
+			if tile.kind == "Property" and (engine.owners[index] or 0) == 0 then
+				local tariff = Tarif.get(index)
+				if tariff and participant.cash - tariff.price >= profile.reserve and tariff.price > bestPrice then
+					bestPrice = tariff.price
+					bestUnowned = index
+				end
+			end
+		end
+		if bestUnowned then
+			return "PlayCard", {cardId = "KaburAjaDulu", choice = bestUnowned}
+		end
+	end
+
+	return nil, nil
 end
 
 function BotAIService.decide(self: any, engine: any): (string?, any?)
@@ -100,27 +168,53 @@ function BotAIService.decide(self: any, engine: any): (string?, any?)
 	local participant = engine.players[seat]
 	if not participant or participant.isBot ~= true or participant.eliminated then return nil, nil end
 
+	local profile = getBotProfile(participant.name)
+
 	if engine.phase == "AwaitRoll" then
-		if participant.inJail and participant.cash >= Rules.JailBailAmount then
-			return "Bail", nil
+		-- Pertimbangkan kartu simpanan terlebih dahulu
+		local cardAction, cardPayload = chooseCardPlay(engine, seat, participant, profile)
+		if cardAction then
+			return cardAction, cardPayload
+		end
+
+		if participant.inJail then
+			local canPay = participant.cash >= Rules.JailBailAmount + (if profile.prefersBail then 200000 else profile.reserve)
+			if canPay then
+				return "Bail", nil
+			end
 		end
 		return "Roll", nil
 	elseif engine.phase == "AwaitBuy" then
 		local tileIndex = participant.position
 		local tariff = Tarif.get(tileIndex)
-		if not participant.buyBanned and tariff and participant.cash - tariff.price > CASH_RESERVE then
-			return "Buy", nil
+		if not participant.buyBanned and tariff then
+			local buffer = if profile.aggression == "Aggressive" then 200000 else profile.reserve
+			if participant.cash - tariff.price >= buffer then
+				return "Buy", nil
+			end
 		end
 		return "Skip", nil
 	elseif engine.phase == "AwaitBuild" then
-		local target = chooseBuildTarget(engine, seat, participant)
+		local target = chooseBuildTarget(engine, seat, participant, profile)
 		if target then return "Build", target end
 		return "SkipBuild", nil
 	elseif engine.phase == "AwaitCardChoice" then
 		local pending = engine.pendingCardChoice
 		if not pending or pending.seat ~= seat then return nil, nil end
 		local choices = engine:cardLandChoices(seat, pending.id)
-		if #choices > 0 then return "SelectCardLand", choices[1] end
+		if #choices > 0 then
+			-- Pilih petak lawan dengan level tertinggi untuk efek musibah/hancurkan
+			local bestChoice = choices[1]
+			local highestLevel = -1
+			for _, choiceIndex in choices do
+				local lvl = (engine.buildings and engine.buildings[choiceIndex]) or 0
+				if lvl > highestLevel then
+					highestLevel = lvl
+					bestChoice = choiceIndex
+				end
+			end
+			return "SelectCardLand", bestChoice
+		end
 		if pending.id == "PembebasanLahan" then return "SkipCardChoice", nil end
 	end
 	return nil, nil
