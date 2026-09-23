@@ -1549,8 +1549,8 @@ end)
 local cameraToggle = Instance.new("TextButton")
 cameraToggle.Name = "CameraToggle"
 cameraToggle.AnchorPoint = Vector2.new(0, 1)
-cameraToggle.Position = UDim2.fromScale(0.02, 0.98)
-cameraToggle.Size = UDim2.fromScale(0.14, 0.055)
+cameraToggle.Position = UDim2.new(0.012, 0, 0.98, 0)
+cameraToggle.Size = UDim2.new(0.210, 0, 0.060, 0)
 cameraToggle.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
 cameraToggle.Font = Enum.Font.GothamBold
 cameraToggle.Text = "KAMERA BEBAS"
