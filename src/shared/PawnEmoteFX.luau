@@ -37,42 +37,49 @@ function PawnEmoteFX.showEmote(pawnOrSeat: Instance | number, emojiText: string,
 	local targetPart = findPawnPart(pawnOrSeat)
 	if not targetPart or not targetPart:IsDescendantOf(Workspace) then return end
 
+	local isQuickChat = #emojiText > 4
+	local textLen = utf8.len(emojiText) or #emojiText
+	local bubbleWidth = if isQuickChat then math.clamp(textLen * 11 + 36, 110, 220) else 58
+	local bubbleHeight = if isQuickChat then 42 else 58
+
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "EmoteBubble_" .. emojiText
 	bb.Adornee = targetPart
-	bb.Size = UDim2.new(0, 58, 0, 58)
+	bb.Size = UDim2.new(0, bubbleWidth, 0, bubbleHeight)
 	bb.StudsOffset = Vector3.new(0, 3.4, 0)
 	bb.AlwaysOnTop = true
 	bb.Parent = targetPart
-	Debris:AddItem(bb, 2.5)
+	Debris:AddItem(bb, 2.8)
 
 	local bubble = Instance.new("Frame")
 	bubble.Name = "Bubble"
 	bubble.Size = UDim2.new(1, 0, 1, 0)
 	bubble.AnchorPoint = Vector2.new(0.5, 0.5)
 	bubble.Position = UDim2.new(0.5, 0, 0.5, 0)
-	bubble.BackgroundColor3 = bubbleColor or Color3.fromRGB(30, 35, 42)
+	bubble.BackgroundColor3 = bubbleColor or Color3.fromRGB(24, 28, 38)
 	bubble.BorderSizePixel = 0
 	bubble.Parent = bb
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(1, 0)
+	corner.CornerRadius = if isQuickChat then UDim.new(0, 12) else UDim.new(1, 0)
 	corner.Parent = bubble
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = Color3.fromRGB(245, 245, 250)
-	stroke.Thickness = 2.5
+	stroke.Color = Color3.fromRGB(255, 215, 60)
+	stroke.Thickness = 2.0
 	stroke.Parent = bubble
 
 	local label = Instance.new("TextLabel")
 	label.Name = "Emoji"
-	label.Size = UDim2.new(0.8, 0, 0.8, 0)
+	label.Size = UDim2.new(0.9, 0, 0.85, 0)
 	label.AnchorPoint = Vector2.new(0.5, 0.5)
 	label.Position = UDim2.new(0.5, 0, 0.5, 0)
 	label.BackgroundTransparency = 1
 	label.Text = emojiText
-	label.TextScaled = true
-	label.Font = Enum.Font.GothamBlack
+	label.TextScaled = not isQuickChat
+	label.TextSize = if isQuickChat then 14 else 28
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.Font = Enum.Font.GothamBold
 	label.Parent = bubble
 
 	local scale = Instance.new("UIScale")

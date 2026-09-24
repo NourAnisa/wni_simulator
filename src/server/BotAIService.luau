@@ -160,6 +160,11 @@ local function chooseCardPlay(engine: any, seat: number, participant: any, profi
 		end
 	end
 
+	-- 3. DoaOrangTua: bot selalu memilih tier "high" (5-6) agar paling aman saat kena Musibah
+	if table.find(hand, "DoaOrangTua") and not participant.doaTier then
+		return "PlayCard", {cardId = "DoaOrangTua", choice = "high"}
+	end
+
 	return nil, nil
 end
 

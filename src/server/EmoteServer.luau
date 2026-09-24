@@ -25,6 +25,15 @@ local ALLOWED_EMOJIS = {
 	["👑"] = true,
 	["💸"] = true,
 	["👋"] = true,
+	-- Pesan Chat Cepat (Quick Chat)
+	["Sewa please! 😭"] = true,
+	["Monopoli kita! 👑"] = true,
+	["Pungli lagi?! 💸"] = true,
+	["Hoki banget! 🔥"] = true,
+	["Ampun bang! 🙏"] = true,
+	["GGWP! 🏆"] = true,
+	["Begal nih bos! 💀"] = true,
+	["Kabur dulu ah! 💨"] = true,
 }
 
 local COOLDOWN_SECONDS = 1.5
