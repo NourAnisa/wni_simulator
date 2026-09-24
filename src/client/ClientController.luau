@@ -317,6 +317,8 @@ local focusTile: any = nil
 local restoreOverview: any = nil
 local cameraToggle: TextButton? = nil
 local applyResponsiveLayout: any = nil
+local showSpeechBubble: any = nil
+local updatePropertyBuyModal: any = nil
 
 local function send(action: string)
 	local snap = latest
@@ -798,6 +800,9 @@ local function refresh(snap: any)
 	end
 	for seat = 1, Rules.PlayerCount do
 		setSeatGlow(seat, phase ~= "Waiting" and not over and seat == activeSeat)
+	end
+	if updatePropertyBuyModal then
+		updatePropertyBuyModal(snap, mySeat)
 	end
 end
 
@@ -1730,17 +1735,28 @@ local function playSnapshotFeedback(previous: any, current: any)
 		if showActionBanner then
 			showActionBanner("💰 GAJI KELILING START! +Rp 1.000.000!")
 		end
+		if audio then audio:playSfx("CashIncome", false) end
+		if showSpeechBubble and currentSeat > 0 then
+			showSpeechBubble(currentSeat, "Alhamdulillah gajian cair! 💸", "💰")
+		end
 	end
 
 	if previousParticipant and currentParticipant and previousParticipant.inJail ~= true and currentParticipant.inJail == true then
 		if showActionBanner then
 			showActionBanner("🚨 TERCIDUK! KAMU MASUK LAPAS!")
 		end
+		if audio then audio:playSfx("SirenLapas", false) end
+		if showSpeechBubble and currentSeat > 0 then
+			showSpeechBubble(currentSeat, "Aduh apes kena razia! 🚓", "😭")
+		end
 	end
 
 	if previousParticipant and currentParticipant and not previousParticipant.inBekasi and currentParticipant.inBekasi then
 		if showActionBanner then
 			showActionBanner("🚀 TERLEMPAR KE PLANET BEKASI! 🛸")
+		end
+		if showSpeechBubble and currentSeat > 0 then
+			showSpeechBubble(currentSeat, "Nyasar ke Planet Bekasi! 🛸", "🚀")
 		end
 	end
 
@@ -1752,6 +1768,7 @@ local function playSnapshotFeedback(previous: any, current: any)
 
 	if previousParticipant and currentParticipant and previousParticipant.position ~= currentParticipant.position then
 		focusTile(currentParticipant.position)
+		if audio then audio:playSfx("PawnStep", true) end
 		local board = WS:FindFirstChild("WNIBoard")
 		local tilesFolder = board and board:FindFirstChild("Tiles")
 		local tile = tilesFolder and tilesFolder:FindFirstChild(string.format("Tile_%02d", currentParticipant.position))
@@ -1769,13 +1786,29 @@ local function playSnapshotFeedback(previous: any, current: any)
 
 	local previousNewest = if typeof(previous.logs) == "table" then previous.logs[1] else nil
 	local currentNewest = if typeof(current.logs) == "table" then current.logs[1] else nil
-	if typeof(currentNewest) == "string" and currentNewest ~= previousNewest and currentParticipant then
-		local mentionsPlayer = string.find(currentNewest, currentParticipant.name, 1, true) ~= nil
-		local drewCard = string.find(currentNewest, "menarik", 1, true) ~= nil
-		if mentionsPlayer and drewCard then
-			showCardToast(currentNewest)
-			showCardModal(currentNewest)
-			if audio then audio:playSfx("CardDraw", true) end
+	if typeof(currentNewest) == "string" and currentNewest ~= previousNewest then
+		for seat, p in ipairs(current.players) do
+			if string.find(currentNewest, p.name, 1, true) then
+				if string.find(currentNewest, "membeli", 1, true) then
+					if showSpeechBubble then showSpeechBubble(seat, "Investasi properti cuan nih! 🏢", "😎") end
+					if audio then audio:playSfx("BuildUpgrade", true) end
+				elseif string.find(currentNewest, "sewa", 1, true) or string.find(currentNewest, "membayar", 1, true) then
+					if showSpeechBubble then showSpeechBubble(seat, "Ampun sewa mahal bener! 💀", "💸") end
+					if audio then audio:playSfx("CashSpend", false) end
+				elseif string.find(currentNewest, "kembar", 1, true) then
+					if showSpeechBubble then showSpeechBubble(seat, "Dadu kembar! Hoki banget! 🔥", "🎲") end
+				end
+				break
+			end
+		end
+		if currentParticipant then
+			local mentionsPlayer = string.find(currentNewest, currentParticipant.name, 1, true) ~= nil
+			local drewCard = string.find(currentNewest, "menarik", 1, true) ~= nil
+			if mentionsPlayer and drewCard then
+				showCardToast(currentNewest)
+				showCardModal(currentNewest)
+				if audio then audio:playSfx("CardDraw", true) end
+			end
 		end
 	end
 
@@ -1999,7 +2032,7 @@ local function playUISound(sound: Sound)
 end
 
 local function initPolishUI()
-	local cameraFollow = false
+	local cameraFollow = true
 	local cameraTween: Tween? = nil
 	local overviewCF: CFrame? = nil
 	local actionBanner = waitFor(root, "ActionBanner") :: Frame
@@ -2010,8 +2043,9 @@ local function initPolishUI()
 		local cam = WS.CurrentCamera
 		if cam and overviewCF then return overviewCF end
 		local board = WS:FindFirstChild("WNIBoard")
-		local pivot = board and board:GetPivot() or CFrame.new(9, 9, 8)
-		return CFrame.new(pivot.Position + Vector3.new(0, 132, 72), pivot.Position)
+		local pivot = board and board:GetPivot() or CFrame.new(9.2, 4.0, 8.6)
+		local center = pivot.Position
+		return CFrame.new(center + Vector3.new(0, 56, 44), center)
 	end
 	local function tweenCameraTo(targetCF: CFrame, duration: number)
 		local cam = WS.CurrentCamera
@@ -2029,11 +2063,215 @@ local function initPolishUI()
 		local cam = WS.CurrentCamera
 		if not (anchor and cam) then return end
 		local tilePos = anchor.WorldPosition
-		tweenCameraTo(CFrame.new(tilePos + Vector3.new(0, 9, 9), tilePos), 0.5)
+		tweenCameraTo(CFrame.new(tilePos + Vector3.new(0, 16, 14), tilePos), 0.45)
 	end
 	restoreOverview = function()
 		if not cameraFollow then return end
 		tweenCameraTo(overviewCFrame(), 0.7)
+	end
+
+	showSpeechBubble = function(seat: number, message: string, emoji: string?)
+		local board = WS:FindFirstChild("WNIBoard")
+		local pawnsFolder = board and board:FindFirstChild("Pawns")
+		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. seat) or pawnsFolder:FindFirstChild("Pawn_" .. seat))
+		if not pawnModel then return end
+		local head = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart
+		if not head then return end
+
+		local existing = head:FindFirstChild("SpeechBubbleGui")
+		if existing then existing:Destroy() end
+
+		local bubbleGui = Instance.new("BillboardGui")
+		bubbleGui.Name = "SpeechBubbleGui"
+		bubbleGui.Size = UDim2.fromOffset(200, 52)
+		bubbleGui.StudsOffset = Vector3.new(0, 3.2, 0)
+		bubbleGui.AlwaysOnTop = true
+		bubbleGui.MaxDistance = 110
+		bubbleGui.Adornee = head
+		bubbleGui.Parent = head
+
+		local bubbleFrame = Instance.new("Frame")
+		bubbleFrame.Size = UDim2.fromScale(1, 1)
+		bubbleFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		bubbleFrame.BorderSizePixel = 0
+		bubbleFrame.Parent = bubbleGui
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 12)
+		corner.Parent = bubbleFrame
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(24, 34, 46)
+		stroke.Thickness = 2
+		stroke.Parent = bubbleFrame
+
+		local text = Instance.new("TextLabel")
+		text.Size = UDim2.new(1, -12, 1, -8)
+		text.Position = UDim2.new(0, 6, 0, 4)
+		text.BackgroundTransparency = 1
+		text.Font = Enum.Font.GothamBlack
+		text.Text = (emoji or "💬") .. " " .. message
+		text.TextColor3 = Color3.fromRGB(20, 28, 38)
+		text.TextScaled = true
+		text.Parent = bubbleFrame
+
+		local scale = Instance.new("UIScale")
+		scale.Scale = 0.4
+		scale.Parent = bubbleGui
+		TweenService:Create(scale, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+
+		task.delay(3.5, function()
+			if bubbleGui and bubbleGui.Parent then
+				local fade = TweenService:Create(scale, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0})
+				fade:Play()
+				fade.Completed:Once(function()
+					bubbleGui:Destroy()
+				end)
+			end
+		end)
+	end
+
+	local buyModal = Instance.new("Frame")
+	buyModal.Name = "PropertyBuyCardModal"
+	buyModal.AnchorPoint = Vector2.new(0.5, 0.5)
+	buyModal.Position = UDim2.new(0.5, 0, 0.45, 0)
+	buyModal.Size = UDim2.new(0, 360, 0, 240)
+	buyModal.BackgroundColor3 = Color3.fromRGB(18, 26, 34)
+	buyModal.BackgroundTransparency = 0.05
+	buyModal.BorderSizePixel = 0
+	buyModal.Visible = false
+	buyModal.ZIndex = 30
+	buyModal.Parent = root
+
+	local buyCorner = Instance.new("UICorner")
+	buyCorner.CornerRadius = UDim.new(0, 16)
+	buyCorner.Parent = buyModal
+
+	local buyStroke = Instance.new("UIStroke")
+	buyStroke.Color = Color3.fromRGB(255, 215, 60)
+	buyStroke.Thickness = 2.5
+	buyStroke.Parent = buyModal
+
+	local modalScale = Instance.new("UIScale")
+	modalScale.Scale = 1
+	modalScale.Parent = buyModal
+
+	local cardHeader = Instance.new("TextLabel")
+	cardHeader.Name = "CardHeader"
+	cardHeader.Size = UDim2.new(1, -20, 0, 32)
+	cardHeader.Position = UDim2.new(0, 10, 0, 12)
+	cardHeader.BackgroundTransparency = 1
+	cardHeader.Font = Enum.Font.GothamBlack
+	cardHeader.TextSize = 20
+	cardHeader.TextColor3 = Color3.fromRGB(255, 220, 80)
+	cardHeader.Text = "🏙️ KEBAYORAN BARU"
+	cardHeader.Parent = buyModal
+
+	local islandBadge = Instance.new("TextLabel")
+	islandBadge.Name = "IslandBadge"
+	islandBadge.Size = UDim2.new(1, -20, 0, 20)
+	islandBadge.Position = UDim2.new(0, 10, 0, 46)
+	islandBadge.BackgroundTransparency = 1
+	islandBadge.Font = Enum.Font.GothamBold
+	islandBadge.TextSize = 13
+	islandBadge.TextColor3 = Color3.fromRGB(80, 210, 185)
+	islandBadge.Text = "KAVLING PULAU NUSANTARA"
+	islandBadge.Parent = buyModal
+
+	local priceLabel = Instance.new("TextLabel")
+	priceLabel.Name = "PriceLabel"
+	priceLabel.Size = UDim2.new(1, -20, 0, 26)
+	priceLabel.Position = UDim2.new(0, 10, 0, 76)
+	priceLabel.BackgroundTransparency = 1
+	priceLabel.Font = Enum.Font.GothamBlack
+	priceLabel.TextSize = 18
+	priceLabel.TextColor3 = Color3.fromRGB(85, 255, 140)
+	priceLabel.Text = "Harga Beli: Rp 1.500.000"
+	priceLabel.Parent = buyModal
+
+	local rentLabel = Instance.new("TextLabel")
+	rentLabel.Name = "RentLabel"
+	rentLabel.Size = UDim2.new(1, -20, 0, 22)
+	rentLabel.Position = UDim2.new(0, 10, 0, 106)
+	rentLabel.BackgroundTransparency = 1
+	rentLabel.Font = Enum.Font.Gotham
+	rentLabel.TextSize = 13
+	rentLabel.TextColor3 = Color3.fromRGB(220, 230, 240)
+	rentLabel.Text = "Sewa Pengunjung: Rp 200.000 / singgah"
+	rentLabel.Parent = buyModal
+
+	local perkLabel = Instance.new("TextLabel")
+	perkLabel.Name = "PerkLabel"
+	perkLabel.Size = UDim2.new(1, -20, 0, 20)
+	perkLabel.Position = UDim2.new(0, 10, 0, 132)
+	perkLabel.BackgroundTransparency = 1
+	perkLabel.Font = Enum.Font.GothamMedium
+	perkLabel.TextSize = 12
+	perkLabel.TextColor3 = Color3.fromRGB(255, 195, 100)
+	perkLabel.Text = "👑 Lengkapi 1 pulau untuk sewa 2x lipat!"
+	perkLabel.Parent = buyModal
+
+	local buyActionBtn = Instance.new("TextButton")
+	buyActionBtn.Name = "BuyActionBtn"
+	buyActionBtn.Size = UDim2.new(0.46, 0, 0, 44)
+	buyActionBtn.Position = UDim2.new(0.04, 0, 0, 172)
+	buyActionBtn.BackgroundColor3 = Color3.fromRGB(39, 174, 96)
+	buyActionBtn.Font = Enum.Font.GothamBlack
+	buyActionBtn.Text = "✅ BELI TANAH"
+	buyActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	buyActionBtn.TextSize = 14
+	buyActionBtn.Parent = buyModal
+	local buyActionCorner = Instance.new("UICorner")
+	buyActionCorner.CornerRadius = UDim.new(0, 10)
+	buyActionCorner.Parent = buyActionBtn
+
+	local skipActionBtn = Instance.new("TextButton")
+	skipActionBtn.Name = "SkipActionBtn"
+	skipActionBtn.Size = UDim2.new(0.42, 0, 0, 44)
+	skipActionBtn.Position = UDim2.new(0.54, 0, 0, 172)
+	skipActionBtn.BackgroundColor3 = Color3.fromRGB(52, 73, 94)
+	skipActionBtn.Font = Enum.Font.GothamBold
+	skipActionBtn.Text = "❌ LEWATI"
+	skipActionBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+	skipActionBtn.TextSize = 14
+	skipActionBtn.Parent = buyModal
+	local skipActionCorner = Instance.new("UICorner")
+	skipActionCorner.CornerRadius = UDim.new(0, 10)
+	skipActionCorner.Parent = skipActionBtn
+
+	buyActionBtn.Activated:Connect(function()
+		if allowed.Buy then
+			if audio then audio:playSfx("BuildUpgrade", false) end
+			buyModal.Visible = false
+			send("Buy")
+		end
+	end)
+	skipActionBtn.Activated:Connect(function()
+		if allowed.Skip then
+			buyModal.Visible = false
+			send("Skip")
+		end
+	end)
+
+	updatePropertyBuyModal = function(snap: any, mySeat: number)
+		if not snap or snap.phase ~= "AwaitBuy" or mySeat <= 0 or snap.activeSeat ~= mySeat then
+			if buyModal.Visible then buyModal.Visible = false end
+			return
+		end
+		local active = snap.players and snap.players[mySeat]
+		if not active then buyModal.Visible = false return end
+		local pos = active.position or 1
+		local tariff = Tarif.get(pos)
+		local tileName, _ = describeTile(snap, pos, mySeat)
+		cardHeader.Text = "🏙️ " .. string.upper(tileName)
+		priceLabel.Text = "Harga Beli: " .. Rules.formatMoney(tariff.price)
+		rentLabel.Text = "Sewa Pengunjung: " .. Rules.formatMoney(tariff.rents[1]) .. " / singgah"
+		buyActionBtn.Text = "✅ BELI (" .. Rules.formatMoney(tariff.price) .. ")"
+		if not buyModal.Visible then
+			buyModal.Visible = true
+			modalScale.Scale = 0.8
+			TweenService:Create(modalScale, TweenInfo.new(0.24, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+		end
 	end
 
 	local bannerGeneration = 0
@@ -2254,8 +2492,8 @@ local function initPolishUI()
 		btn.Size = UDim2.new(0, 140, 0, 34)
 		btn.BackgroundColor3 = Color3.fromRGB(24, 46, 42)
 		btn.Font = Enum.Font.GothamBold
-		btn.Text = "KAMERA BEBAS"
-		btn.TextColor3 = Color3.fromRGB(210, 224, 214)
+		btn.Text = "IKUTI PION (ON)"
+		btn.TextColor3 = Color3.fromRGB(120, 245, 185)
 		btn.TextSize = 12
 		btn.TextScaled = false
 		btn.Parent = root
@@ -2274,12 +2512,14 @@ local function initPolishUI()
 			cameraFollow = not cameraFollow
 			if cameraFollow then
 				overviewCF = overviewCFrame()
-				btn.Text = "IKUTI PION"
+				btn.Text = "IKUTI PION (ON)"
+				btn.TextColor3 = Color3.fromRGB(120, 245, 185)
 				local seatNow = findMySeat(latest or {})
 				local posNow = if seatNow > 0 and latest and latest.players[seatNow] then latest.players[seatNow].position else nil
 				if posNow then focusTile(posNow) else restoreOverview() end
 			else
 				btn.Text = "KAMERA BEBAS"
+				btn.TextColor3 = Color3.fromRGB(210, 224, 214)
 				tweenCameraTo(overviewCFrame(), 0.7)
 			end
 		end)
