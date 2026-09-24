@@ -227,6 +227,48 @@ function CardEngine.resolve(self: any, id: string, ctx: any): CardEffect
 	elseif id == "TenderKoperasi" then
 		-- Menang tender 1jt dipotong pajak 11% = 890.000 bersih
 		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 890000, reason = "tender proyek Koperasi Merah Putih (dipotong pajak 11%)"})
+	elseif id == "MagnetSultan" then
+		-- Cari tanah termahal milik pemain ini
+		local myBestTile, myBestVal = nil, -1
+		for index, owner in ctx.owners do
+			if owner == ctx.seat then
+				local val = if ctx.assetInvestment then ctx.assetInvestment(index, ctx.buildings or {}) else ctx.tarif(index).price
+				if val > myBestVal then
+					myBestVal = val
+					myBestTile = index
+				end
+			end
+		end
+		-- Cari lawan yang masih aktif
+		local targetOpponent = nil
+		for s = 1, #ctx.players do
+			if s ~= ctx.seat and not ctx.players[s].eliminated then
+				targetOpponent = s
+				break
+			end
+		end
+		if myBestTile and targetOpponent then
+			table.insert(actions, {type = "teleport", seat = targetOpponent, tile = myBestTile})
+		else
+			table.insert(actions, {type = "noOp", reason = "Tidak ada tanah atau lawan yang dapat ditarik magnet."})
+		end
+	elseif id == "BegalProperti" then
+		-- Rebut paksa 1 tanah lawan
+		local targetTile, bestVal = nil, -1
+		for index, owner in ctx.owners do
+			if owner and owner ~= ctx.seat and not (ctx.tolls and ctx.tolls[index]) then
+				local val = if ctx.assetInvestment then ctx.assetInvestment(index, ctx.buildings or {}) else ctx.tarif(index).price
+				if val > bestVal then
+					bestVal = val
+					targetTile = index
+				end
+			end
+		end
+		if targetTile then
+			table.insert(actions, {type = "seizeLand", seat = ctx.seat, tile = targetTile})
+		else
+			table.insert(actions, {type = "noOp", reason = "Tidak ada tanah lawan yang dapat dibegal."})
+		end
 	end
 	return {id = id, deck = card.deck, name = card.name, status = card.status, note = card.note, dice = {d}, actions = actions}
 end

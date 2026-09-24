@@ -323,6 +323,9 @@ local cameraToggle: TextButton? = nil
 local applyResponsiveLayout: any = nil
 local showSpeechBubble: any = nil
 local updatePropertyBuyModal: any = nil
+local updateMyPawnMarker: any = nil
+local updateMischiefToolbar: any = nil
+local triggerScreenShake: any = nil
 
 local function send(action: string)
 	local snap = latest
@@ -843,6 +846,12 @@ local function refresh(snap: any)
 	end
 	if updatePropertyBuyModal then
 		updatePropertyBuyModal(snap, mySeat)
+	end
+	if updateMyPawnMarker then
+		updateMyPawnMarker(snap)
+	end
+	if updateMischiefToolbar then
+		updateMischiefToolbar(snap, mySeat)
 	end
 end
 
@@ -1735,8 +1744,16 @@ local function playSnapshotFeedback(previous: any, current: any)
 		local newCash = currentParticipant.cash or 0
 		if newCash < oldCash then
 			audio:playSfx("CashSpend", true)
+			if currentSeat == mySeat and oldCash - newCash >= 800000 then
+				if triggerScreenShake then triggerScreenShake(0.45, 1.4) end
+				if showSpeechBubble then showSpeechBubble(currentSeat, "Dompetku jebol seketika! 💸😭", "💀") end
+			end
 		elseif newCash > oldCash then
 			audio:playSfx("CashIncome", true)
+			if currentSeat == mySeat and newCash - oldCash >= 800000 then
+				if audio then audio:playSfx("WinJingle", false) end
+				if showSpeechBubble then showSpeechBubble(currentSeat, "Cuan melimpah! Kas cair! 💰", "🤑") end
+			end
 		end
 
 		if previousParticipant.inJail ~= true and currentParticipant.inJail == true then
@@ -2580,6 +2597,219 @@ local function initPolishUI()
 		end)
 		if applyResponsiveLayout and WS.CurrentCamera then
 			applyResponsiveLayout(WS.CurrentCamera.ViewportSize)
+		end
+	end
+
+	-- ─── 1. SCREEN SHAKE ADRENALIN ──────────────────────────────────────────────
+	triggerScreenShake = function(duration: number, intensity: number)
+		local cam = WS.CurrentCamera
+		if not cam then return end
+		task.spawn(function()
+			local elapsed = 0
+			local origCFrame = cam.CFrame
+			while elapsed < duration and cam == WS.CurrentCamera do
+				local dt = task.wait()
+				elapsed += dt
+				local progress = math.clamp(1 - (elapsed / duration), 0, 1)
+				local dx = (math.random() - 0.5) * 2 * intensity * progress
+				local dy = (math.random() - 0.5) * 2 * intensity * progress
+				cam.CFrame = origCFrame * CFrame.new(dx, dy, 0)
+			end
+			cam.CFrame = origCFrame
+		end)
+	end
+
+	-- ─── 2. PANAH EMAS RAKSASA "KAMU" & AURA NEON ────────────────────────────────
+	local myMarkerGui: BillboardGui? = nil
+	updateMyPawnMarker = function(snap: any)
+		local mySeat = findMySeat(snap or {})
+		if mySeat <= 0 then
+			if myMarkerGui then myMarkerGui:Destroy() myMarkerGui = nil end
+			return
+		end
+		local board = WS:FindFirstChild("WNIBoard")
+		local pawnsFolder = board and board:FindFirstChild("Pawns")
+		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. mySeat) or pawnsFolder:FindFirstChild("Pawn_" .. mySeat))
+		if not pawnModel then return end
+		local targetPart = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart or pawnModel:FindFirstChildWhichIsA("BasePart")
+		if not targetPart then return end
+
+		if myMarkerGui and myMarkerGui.Parent == targetPart then
+			return
+		end
+		if myMarkerGui then myMarkerGui:Destroy() end
+
+		local bb = Instance.new("BillboardGui")
+		bb.Name = "MyPawnMarker"
+		bb.Size = UDim2.fromOffset(140, 52)
+		bb.StudsOffset = Vector3.new(0, 4.4, 0)
+		bb.AlwaysOnTop = true
+		bb.MaxDistance = 180
+		bb.Adornee = targetPart
+		bb.Parent = targetPart
+		myMarkerGui = bb
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Text = "🔻\n⭐ KAMU (SULTAN) ⭐"
+		label.TextColor3 = Color3.fromRGB(255, 230, 40)
+		label.TextStrokeColor3 = Color3.fromRGB(15, 20, 30)
+		label.TextStrokeTransparency = 0.05
+		label.Font = Enum.Font.GothamBlack
+		label.TextSize = 13
+		label.Parent = bb
+
+		TweenService:Create(bb, TweenInfo.new(0.65, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+			StudsOffset = Vector3.new(0, 5.2, 0)
+		}):Play()
+	end
+
+	-- ─── 3. BAR KEJAHILAN SAAT MENUNGGU GILIRAN LAWAN (MISCHIEF BAR) ─────────────
+	local mischiefBar = Instance.new("Frame")
+	mischiefBar.Name = "MischiefToolbar"
+	mischiefBar.Size = UDim2.new(0, 340, 0, 44)
+	mischiefBar.Position = UDim2.new(0.5, 0, 1, -68)
+	mischiefBar.AnchorPoint = Vector2.new(0.5, 1)
+	mischiefBar.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
+	mischiefBar.BackgroundTransparency = 0.25
+	mischiefBar.Visible = false
+	mischiefBar.ZIndex = 25
+	mischiefBar.Parent = root
+
+	local mbCorner = Instance.new("UICorner"); mbCorner.CornerRadius = UDim.new(0, 14); mbCorner.Parent = mischiefBar
+	local mbStroke = Instance.new("UIStroke"); mbStroke.Color = Color3.fromRGB(80, 110, 160); mbStroke.Thickness = 1.5; mbStroke.Parent = mischiefBar
+
+	local mbLabel = Instance.new("TextLabel")
+	mbLabel.Size = UDim2.new(0, 95, 1, 0)
+	mbLabel.Position = UDim2.new(0, 8, 0, 0)
+	mbLabel.Text = "JAHILIN BOT:"
+	mbLabel.TextColor3 = Color3.fromRGB(240, 200, 80)
+	mbLabel.Font = Enum.Font.GothamBold
+	mbLabel.TextSize = 11
+	mbLabel.BackgroundTransparency = 1
+	mbLabel.Parent = mischiefBar
+
+	local function createMischiefBtn(name: string, iconText: string, posX: number, bgColor: Color3)
+		local b = Instance.new("TextButton")
+		b.Name = name
+		b.Size = UDim2.new(0, 72, 0, 32)
+		b.Position = UDim2.new(0, posX, 0.5, 0)
+		b.AnchorPoint = Vector2.new(0, 0.5)
+		b.BackgroundColor3 = bgColor
+		b.Text = iconText
+		b.TextColor3 = Color3.fromRGB(255, 255, 255)
+		b.Font = Enum.Font.GothamBold
+		b.TextSize = 11
+		b.Parent = mischiefBar
+		local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, 8); c.Parent = b
+		return b
+	end
+
+	local sandalBtn = createMischiefBtn("SandalBtn", "🩴 SANDAL", 108, Color3.fromRGB(210, 140, 30))
+	local tomatBtn = createMischiefBtn("TomatBtn", "🍅 TOMAT", 186, Color3.fromRGB(195, 45, 45))
+	local teloletBtn = createMischiefBtn("TeloletBtn", "📢 TELOLET", 264, Color3.fromRGB(45, 135, 185))
+
+	local lastMischiefTime = 0
+	local function doMischief(kind: string)
+		if os.clock() - lastMischiefTime < 1.5 then return end
+		lastMischiefTime = os.clock()
+
+		local snap = latest
+		if not snap or not snap.activeSeat then return end
+		local targetSeat = snap.activeSeat
+		if targetSeat <= 0 then return end
+
+		local board = WS:FindFirstChild("WNIBoard")
+		local pawnsFolder = board and board:FindFirstChild("Pawns")
+		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. targetSeat) or pawnsFolder:FindFirstChild("Pawn_" .. targetSeat))
+		if not pawnModel then return end
+		local targetHead = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart
+		if not targetHead then return end
+
+		if kind == "Sandal" then
+			if audio then audio:playSfx("PawnStep", true) end
+			local p = Instance.new("Part")
+			p.Size = Vector3.new(0.6, 0.2, 1.2)
+			p.Color = Color3.fromRGB(60, 140, 240)
+			p.Material = Enum.Material.SmoothPlastic
+			p.Anchored = true
+			p.CanCollide = false
+			local startPos = if WS.CurrentCamera then WS.CurrentCamera.CFrame.Position + Vector3.new(0, -2, 0) else targetHead.Position + Vector3.new(0, 10, 5)
+			p.CFrame = CFrame.new(startPos, targetHead.Position)
+			p.Parent = WS
+
+			local tw = TweenService:Create(p, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				CFrame = CFrame.new(targetHead.Position) * CFrame.Angles(math.rad(720), 0, 0)
+			})
+			tw:Play()
+			tw.Completed:Connect(function()
+				p:Destroy()
+				if audio then audio:playSfx("ButtonClick", false) end
+				local replies = {
+					"Aduh siapa lempar sandal swallow?! 😵",
+					"Sakit woi! Gak punya adab ya! 🩴🤬",
+					"Sandal siapa nih bau terasi! 💀",
+					"Kena kepala lur! Awas kubalas ya! 💢"
+				}
+				if showSpeechBubble then
+					showSpeechBubble(targetSeat, replies[math.random(1, #replies)], "🩴")
+				end
+			end)
+		elseif kind == "Tomat" then
+			local p = Instance.new("Part")
+			p.Shape = Enum.PartType.Ball
+			p.Size = Vector3.new(0.7, 0.7, 0.7)
+			p.Color = Color3.fromRGB(220, 40, 30)
+			p.Material = Enum.Material.SmoothPlastic
+			p.Anchored = true
+			p.CanCollide = false
+			local startPos = if WS.CurrentCamera then WS.CurrentCamera.CFrame.Position + Vector3.new(0, -2, 0) else targetHead.Position + Vector3.new(0, 10, 5)
+			p.CFrame = CFrame.new(startPos)
+			p.Parent = WS
+
+			local tw = TweenService:Create(p, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Position = targetHead.Position
+			})
+			tw:Play()
+			tw.Completed:Connect(function()
+				p:Destroy()
+				if audio then audio:playSfx("WaterSplash", false) end
+				local replies = {
+					"Woi bajuku kena saos tomat! 🍅",
+					"Ngeselin banget sih lempar-lempar! 😡",
+					"Mubazir makanan woi! 😭",
+					"Kotor semua woi! Kurang ajar! 💢"
+				}
+				if showSpeechBubble then
+					showSpeechBubble(targetSeat, replies[math.random(1, #replies)], "🍅")
+				end
+			end)
+		elseif kind == "Telolet" then
+			if audio then audio:playSfx("WinJingle", true) end
+			local replies = {
+				"Om telolet om! 🎺🚌",
+				"Berisik banget woi teloletnya! 🙉",
+				"Asik goyang telolet dulu lur! 💃",
+				"Klakson kapal laut apa bus malam tuh! 🔊"
+			}
+			if showSpeechBubble then
+				showSpeechBubble(targetSeat, replies[math.random(1, #replies)], "🎺")
+			end
+		end
+	end
+
+	sandalBtn.Activated:Connect(function() doMischief("Sandal") end)
+	tomatBtn.Activated:Connect(function() doMischief("Tomat") end)
+	teloletBtn.Activated:Connect(function() doMischief("Telolet") end)
+
+	updateMischiefToolbar = function(snap: any, mySeat: number)
+		if not snap then mischiefBar.Visible = false return end
+		local inMatch = snap.phase == "Active" or snap.phase == "AwaitRoll" or snap.phase == "AwaitBuy" or snap.phase == "AwaitBuild"
+		if inMatch and mySeat > 0 and snap.activeSeat ~= mySeat then
+			mischiefBar.Visible = true
+		else
+			mischiefBar.Visible = false
 		end
 	end
 end

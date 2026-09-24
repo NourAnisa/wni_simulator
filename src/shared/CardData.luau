@@ -48,6 +48,8 @@ add("WhooshBandung", FATE, "Tiket Kereta Cepat Whoosh", false, "verified", "Mend
 add("SeranganFajar", FATE, "Serangan Fajar", false, "verified", "Pemilu sudah dekat! Menerima uang serangan fajar Rp50.000 dari amplop caleg.")
 add("TanahTerlantar", DISASTER, "Penertiban Tanah Terlantar", false, "verified", "Tanah milikmu yang belum dibangun (level 0) disita oleh Negara karena ditelantarkan.")
 add("TenderKoperasi", FATE, "Tender Koperasi Merah Putih", false, "verified", "Selamat! Menang tender proyek Koperasi Merah Putih. Dana Rp1.000.000 dipotong pajak 11% (bersih Rp890.000).")
+add("MagnetSultan", FATE, "Magnet Sultan", false, "verified", "Tarik lawan terdekat untuk mendarat tepat di tanah termahal milikmu!")
+add("BegalProperti", FATE, "Begal Properti", false, "verified", "Rebut paksa satu petak tanah milik lawan yang belum ber-Landmark!")
 local CardData = {}
 function CardData.get(id: string): Card
 	return D[id]

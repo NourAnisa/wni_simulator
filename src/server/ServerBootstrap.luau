@@ -650,6 +650,7 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 			end
 		end
 		if engine.phase == "Waiting" then
+			engine.gameMode = "SoloFFA"
 			botAI:fillEmptySeats(rooms, now)
 			botAI:readyWaitingBots(rooms, now)
 			local readyOk, readyMsg = engine:handle(player.UserId, "Ready", engine.revision, now, nil)
