@@ -317,6 +317,7 @@ local updatePropertyBuyModal: any = nil
 local updateMyPawnMarker: any = nil
 local updateMischiefToolbar: any = nil
 local triggerScreenShake: any = nil
+local showDiceRollBar: any = nil
 
 local function send(action: string)
 	local snap = latest
@@ -773,6 +774,7 @@ local function refresh(snap: any)
 		local mine = if mySeat > 0 then players[mySeat] else nil
 		setButton("Ready", mine ~= nil, if mine and mine.ready then "Batal Siap" else "Nyatakan Siap")
 		setButton("Roll", false)
+		if showDiceRollBar then showDiceRollBar(false) end
 		setButton("Buy", false)
 		setButton("Skip", false)
 		setButton("Build", false)
@@ -785,6 +787,7 @@ local function refresh(snap: any)
 		local voted = mySeat > 0 and snap.rematchVotes and snap.rematchVotes[mySeat]
 		setButton("Ready", canRematch, if voted then "Batal Main Lagi" else "Main Lagi")
 		setButton("Roll", false)
+		if showDiceRollBar then showDiceRollBar(false) end
 		setButton("Buy", false)
 		setButton("Skip", false)
 		setButton("Build", false)
@@ -796,8 +799,10 @@ local function refresh(snap: any)
 	else
 		local pausedForReconnect = snap.room and snap.room.pausedForReconnect == true
 		setButton("Ready", false)
-		setRollPulse(phase == "AwaitRoll" and myTurn and not pausedForReconnect)
-		setButton("Roll", not pausedForReconnect and phase == "AwaitRoll" and myTurn)
+		-- DiceRollBar handles roll when it's the player's turn — plain Roll button stays hidden
+		local wantDiceBar = not pausedForReconnect and phase == "AwaitRoll" and myTurn
+		setButton("Roll", false)
+		if showDiceRollBar then showDiceRollBar(wantDiceBar) end
 		setButton("Buy", not pausedForReconnect and phase == "AwaitBuy" and myTurn)
 		setButton("Skip", not pausedForReconnect and phase == "AwaitBuy" and myTurn)
 		setButton("Build", not pausedForReconnect and phase == "AwaitBuild" and myTurn)
@@ -2816,6 +2821,255 @@ local function initPolishUI()
 		else
 			mischiefBar.Visible = false
 		end
+	end
+
+	-- ─── 4. DICE ROLL BAR AGAR SERASA GET RICH ────────────────────────────────────
+	do
+		-- Buat container overlay (seluruh layar, tengah bawah)
+		local drbOverlay = Instance.new("Frame")
+		drbOverlay.Name = "DiceRollBar"
+		drbOverlay.Size = UDim2.new(1, 0, 0, 220)
+		drbOverlay.AnchorPoint = Vector2.new(0.5, 1)
+		drbOverlay.Position = UDim2.new(0.5, 0, 1, -10)
+		drbOverlay.BackgroundTransparency = 1
+		drbOverlay.Visible = false
+		drbOverlay.ZIndex = 20
+		drbOverlay.Parent = root
+
+		-- Panel utama: gradient merah-oranye seperti Get Rich
+		local drbPanel = Instance.new("Frame")
+		drbPanel.Name = "Panel"
+		drbPanel.Size = UDim2.new(0, 520, 0, 200)
+		drbPanel.AnchorPoint = Vector2.new(0.5, 1)
+		drbPanel.Position = UDim2.new(0.5, 0, 1, 0)
+		drbPanel.BackgroundColor3 = Color3.fromRGB(20, 10, 40)
+		drbPanel.BorderSizePixel = 0
+		drbPanel.ZIndex = 20
+		drbPanel.Parent = drbOverlay
+		local drbCorner = Instance.new("UICorner")
+		drbCorner.CornerRadius = UDim.new(0, 18)
+		drbCorner.Parent = drbPanel
+		local drbGrad = Instance.new("UIGradient")
+		drbGrad.Color = ColorSequence.new({
+			ColorSequenceKeypoint.new(0, Color3.fromRGB(140, 0, 60)),
+			ColorSequenceKeypoint.new(0.5, Color3.fromRGB(60, 0, 120)),
+			ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 0, 60)),
+		})
+		drbGrad.Rotation = 0
+		drbGrad.Parent = drbPanel
+
+		-- Judul atas
+		local drbTitle = Instance.new("TextLabel")
+		drbTitle.Name = "Title"
+		drbTitle.Size = UDim2.new(1, 0, 0, 30)
+		drbTitle.Position = UDim2.new(0, 0, 0, 6)
+		drbTitle.BackgroundTransparency = 1
+		drbTitle.Text = "🎲  GILIRAN MELEMPAR DADU  🎲"
+		drbTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
+		drbTitle.Font = Enum.Font.GothamBold
+		drbTitle.TextSize = 16
+		drbTitle.ZIndex = 21
+		drbTitle.Parent = drbPanel
+
+		-- Track bar latar
+		local barTrack = Instance.new("Frame")
+		barTrack.Name = "BarTrack"
+		barTrack.Size = UDim2.new(0, 380, 0, 28)
+		barTrack.AnchorPoint = Vector2.new(0.5, 0)
+		barTrack.Position = UDim2.new(0.5, 0, 0, 42)
+		barTrack.BackgroundColor3 = Color3.fromRGB(30, 10, 60)
+		barTrack.BorderSizePixel = 0
+		barTrack.ZIndex = 21
+		barTrack.Parent = drbPanel
+		local barCorner = Instance.new("UICorner")
+		barCorner.CornerRadius = UDim.new(0, 14)
+		barCorner.Parent = barTrack
+
+		-- Zone GANJIL (kiri, oranye)
+		local zoneGanjil = Instance.new("Frame")
+		zoneGanjil.Name = "ZoneGanjil"
+		zoneGanjil.Size = UDim2.new(0.35, 0, 1, 0)
+		zoneGanjil.Position = UDim2.new(0, 0, 0, 0)
+		zoneGanjil.BackgroundColor3 = Color3.fromRGB(255, 120, 0)
+		zoneGanjil.BorderSizePixel = 0
+		zoneGanjil.ZIndex = 22
+		zoneGanjil.Parent = barTrack
+		local zgCorner = Instance.new("UICorner")
+		zgCorner.CornerRadius = UDim.new(0, 14)
+		zgCorner.Parent = zoneGanjil
+		local zgLabel = Instance.new("TextLabel")
+		zgLabel.Size = UDim2.new(1, 0, 1, 0)
+		zgLabel.BackgroundTransparency = 1
+		zgLabel.Text = "GANJIL"
+		zgLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		zgLabel.Font = Enum.Font.GothamBold
+		zgLabel.TextSize = 13
+		zgLabel.ZIndex = 23
+		zgLabel.Parent = zoneGanjil
+
+		-- Zone GENAP (kanan, biru muda)
+		local zoneGenap = Instance.new("Frame")
+		zoneGenap.Name = "ZoneGenap"
+		zoneGenap.Size = UDim2.new(0.35, 0, 1, 0)
+		zoneGenap.Position = UDim2.new(0.65, 0, 0, 0)
+		zoneGenap.BackgroundColor3 = Color3.fromRGB(0, 140, 220)
+		zoneGenap.BorderSizePixel = 0
+		zoneGenap.ZIndex = 22
+		zoneGenap.Parent = barTrack
+		local zpCorner = Instance.new("UICorner")
+		zpCorner.CornerRadius = UDim.new(0, 14)
+		zpCorner.Parent = zoneGenap
+		local zpLabel = Instance.new("TextLabel")
+		zpLabel.Size = UDim2.new(1, 0, 1, 0)
+		zpLabel.BackgroundTransparency = 1
+		zpLabel.Text = "GENAP"
+		zpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		zpLabel.Font = Enum.Font.GothamBold
+		zpLabel.TextSize = 13
+		zpLabel.ZIndex = 23
+		zpLabel.Parent = zoneGenap
+
+		-- Jarum / needle yang bergerak (putih terang)
+		local needle = Instance.new("Frame")
+		needle.Name = "Needle"
+		needle.Size = UDim2.new(0, 8, 1, 6)
+		needle.AnchorPoint = Vector2.new(0.5, 0.5)
+		needle.Position = UDim2.new(0.5, 0, 0.5, 0)
+		needle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		needle.BorderSizePixel = 0
+		needle.ZIndex = 25
+		needle.Parent = barTrack
+		local needleCorner = Instance.new("UICorner")
+		needleCorner.CornerRadius = UDim.new(0, 4)
+		needleCorner.Parent = needle
+
+		-- Tombol LEMPAR besar di tengah bawah
+		local lemparBtn = Instance.new("TextButton")
+		lemparBtn.Name = "LemparBtn"
+		lemparBtn.Size = UDim2.new(0, 160, 0, 52)
+		lemparBtn.AnchorPoint = Vector2.new(0.5, 0)
+		lemparBtn.Position = UDim2.new(0.5, 0, 0, 80)
+		lemparBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+		lemparBtn.Text = "🎲  LEMPAR!"
+		lemparBtn.TextColor3 = Color3.fromRGB(40, 0, 80)
+		lemparBtn.Font = Enum.Font.GothamBold
+		lemparBtn.TextSize = 20
+		lemparBtn.BorderSizePixel = 0
+		lemparBtn.ZIndex = 24
+		lemparBtn.Parent = drbPanel
+		local lemparCorner = Instance.new("UICorner")
+		lemparCorner.CornerRadius = UDim.new(0, 26)
+		lemparCorner.Parent = lemparBtn
+
+		-- Label hasil prediksi (GANJIL/GENAP terpilih)
+		local drbPredict = Instance.new("TextLabel")
+		drbPredict.Name = "Predict"
+		drbPredict.Size = UDim2.new(1, 0, 0, 24)
+		drbPredict.Position = UDim2.new(0, 0, 0, 140)
+		drbPredict.BackgroundTransparency = 1
+		drbPredict.Text = ""
+		drbPredict.TextColor3 = Color3.fromRGB(255, 230, 100)
+		drbPredict.Font = Enum.Font.GothamBold
+		drbPredict.TextSize = 14
+		drbPredict.ZIndex = 24
+		drbPredict.Parent = drbPanel
+
+		-- Label "Tekan LEMPAR untuk kocok!"
+		local drbHint2 = Instance.new("TextLabel")
+		drbHint2.Name = "Hint2"
+		drbHint2.Size = UDim2.new(1, 0, 0, 20)
+		drbHint2.Position = UDim2.new(0, 0, 0, 168)
+		drbHint2.BackgroundTransparency = 1
+		drbHint2.Text = "Tekan LEMPAR saat jarum di zona yang kamu inginkan!"
+		drbHint2.TextColor3 = Color3.fromRGB(200, 180, 255)
+		drbHint2.Font = Enum.Font.Gotham
+		drbHint2.TextSize = 12
+		drbHint2.ZIndex = 24
+		drbHint2.Parent = drbPanel
+
+		-- State internal
+		local drbActive = false
+		local drbNeedlePos = 0.5  -- 0..1, posisi jarum di bar
+		local drbNeedleDir = 1    -- +1 kanan, -1 kiri
+		local drbSpeed = 0.6      -- kecepatan jarum (fraksi per detik)
+		local drbLocked = false   -- setelah ditekan, jarum terkunci
+		local drbHeartbeat: RBXScriptConnection? = nil
+
+		local function stopNeedleLoop()
+			if drbHeartbeat then
+				drbHeartbeat:Disconnect()
+				drbHeartbeat = nil
+			end
+		end
+
+		local function startNeedleLoop()
+			stopNeedleLoop()
+			drbNeedlePos = 0.1
+			drbNeedleDir = 1
+			drbLocked = false
+			drbHeartbeat = RunService.Heartbeat:Connect(function(dt)
+				if not drbActive then stopNeedleLoop() return end
+				if drbLocked then return end
+				drbNeedlePos = drbNeedlePos + drbNeedleDir * drbSpeed * dt
+				-- bounce di ujung + akselerasi sedikit setiap pantulan
+				if drbNeedlePos >= 1 then
+					drbNeedlePos = 1
+					drbNeedleDir = -1
+					drbSpeed = math.min(drbSpeed + 0.05, 1.2)
+				elseif drbNeedlePos <= 0 then
+					drbNeedlePos = 0
+					drbNeedleDir = 1
+					drbSpeed = math.min(drbSpeed + 0.05, 1.2)
+				end
+				needle.Position = UDim2.new(drbNeedlePos, 0, 0.5, 0)
+				-- Warnai jarum sesuai zona
+				if drbNeedlePos < 0.35 then
+					needle.BackgroundColor3 = Color3.fromRGB(255, 180, 60)   -- zona ganjil
+				elseif drbNeedlePos > 0.65 then
+					needle.BackgroundColor3 = Color3.fromRGB(80, 200, 255)   -- zona genap
+				else
+					needle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  -- zona tengah
+				end
+			end)
+		end
+
+		showDiceRollBar = function(visible: boolean)
+			drbActive = visible
+			drbOverlay.Visible = visible
+			if visible then
+				drbLocked = false
+				drbSpeed = 0.6
+				lemparBtn.Text = "🎲  LEMPAR!"
+				lemparBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+				lemparBtn.Active = true
+				lemparBtn.AutoButtonColor = true
+				drbPredict.Text = ""
+				startNeedleLoop()
+			else
+				stopNeedleLoop()
+			end
+		end
+
+		lemparBtn.Activated:Connect(function()
+			if not drbActive or drbLocked then return end
+			drbLocked = true
+			-- Tunjukkan zona terpilih berdasarkan posisi jarum
+			local zone = if drbNeedlePos < 0.35 then "GANJIL 🔴" elseif drbNeedlePos > 0.65 then "GENAP 🔵" else "TENGAH ⚪"
+			drbPredict.Text = "Jarum berhenti di: " .. zone
+			lemparBtn.Text = "⏳  Mengocok..."
+			lemparBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+			lemparBtn.Active = false
+			-- Animasi dadu berputar sebentar seperti animasi lama
+			if audio then audio:playSfx("RollDice", true) end
+			task.spawn(function()
+				for _ = 1, 8 do
+					diceText.Text = string.format("🎲  %d + %d  =  ?", math.random(1, 6), math.random(1, 6))
+					task.wait(0.07)
+				end
+			end)
+			-- Kirim action Roll ke server (server tetap yang tentukan hasil dadu — authoritative)
+			send("Roll")
+		end)
 	end
 end
 initPolishUI()
