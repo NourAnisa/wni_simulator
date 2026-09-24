@@ -186,6 +186,30 @@ function ProfileService.recordMatch(self: any, userId: number, matchId: string, 
 	return true
 end
 
+function ProfileService.setDiceSkin(self: any, userId: number, skinKey: string): boolean
+	local skin = ProgressionConfig.DICE_SKINS[skinKey]
+	if not skin then return false end
+	local profile = self:get(userId)
+	if profile.level < skin.RequiredLevel then return false end
+
+	profile.diceSkin = skinKey
+	self.cache[userId] = profile
+
+	if store then
+		local key = "u_" .. tostring(userId)
+		task.spawn(function()
+			pcall(function()
+				store:UpdateAsync(key, function(raw)
+					local p = sanitize(raw)
+					p.diceSkin = skinKey
+					return p
+				end)
+			end)
+		end)
+	end
+	return true
+end
+
 function ProfileService.release(self: any, userId: number)
 	self.cache[userId] = nil
 	self.loaded[userId] = nil

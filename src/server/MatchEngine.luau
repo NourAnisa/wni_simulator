@@ -119,7 +119,7 @@ function Engine.join(self: any, userId: number, name: string): boolean
 		cash = Rules.StartingCash, position = 1, ready = false, eliminated = false,
 		inJail = false, jailTries = 0, jailRentToState = false, rentSuppressed = false,
 		inBekasi = false, bekasiReturnPosition = nil,
-		hand = {},
+		hand = {}, extraTurn = false,
 	})
 	for _, participant in self.players do
 		participant.ready = false
@@ -169,6 +169,15 @@ end
 
 function Engine.advance(self: any, now: number)
 	if self:checkEnd() then return end
+	-- Cek apakah pemain aktif mendapat giliran ekstra (dari dadu kembar)
+	local currentP = self.players[self.activeSeat]
+	if currentP and currentP.extraTurn and not currentP.eliminated then
+		currentP.extraTurn = false
+		self.phase = "AwaitRoll"
+		self.deadline = now + Rules.DecisionSeconds
+		self:addLog(currentP.name .. " bermain lagi karena dadu kembar! 🎲")
+		return
+	end
 	for _ = 1, Rules.PlayerCount do
 		self.activeSeat += 1
 		if self.activeSeat > Rules.PlayerCount then
@@ -288,8 +297,9 @@ function Engine.roll(self: any, now: number)
 	local d1 = self.random:NextInteger(1, 6)
 	local d2 = self.random:NextInteger(1, 6)
 	self.dice = {d1, d2}
+	local isDouble = (d1 == d2)
 	if participant.inJail then
-		if d1 == d2 then
+		if isDouble then
 			participant.inJail = false
 			participant.jailTries = 0
 			participant.jailRentToState = false
@@ -298,6 +308,12 @@ function Engine.roll(self: any, now: number)
 			self:addLog(participant.name .. " gagal keluar LAPAS (dadu " .. d1 .. "-" .. d2 .. "); tetap ditahan.")
 			self:advance(now)
 			return
+		end
+	else
+		-- Dadu kembar di luar LAPAS → beri giliran ekstra setelah petak selesai
+		if isDouble then
+			participant.extraTurn = true
+			self:addLog(participant.name .. " 🎲 DADU KEMBAR " .. d1 .. "-" .. d2 .. "! Mendapat giliran ekstra!")
 		end
 	end
 	local destination = participant.position + d1 + d2
@@ -384,16 +400,22 @@ end
 
 function Engine.court(self: any, seat: number, now: number)
 	local participant = self.players[seat]
-	local roll = self.random:NextInteger(1, 6)
-	self.dice = {roll, 0}
-	self:addLog(participant.name .. " di Pengadilan, dadu " .. roll .. ".")
-	if roll >= 5 then
+	-- Gunakan 2 dadu (2-12) untuk distribusi probabilitas yang lebih representatif
+	local d1 = self.random:NextInteger(1, 6)
+	local d2 = self.random:NextInteger(1, 6)
+	local roll = d1 + d2
+	self.dice = {d1, d2}
+	self:addLog(participant.name .. " di Pengadilan, dadu " .. d1 .. "+" .. d2 .. "=" .. roll .. ".")
+	if roll >= 9 then
+		-- Tinggi (9-12): menang gugatan
 		Economy.credit(participant, Rules.CourtCompensation)
 		self:addLog(participant.name .. " menang gugatan, menerima " .. Rules.formatMoney(Rules.CourtCompensation) .. ".")
-	elseif roll >= 3 then
+	elseif roll >= 5 then
+		-- Sedang (5-8): denda dan LAPAS
 		self:pay(seat, Rules.CourtFine, nil, "denda Pengadilan")
 		self:sendToJail(seat, "vonis Pengadilan")
 	else
+		-- Rendah (2-4): sitaan berat + LAPAS
 		local take = math.ceil(participant.cash / 2)
 		self:pay(seat, take, nil, "aset dirampas 50 persen (dibulatkan ke atas)")
 		self:sendToJail(seat, "vonis Pengadilan berat")
@@ -626,7 +648,7 @@ function Engine.restart(self: any, now: number)
 			cash = Rules.StartingCash, position = 1, ready = true, eliminated = false,
 			inJail = false, jailTries = 0, jailRentToState = false, rentSuppressed = false,
 			inBekasi = false, bekasiReturnPosition = nil,
-			hand = {},
+			hand = {}, extraTurn = false,
 		})
 	end
 	self.players = freshPlayers

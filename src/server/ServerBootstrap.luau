@@ -109,6 +109,8 @@ local AvatarPawnService = require(avatarPawnModule)
 local BotAIService = require(botAIModule)
 local avatarPawns = AvatarPawnService.new()
 local botAI = BotAIService.new()
+local leaderboardModule = script.Parent:FindFirstChild("LeaderboardService")
+local LeaderboardService = if leaderboardModule and leaderboardModule:IsA("ModuleScript") then require(leaderboardModule) else nil
 local rooms = RoomService.new(function() return Engine.new(definitions) end)
 local profiles = ProfileService.new()
 local routing = MatchRoutingService.new()
@@ -254,6 +256,15 @@ local function recordFinishedMatch()
 		local outcome = if winningTeam == nil then "draw" elseif participant.team == winningTeam then "win" else "loss"
 		task.spawn(function()
 			profiles:recordMatch(participant.userId, matchId, outcome)
+			if LeaderboardService then
+				local p = profiles:get(participant.userId)
+				LeaderboardService.updatePlayerXP(participant.userId, p.xp)
+				local player = Players:GetPlayerByUserId(participant.userId)
+				if player and outcome == "win" then
+					LeaderboardService.trackMission(participant.userId, "win_match", 1)
+					LeaderboardService.sendMissions(player)
+				end
+			end
 		end)
 	end
 end
@@ -453,8 +464,19 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 	local now = Workspace:GetServerTimeNow()
 	if now - (lastRequest[player] or -math.huge) < Rules.RequestInterval then return end
 	lastRequest[player] = now
-	if typeof(action) ~= "string" or #action > 16 then return end
 	if action == "Sync" then synchronize(player, nil); return end
+	if action == "SetDiceSkin" then
+		local skinKey = tostring(version or targetTile or revision or "")
+		if skinKey ~= "" then
+			local ok = profiles:setDiceSkin(player.UserId, skinKey)
+			if ok then
+				broadcast()
+			else
+				synchronize(player, "Skin dadu belum terbuka atau tidak valid.")
+			end
+		end
+		return
+	end
 	if action == "ReturnLobby" then
 		if typeof(revision) ~= "number" or revision ~= revision or revision % 1 ~= 0 or revision < 0 or revision > 1000000000 then return end
 		if typeof(version) ~= "string" or version ~= Rules.Version or targetTile ~= nil then return end
@@ -802,6 +824,7 @@ task.spawn(function()
 			end
 			if matchmaking.revision ~= matchmakingRevision then matchmakingChanged = true end
 		end
+		if LeaderboardService then LeaderboardService.tick(now) end
 		if reconnectExpired or engineChanged or matchmakingChanged then broadcast() end
 		task.wait(0.25)
 	end

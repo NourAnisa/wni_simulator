@@ -55,83 +55,65 @@ local NAME_PERSONALITY = {
 	["Bot Dewi"] = "Balanced",
 }
 
-local function propertyBand(index: number)
-	if index >= 2 and index <= 8 then return 2, 8 end
-	if index >= 10 and index <= 16 then return 10, 16 end
-	if index >= 18 and index <= 24 then return 18, 24 end
-	if index >= 26 and index <= 32 then return 26, 32 end
-	if index >= 34 and index <= 40 then return 34, 40 end
-	return nil
-end
+-- Peta kluster pulau (sama dengan ISLAND_TILES di MatchEngine)
+local ISLAND_CLUSTERS: {[string]: {number}} = {
+	SUMATERA   = {2, 3, 5, 6, 8},
+	KALIMANTAN = {10, 11, 13, 14, 16},
+	SULAWESI   = {18, 19, 21, 22, 24},
+	PAPUA      = {26, 27, 29, 30, 32},
+	JAWA       = {34, 35, 37, 38, 40},
+}
 
-function BotStrategyService.profileFor(participant: any): (string, any)
-	local key = NAME_PERSONALITY[participant.name]
-	if not key then
-		local n = math.abs(tonumber(participant.userId) or 0) % 3
-		key = if n == 0 then "Aggressive" elseif n == 1 then "Balanced" else "Conservative"
-	end
-	return key, PERSONALITIES[key]
-end
+-- Cek apakah pembelian tile akan melengkapi monopoli pulau (oleh tim si pembeli)
+-- Juga cek apakah tile ini adalah tile terakhir yang dibutuhkan musuh untuk monopoli
+local function checkIslandMonopolyStatus(engine: any, buyerSeat: number, tileIndex: number)
+	local buyer = engine.players[buyerSeat]
+	if not buyer then return false, false end
+	local buyerTeam = buyer.team
 
-local function enemyRentThreat(engine: any, seat: number): number
-	local participant = engine.players[seat]
-	local highest = 0
-	local second = 0
-	for tileIndex, ownerSeat in engine.owners do
-		local owner = engine.players[ownerSeat]
-		if owner and not owner.eliminated and owner.team ~= participant.team and not (engine.tolls and engine.tolls[tileIndex]) then
-			local level = engine.buildings[tileIndex] or 0
-			local rents = Tarif.get(tileIndex).rents
-			local rent = rents[math.clamp(level + 1, 1, #rents)] or 0
-			if rent > highest then
-				second = highest
-				highest = rent
-			elseif rent > second then
-				second = rent
+	for _, cluster in pairs(ISLAND_CLUSTERS) do
+		if table.find(cluster, tileIndex) then
+			-- Cek apakah pembelian ini melengkapi monopoli tim pembeli
+			local willComplete = true
+			for _, idx in ipairs(cluster) do
+				if idx == tileIndex then continue end
+				if engine.tiles[idx] and engine.tiles[idx].kind ~= "Property" then continue end
+				local owner = engine.owners[idx]
+				if not owner or not engine.players[owner] or engine.players[owner].team ~= buyerTeam then
+					willComplete = false
+					break
+				end
 			end
+
+			-- Cek apakah tile ini adalah tile terakhir yang dibutuhkan musuh untuk monopoli
+			local wouldBlockEnemy = false
+			for _, idx in ipairs(cluster) do
+				if idx == tileIndex then continue end
+				if engine.tiles[idx] and engine.tiles[idx].kind ~= "Property" then continue end
+				local owner = engine.owners[idx]
+				if owner and engine.players[owner] and engine.players[owner].team ~= buyerTeam then
+					-- Musuh sudah punya tile lain di kluster ini
+					local enemyCount, totalProp = 0, 0
+					for _, cidx in ipairs(cluster) do
+						if engine.tiles[cidx] and engine.tiles[cidx].kind == "Property" then
+							totalProp += 1
+							local co = engine.owners[cidx]
+							if co and engine.players[co] and engine.players[co].team ~= buyerTeam then
+								enemyCount += 1
+							end
+						end
+					end
+					if enemyCount >= totalProp - 1 then
+						wouldBlockEnemy = true
+					end
+					break
+				end
+			end
+
+			return willComplete, wouldBlockEnemy
 		end
 	end
-	return highest + math.floor(second * 0.35)
-end
-
-local function groupState(engine: any, seat: number, tileIndex: number): (number, number, number, number)
-	local first, last = propertyBand(tileIndex)
-	if not first or not last then return 0, 0, 0, 0 end
-	local participant = engine.players[seat]
-	local teamOwned, enemyOwned, free, total = 0, 0, 0, 0
-	for index = first, last do
-		if engine.tiles[index] and engine.tiles[index].kind == "Property" and not (engine.tolls and engine.tolls[index]) then
-			total += 1
-			local ownerSeat = engine.owners[index]
-			if not ownerSeat then
-				free += 1
-			else
-				local owner = engine.players[ownerSeat]
-				if owner and owner.team == participant.team then teamOwned += 1 else enemyOwned += 1 end
-			end
-		end
-	end
-	return teamOwned, enemyOwned, free, total
-end
-
-function BotStrategyService.reserveFor(engine: any, seat: number): number
-	local participant = engine.players[seat]
-	local _, profile = BotStrategyService.profileFor(participant)
-	local threat = enemyRentThreat(engine, seat)
-	local reserve = profile.baseReserve + math.floor(threat * profile.threatWeight)
-	if participant.inJail then reserve += math.floor((Rules.JailBailAmount or 0) * 0.5) end
-	return reserve
-end
-
-function BotStrategyService.shouldBail(engine: any, seat: number): boolean
-	local participant = engine.players[seat]
-	if not participant.inJail or participant.cash < Rules.JailBailAmount then return false end
-	local reserve = BotStrategyService.reserveFor(engine, seat)
-	local after = participant.cash - Rules.JailBailAmount
-	local key = BotStrategyService.profileFor(participant)
-	if key == "Aggressive" then return after >= reserve * 0.65 end
-	if key == "Balanced" then return participant.jailTries >= 1 and after >= reserve * 0.85 end
-	return participant.jailTries >= 2 and after >= reserve
+	return false, false
 end
 
 function BotStrategyService.shouldBuy(engine: any, seat: number, tileIndex: number): (boolean, any)
@@ -153,6 +135,9 @@ function BotStrategyService.shouldBuy(engine: any, seat: number, tileIndex: numb
 	local liquidity = cashAfter / math.max(participant.cash, 1)
 	local roundRatio = math.clamp((engine.round or 0) / math.max(Rules.MaxRounds, 1), 0, 1)
 
+	-- Cek monopoli Nusantara
+	local willMonopolize, wouldBlockMonopoly = checkIslandMonopolyStatus(engine, seat, tileIndex)
+
 	local score = 0.55
 	score += math.clamp(rentEfficiency * 3.0, 0, 1.10)
 	score += groupRatio * profile.groupWeight
@@ -161,6 +146,9 @@ function BotStrategyService.shouldBuy(engine: any, seat: number, tileIndex: numb
 	if blocksEnemy then score += profile.blockWeight end
 	score += roundRatio * profile.lateGameBonus
 	if tariff.verified == false then score -= 0.04 end
+	-- Bonus besar untuk monopoli Nusantara (2× sewa = sangat menguntungkan)
+	if willMonopolize then score += 1.80 end
+	if wouldBlockMonopoly then score += 0.90 end
 
 	return score >= profile.buyThreshold, {
 		personality = key,
@@ -170,6 +158,8 @@ function BotStrategyService.shouldBuy(engine: any, seat: number, tileIndex: numb
 		groupRatio = groupRatio,
 		completesGroup = completesGroup,
 		blocksEnemy = blocksEnemy,
+		willMonopolize = willMonopolize,
+		wouldBlockMonopoly = wouldBlockMonopoly,
 	}
 end
 

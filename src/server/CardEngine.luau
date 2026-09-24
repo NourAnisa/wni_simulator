@@ -20,6 +20,9 @@ function CardEngine.new()
 			table.insert(self.disasterDeck, card.id)
 		end
 	end
+	-- Shuffle decks at init so draw order is random from the first card
+	self.random:Shuffle(self.fateDeck)
+	self.random:Shuffle(self.disasterDeck)
 	return self
 end
 function CardEngine.draw(self: any, deckName: string): string
