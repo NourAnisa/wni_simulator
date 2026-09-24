@@ -133,11 +133,31 @@ stylePanel("HintBar",      12, Color3.fromRGB(30, 22, 8), Color3.fromRGB(18, 12,
 local victoryPanel = root:FindFirstChild("VictoryPanel")
 if victoryPanel then
 	local content = victoryPanel:FindFirstChild("Content")
-	if content and content:IsA("Frame") then
-		(content :: Frame).BackgroundColor3 = C.navyLight
+	if content and (content:IsA("Frame") or content:IsA("CanvasGroup")) then
+		local cGui = content :: any
+		cGui.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 		addCorner(content, 20)
-		addGradient(content, Color3.fromRGB(22, 32, 60), C.navy, 160)
-		addStroke(content, C.gold, 2, 0)
+		addGradient(content, Color3.fromRGB(26, 36, 60), Color3.fromRGB(14, 20, 36), 90)
+		addStroke(content, C.gold, 2.5, 0)
+
+		local title = content:FindFirstChild("Title") :: TextLabel?
+		if title then
+			title.TextColor3 = Color3.fromRGB(255, 220, 80)
+			title.Font = Enum.Font.GothamBlack
+		end
+		local trophy = content:FindFirstChild("TrophyBanner") :: TextLabel?
+		if trophy then
+			trophy.Font = Enum.Font.GothamBlack
+			trophy.TextColor3 = Color3.fromRGB(255, 225, 95)
+		end
+		local status = content:FindFirstChild("Status") :: TextLabel?
+		if status then
+			status.TextColor3 = Color3.fromRGB(180, 205, 235)
+		end
+		local scores = content:FindFirstChild("Scores") :: TextLabel?
+		if scores then
+			scores.TextColor3 = Color3.fromRGB(240, 245, 255)
+		end
 	end
 	if victoryPanel:IsA("Frame") then
 		(victoryPanel :: Frame).BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -156,6 +176,8 @@ local function styleButton(btn: TextButton, isPrimary: boolean)
 	local baseColor = if isPrimary then PRIMARY_BTN_COLOR else SECONDARY_BTN_COLOR
 	local hoverColor = if isPrimary then PRIMARY_BTN_HOVER else SECONDARY_BTN_HOVER
 	btn.BackgroundColor3 = baseColor
+	btn.TextColor3 = if isPrimary then Color3.fromRGB(15, 23, 42) else Color3.fromRGB(245, 248, 255)
+	btn.Font = if isPrimary then Enum.Font.GothamBlack else Enum.Font.GothamBold
 	addCorner(btn, 14)
 	-- Gradient sudah ditambahkan, remove dulu lalu buat baru
 	local oldGrad = btn:FindFirstChildOfClass("UIGradient")
@@ -202,7 +224,8 @@ for _, desc in ipairs(root:GetDescendants()) do
 		local isPrimary = table.find(PRIMARY_NAMES, btn.Name) ~= nil
 		-- Hanya style jika bukan tombol kecil navigasi
 		if btn.Name ~= "Previous" and btn.Name ~= "Next" and
-		   btn.Name ~= "CloseHand" and btn.Name ~= "PreviousCard" and btn.Name ~= "NextCard" then
+		   btn.Name ~= "CloseHand" and btn.Name ~= "PreviousCard" and btn.Name ~= "NextCard" and
+		   btn.Name ~= "CloseButton" then
 			task.spawn(styleButton, btn, isPrimary)
 		end
 	end

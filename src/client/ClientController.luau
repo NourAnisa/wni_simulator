@@ -161,7 +161,26 @@ local specialToastUI = {
 	stroke = waitFor(specialToast, "AccentStroke") :: UIStroke,
 }
 local victoryPanel = waitFor(root, "VictoryPanel") :: Frame
-local victoryContent = waitFor(victoryPanel, "Content") :: CanvasGroup
+local victoryContent = waitFor(victoryPanel, "Content") :: GuiObject
+
+-- Pastikan Content adalah Frame standar agar touch event di mobile/tablet tidak terhalang bug CanvasGroup
+if victoryContent:IsA("CanvasGroup") then
+	local frame = Instance.new("Frame")
+	frame.Name = "Content"
+	frame.Size = victoryContent.Size
+	frame.Position = victoryContent.Position
+	frame.AnchorPoint = victoryContent.AnchorPoint
+	frame.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+	frame.BorderSizePixel = 0
+	frame.ZIndex = victoryContent.ZIndex
+	frame.Parent = victoryPanel
+	for _, child in ipairs(victoryContent:GetChildren()) do
+		child.Parent = frame
+	end
+	victoryContent:Destroy()
+	victoryContent = frame
+end
+
 local victoryUI = {
 	content = victoryContent,
 	scale = waitFor(victoryContent, "VictoryScale") :: UIScale,
@@ -170,9 +189,34 @@ local victoryUI = {
 	scores = waitFor(victoryContent, "Scores") :: TextLabel,
 	rematch = waitFor(victoryContent, "Rematch") :: TextButton,
 	returnLobby = waitFor(victoryContent, "ReturnLobby") :: TextButton,
+	close = victoryContent:FindFirstChild("CloseButton") :: TextButton?,
 }
 local trophyBanner = victoryContent:FindFirstChild("TrophyBanner") :: TextLabel?
 local trophyStroke = if trophyBanner then trophyBanner:FindFirstChild("TrophyStroke") :: UIStroke? else nil
+
+if not victoryUI.close then
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Name = "CloseButton"
+	closeBtn.AnchorPoint = Vector2.new(1, 0)
+	closeBtn.Position = UDim2.new(0.95, 0, 0.05, 0)
+	closeBtn.Size = UDim2.new(0, 34, 0, 34)
+	closeBtn.BackgroundColor3 = Color3.fromRGB(35, 48, 75)
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.Text = "✕"
+	closeBtn.TextColor3 = Color3.fromRGB(220, 230, 250)
+	closeBtn.TextSize = 16
+	closeBtn.AutoButtonColor = true
+	closeBtn.ZIndex = 95
+	local closeCorner = Instance.new("UICorner")
+	closeCorner.CornerRadius = UDim.new(0, 17)
+	closeCorner.Parent = closeBtn
+	local closeStroke = Instance.new("UIStroke")
+	closeStroke.Color = Color3.fromRGB(70, 90, 130)
+	closeStroke.Thickness = 1.5
+	closeStroke.Parent = closeBtn
+	closeBtn.Parent = victoryContent
+	victoryUI.close = closeBtn
+end
 local buildPicker = waitFor(propertyPanel, "BuildPicker") :: Frame
 local previousBuild = waitFor(buildPicker, "Previous") :: TextButton
 local nextBuild = waitFor(buildPicker, "Next") :: TextButton
@@ -1394,25 +1438,33 @@ local function refreshVictoryContent(snap: any)
 	local winnerB = string.find(resultText, "TIM B MENANG", 1, true) ~= nil
 	if trophyBanner then
 		if winnerA or winnerB then
-			trophyBanner.Text = "\u{1F3C6}  " .. resultText
-			trophyBanner.TextColor3 = if winnerA then Color3.fromRGB(174, 221, 202) else Color3.fromRGB(242, 196, 167)
+			trophyBanner.Text = "\u{1F3C6}  " .. (if winnerA then "TIM A MENANG!" else "TIM B MENANG!")
+			trophyBanner.TextColor3 = if winnerA then Color3.fromRGB(130, 240, 200) else Color3.fromRGB(255, 185, 120)
 			if trophyStroke then
-				trophyStroke.Color = if winnerA then Color3.fromRGB(80, 170, 140) else Color3.fromRGB(214, 130, 90)
+				trophyStroke.Color = if winnerA then Color3.fromRGB(60, 180, 140) else Color3.fromRGB(220, 120, 60)
 			end
 			trophyBanner.Visible = true
 		else
-			trophyBanner.Visible = false
+			trophyBanner.Text = "\u{1F3C1}  PERTANDINGAN BERAKHIR"
+			trophyBanner.TextColor3 = Color3.fromRGB(255, 220, 100)
+			trophyBanner.Visible = true
 		end
 	end
 	victoryUI.status.Text = if typeof(snap.result) == "string" and #snap.result > 0 then snap.result else "Hasil pertandingan telah ditetapkan server."
-	victoryUI.scores.Text = "SALDO AKHIR TIM\nTim A  •  " .. Rules.formatMoney(teamA) .. "\nTim B  •  " .. Rules.formatMoney(teamB)
+	victoryUI.scores.Text = string.format("SALDO AKHIR TIM\nTim A  •  %s\nTim B  •  %s", Rules.formatMoney(teamA), Rules.formatMoney(teamB))
 	local mySeat = findMySeat(snap)
 	local canRematch = mySeat > 0 and not snap.rematchUnavailable
 	local voted = mySeat > 0 and snap.rematchVotes and snap.rematchVotes[mySeat]
 	victoryUI.rematch.Text = if voted then "BATAL MAIN LAGI" else "MAIN LAGI"
 	setVictoryButton(victoryUI.rematch, canRematch)
 	local canReturn = mySeat > 0 and snap.routing and snap.routing.canReturnToLobby == true
-	setVictoryButton(victoryUI.returnLobby, canReturn)
+	if canReturn then
+		victoryUI.returnLobby.Text = "KEMBALI KE LOBBY"
+		setVictoryButton(victoryUI.returnLobby, true)
+	else
+		victoryUI.returnLobby.Text = "LIHAT PAPAN"
+		setVictoryButton(victoryUI.returnLobby, true)
+	end
 end
 
 local function showVictory(snap: any, animate: boolean)
@@ -1424,10 +1476,14 @@ local function showVictory(snap: any, animate: boolean)
 	end
 	if animate then
 		victoryPanel.BackgroundTransparency = 1
-		victoryContent.GroupTransparency = 1
-		victoryUI.scale.Scale = 0.90
-		TweenService:Create(victoryPanel, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.34}):Play()
-		TweenService:Create(victoryContent, TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
+		if victoryContent:IsA("CanvasGroup") then
+			(victoryContent :: any).GroupTransparency = 1
+		end
+		victoryUI.scale.Scale = 0.88
+		TweenService:Create(victoryPanel, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.38}):Play()
+		if victoryContent:IsA("CanvasGroup") then
+			TweenService:Create(victoryContent, TweenInfo.new(0.34, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {GroupTransparency = 0}):Play()
+		end
 		TweenService:Create(victoryUI.scale, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
 		if audio then
 			local resultText = tostring(snap.result or "")
@@ -1449,23 +1505,55 @@ local function hideVictory()
 	if not victoryPanel.Visible or victoryClosing then return end
 	victoryClosing = true
 	TweenService:Create(victoryPanel, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
-	local fade = TweenService:Create(victoryContent, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1})
-	TweenService:Create(victoryUI.scale, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.96}):Play()
-	fade:Play()
-	fade.Completed:Once(function()
+	if victoryContent:IsA("CanvasGroup") then
+		local fade = TweenService:Create(victoryContent, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {GroupTransparency = 1})
+		fade:Play()
+	end
+	local scaleTween = TweenService:Create(victoryUI.scale, TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.94})
+	scaleTween:Play()
+	scaleTween.Completed:Once(function()
 		victoryPanel.Visible = false
 		victoryClosing = false
 	end)
 end
 
-victoryUI.rematch.Activated:Connect(function()
-	if victoryUI.rematch.Active and latest and latest.phase == "Finished" and allowed.Ready then
-		send("Rematch")
+local function handleRematchIntent()
+	if not latest or latest.phase ~= "Finished" then return end
+	local mySeat = findMySeat(latest)
+	if mySeat <= 0 or latest.rematchUnavailable then return end
+	send("Rematch")
+end
+victoryUI.rematch.Activated:Connect(handleRematchIntent)
+victoryUI.rematch.MouseButton1Click:Connect(handleRematchIntent)
+
+local function handleReturnOrBoard()
+	if not latest or latest.phase ~= "Finished" then
+		hideVictory()
+		return
 	end
-end)
-victoryUI.returnLobby.Activated:Connect(function()
-	if victoryUI.returnLobby.Active and latest and latest.phase == "Finished" and allowed.ReturnLobby then
+	local mySeat = findMySeat(latest)
+	local canReturn = mySeat > 0 and latest.routing and latest.routing.canReturnToLobby == true
+	if canReturn then
 		send("ReturnLobby")
+	else
+		hideVictory()
+	end
+end
+victoryUI.returnLobby.Activated:Connect(handleReturnOrBoard)
+victoryUI.returnLobby.MouseButton1Click:Connect(handleReturnOrBoard)
+
+if victoryUI.close then
+	victoryUI.close.Activated:Connect(hideVictory)
+	victoryUI.close.MouseButton1Click:Connect(hideVictory)
+end
+
+-- Memungkinkan pemain membuka kembali panel hasil pertandingan kapan saja setelah pertandingan selesai
+hRound.Active = true
+hRound.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		if latest and latest.phase == "Finished" and not victoryPanel.Visible then
+			showVictory(latest, true)
+		end
 	end
 end)
 

@@ -891,6 +891,7 @@ function Engine.restart(self: any, now: number)
 			hand = {}, extraTurn = false, doaTier = nil,
 			role = assignedRole,
 			portfolio = {BBUMN = 0, KRIPTO = 0},
+			isBot = previous.isBot == true,
 		})
 	end
 	self.players = freshPlayers
