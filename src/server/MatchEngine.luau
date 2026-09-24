@@ -92,6 +92,7 @@ function Engine.new(tiles: {Tile})
 	self.rematchVotes = {false, false, false, false}
 	self.rematchUnavailable = false
 	self.buyBanReleaseSeat = nil
+	self.activeEvent = nil
 	self:addLog("Mode prototipe: 4 pemain, tim 2v2, batas 8 ronde.")
 	return self
 end
@@ -167,6 +168,72 @@ function Engine.checkEnd(self: any): boolean
 	return true
 end
 
+function Engine.processRoundEvent(self: any, now: number)
+	if self.round == 3 then
+		self.activeEvent = {
+			id = "MusimMudik",
+			name = "MUSIM MUDIK LEBARAN",
+			desc = "Sewa jalur Transportasi naik 2X lipat selama putaran ini!",
+			icon = "🚗",
+			round = 3,
+		}
+		self:addLog("📢 EVENT NASIONAL: MUSIM MUDIK! Sewa seluruh jalur transportasi naik 2X lipat!")
+	elseif self.round == 5 then
+		local lowestSeat = nil
+		local lowestCash = math.huge
+		for seat, p in self.players do
+			if not p.eliminated and p.cash < lowestCash then
+				lowestCash = p.cash
+				lowestSeat = seat
+			end
+		end
+		self.activeEvent = {
+			id = "BansosNasional",
+			name = "BANSOS SEMBAKO CAIR",
+			desc = "Suntikan dana Rp 2.500.000 untuk warga paling membutuhkan!",
+			icon = "🍚",
+			round = 5,
+		}
+		if lowestSeat then
+			local luckyP = self.players[lowestSeat]
+			local amount = 2500000
+			Economy.credit(luckyP, amount)
+			self:addLog("📢 EVENT NASIONAL: BANSOS CAIR! " .. luckyP.name .. " menerima " .. Rules.formatMoney(amount) .. " dari kas negara!")
+		else
+			self:addLog("📢 EVENT NASIONAL: BANSOS SEMBAKO CAIR!")
+		end
+	elseif self.round == 7 then
+		local highestSeat = nil
+		local highestCash = -1
+		for seat, p in self.players do
+			if not p.eliminated and p.cash > highestCash then
+				highestCash = p.cash
+				highestSeat = seat
+			end
+		end
+		self.activeEvent = {
+			id = "AuditPajak",
+			name = "AUDIT PAJAK & OTT",
+			desc = "Pemeriksaan aset konglomerat terkaya!",
+			icon = "📑",
+			round = 7,
+		}
+		if highestSeat and highestCash > 2000000 then
+			local richP = self.players[highestSeat]
+			local tax = math.floor(highestCash * 0.1)
+			self:pay(highestSeat, tax, nil, "pajak darurat kekayaan ronde 7")
+			self:addLog("📢 EVENT NASIONAL: OTT & AUDIT PAJAK! " .. richP.name .. " menyetorkan " .. Rules.formatMoney(tax) .. " pajak kekayaan!")
+		else
+			self:addLog("📢 EVENT NASIONAL: AUDIT PAJAK! Seluruh warga tertib membayar pajak.")
+		end
+	else
+		if self.activeEvent then
+			self:addLog("Event nasional " .. self.activeEvent.name .. " telah selesai.")
+			self.activeEvent = nil
+		end
+	end
+end
+
 function Engine.advance(self: any, now: number)
 	if self:checkEnd() then return end
 	-- Cek apakah pemain aktif mendapat giliran ekstra (dari dadu kembar)
@@ -183,6 +250,7 @@ function Engine.advance(self: any, now: number)
 		if self.activeSeat > Rules.PlayerCount then
 			self.activeSeat = 1
 			self.round += 1
+			self:processRoundEvent(now)
 			if self.round > Rules.MaxRounds then
 				self.round = Rules.MaxRounds
 				local scores = Economy.teamScores(self.players, self.owners, self.buildings)
@@ -367,6 +435,13 @@ function Engine.resolveTile(self: any, now: number)
 			local label = if level == 0 then "sewa kosong " .. tile.name else "sewa " .. self:levelName(level) .. " " .. tile.name
 			if isMono and monoIsland then
 				label = label .. " [MONOPOLI " .. monoIsland .. " 2X]"
+			end
+			-- Dynamic Round Event: Musim Mudik Lebaran
+			if self.activeEvent and self.activeEvent.id == "MusimMudik" then
+				if monoIsland == "Transportasi" or string.find(tile.name, "Bandara") or string.find(tile.name, "Pelabuhan") or string.find(tile.name, "Stasiun") or string.find(tile.name, "Whoosh") then
+					rent = rent * 2
+					label ..= " [MUDIK 2X]"
+				end
 			end
 			if self.round >= 6 then
 				label = label .. " [INFLASI R" .. self.round .. "]"
@@ -673,6 +748,7 @@ function Engine.restart(self: any, now: number)
 	self.deadline = now + Rules.DecisionSeconds
 	self.matchId = HttpService:GenerateGUID(false)
 	self.rematchVotes = {false, false, false, false}
+	self.activeEvent = nil
 	self:addLog("Semua peserta setuju. Pertandingan baru dimulai dengan uang dan aset awal.")
 end
 
@@ -916,6 +992,7 @@ function Engine.snapshot(self: any)
 		rematchUnavailable = self.rematchUnavailable,
 		monopolies = self:getIslandMonopolies(),
 		teamSwap = if self.phase == "Waiting" and self.teamSwap then table.clone(self.teamSwap) else nil,
+		activeEvent = if self.activeEvent then table.clone(self.activeEvent) else nil,
 		cardChoice = if self.phase == "AwaitCardChoice" and self.pendingCardChoice then {
 			id = self.pendingCardChoice.id, seat = self.pendingCardChoice.seat,
 			options = self:cardLandChoices(self.pendingCardChoice.seat, self.pendingCardChoice.id),

@@ -35,6 +35,14 @@ local QUICK_CHATS = {
 	"Begal nih bos! 💀",
 	"Kabur dulu ah! 💨",
 }
+local SOUND_LIST = {
+	"🎺 Telolet Basuri!",
+	"🚨 Sirine KPK!",
+	"🔨 Palu Hakim!",
+	"🥳 Horeee Menang!",
+	"💦 Kecebur Kali!",
+	"🛵 Priiit Parkir!",
+}
 
 -- Buat GUI Pemilih Emotikon & Chat Cepat
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -68,8 +76,8 @@ triggerStroke.Parent = triggerBtn
 -- 2. Panel Palet
 local palette = Instance.new("Frame")
 palette.Name = "EmotePalette"
-palette.Size = UDim2.fromOffset(260, 220)
-palette.Position = UDim2.new(1, -290, 1, -415)
+palette.Size = UDim2.fromOffset(270, 230)
+palette.Position = UDim2.new(1, -300, 1, -425)
 palette.BackgroundColor3 = Color3.fromRGB(16, 22, 36)
 palette.BackgroundTransparency = 0.05
 palette.Visible = false
@@ -98,27 +106,39 @@ tabBar.Parent = palette
 
 local emojiTabBtn = Instance.new("TextButton")
 emojiTabBtn.Name = "EmojiTab"
-emojiTabBtn.Size = UDim2.new(0.5, -4, 1, 0)
+emojiTabBtn.Size = UDim2.new(0.33, -3, 1, 0)
 emojiTabBtn.Position = UDim2.new(0, 0, 0, 0)
 emojiTabBtn.BackgroundColor3 = Color3.fromRGB(230, 175, 30)
 emojiTabBtn.Text = "EMOJI"
 emojiTabBtn.TextColor3 = Color3.fromRGB(15, 20, 30)
 emojiTabBtn.Font = Enum.Font.GothamBold
-emojiTabBtn.TextSize = 12
+emojiTabBtn.TextSize = 11
 emojiTabBtn.Parent = tabBar
 local etc = Instance.new("UICorner"); etc.CornerRadius = UDim.new(0, 8); etc.Parent = emojiTabBtn
 
 local chatTabBtn = Instance.new("TextButton")
 chatTabBtn.Name = "ChatTab"
-chatTabBtn.Size = UDim2.new(0.5, -4, 1, 0)
-chatTabBtn.Position = UDim2.new(0.5, 4, 0, 0)
+chatTabBtn.Size = UDim2.new(0.33, -3, 1, 0)
+chatTabBtn.Position = UDim2.new(0.33, 1, 0, 0)
 chatTabBtn.BackgroundColor3 = Color3.fromRGB(35, 45, 65)
-chatTabBtn.Text = "CHAT CEPAT"
+chatTabBtn.Text = "CHAT"
 chatTabBtn.TextColor3 = Color3.fromRGB(180, 200, 230)
 chatTabBtn.Font = Enum.Font.GothamBold
 chatTabBtn.TextSize = 11
 chatTabBtn.Parent = tabBar
 local ctc = Instance.new("UICorner"); ctc.CornerRadius = UDim.new(0, 8); ctc.Parent = chatTabBtn
+
+local soundTabBtn = Instance.new("TextButton")
+soundTabBtn.Name = "SoundTab"
+soundTabBtn.Size = UDim2.new(0.34, -3, 1, 0)
+soundTabBtn.Position = UDim2.new(0.66, 2, 0, 0)
+soundTabBtn.BackgroundColor3 = Color3.fromRGB(35, 45, 65)
+soundTabBtn.Text = "SUARA 📢"
+soundTabBtn.TextColor3 = Color3.fromRGB(180, 200, 230)
+soundTabBtn.Font = Enum.Font.GothamBold
+soundTabBtn.TextSize = 10
+soundTabBtn.Parent = tabBar
+local stc = Instance.new("UICorner"); stc.CornerRadius = UDim.new(0, 8); stc.Parent = soundTabBtn
 
 -- Container Emoji
 local emojiContainer = Instance.new("Frame")
@@ -152,6 +172,23 @@ local chatList = Instance.new("UIListLayout")
 chatList.Padding = UDim.new(0, 5)
 chatList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 chatList.Parent = chatContainer
+
+-- Container Suara Meme
+local soundContainer = Instance.new("ScrollingFrame")
+soundContainer.Name = "SoundContainer"
+soundContainer.Size = UDim2.new(1, -16, 1, -52)
+soundContainer.Position = UDim2.new(0, 8, 0, 46)
+soundContainer.BackgroundTransparency = 1
+soundContainer.ScrollBarThickness = 4
+soundContainer.ScrollBarImageColor3 = Color3.fromRGB(230, 175, 30)
+soundContainer.CanvasSize = UDim2.new(0, 0, 0, #SOUND_LIST * 36)
+soundContainer.Visible = false
+soundContainer.Parent = palette
+
+local soundList = Instance.new("UIListLayout")
+soundList.Padding = UDim.new(0, 5)
+soundList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+soundList.Parent = soundContainer
 
 local function playClickSound()
 	local s = Instance.new("Sound")
@@ -191,25 +228,25 @@ local function setPaletteOpen(open: boolean)
 end
 
 -- Tab Switch
-local function switchTab(isEmoji: boolean)
+local function switchTab(tabIndex: number)
 	playClickSound()
-	emojiContainer.Visible = isEmoji
-	chatContainer.Visible = not isEmoji
-	if isEmoji then
-		emojiTabBtn.BackgroundColor3 = Color3.fromRGB(230, 175, 30)
-		emojiTabBtn.TextColor3 = Color3.fromRGB(15, 20, 30)
-		chatTabBtn.BackgroundColor3 = Color3.fromRGB(35, 45, 65)
-		chatTabBtn.TextColor3 = Color3.fromRGB(180, 200, 230)
-	else
-		chatTabBtn.BackgroundColor3 = Color3.fromRGB(230, 175, 30)
-		chatTabBtn.TextColor3 = Color3.fromRGB(15, 20, 30)
-		emojiTabBtn.BackgroundColor3 = Color3.fromRGB(35, 45, 65)
-		emojiTabBtn.TextColor3 = Color3.fromRGB(180, 200, 230)
-	end
+	emojiContainer.Visible = tabIndex == 1
+	chatContainer.Visible = tabIndex == 2
+	soundContainer.Visible = tabIndex == 3
+
+	emojiTabBtn.BackgroundColor3 = if tabIndex == 1 then Color3.fromRGB(230, 175, 30) else Color3.fromRGB(35, 45, 65)
+	emojiTabBtn.TextColor3 = if tabIndex == 1 then Color3.fromRGB(15, 20, 30) else Color3.fromRGB(180, 200, 230)
+
+	chatTabBtn.BackgroundColor3 = if tabIndex == 2 then Color3.fromRGB(230, 175, 30) else Color3.fromRGB(35, 45, 65)
+	chatTabBtn.TextColor3 = if tabIndex == 2 then Color3.fromRGB(15, 20, 30) else Color3.fromRGB(180, 200, 230)
+
+	soundTabBtn.BackgroundColor3 = if tabIndex == 3 then Color3.fromRGB(230, 175, 30) else Color3.fromRGB(35, 45, 65)
+	soundTabBtn.TextColor3 = if tabIndex == 3 then Color3.fromRGB(15, 20, 30) else Color3.fromRGB(180, 200, 230)
 end
 
-emojiTabBtn.Activated:Connect(function() switchTab(true) end)
-chatTabBtn.Activated:Connect(function() switchTab(false) end)
+emojiTabBtn.Activated:Connect(function() switchTab(1) end)
+chatTabBtn.Activated:Connect(function() switchTab(2) end)
+soundTabBtn.Activated:Connect(function() switchTab(3) end)
 
 triggerBtn.Activated:Connect(function()
 	playClickSound()
@@ -289,6 +326,46 @@ for _, chatText in ipairs(QUICK_CHATS) do
 	btn.Activated:Connect(function()
 		playClickSound()
 		emoteRemote:FireServer(chatText)
+		setPaletteOpen(false)
+	end)
+end
+
+-- Tombol Tiap Suara Meme
+for _, soundText in ipairs(SOUND_LIST) do
+	local btn = Instance.new("TextButton")
+	btn.Name = "Sound_" .. soundText
+	btn.Size = UDim2.new(1, -8, 0, 30)
+	btn.BackgroundColor3 = Color3.fromRGB(28, 36, 54)
+	btn.BackgroundTransparency = 0.2
+	btn.Text = "  " .. soundText
+	btn.TextColor3 = Color3.fromRGB(255, 230, 150)
+	btn.TextSize = 12
+	btn.TextXAlignment = Enum.TextXAlignment.Left
+	btn.Font = Enum.Font.GothamBold
+	btn.Parent = soundContainer
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = btn
+
+	local btnStroke = Instance.new("UIStroke")
+	btnStroke.Color = Color3.fromRGB(70, 60, 40)
+	btnStroke.Thickness = 1.0
+	btnStroke.Parent = btn
+
+	btn.MouseEnter:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(55, 50, 35)
+		btnStroke.Color = Color3.fromRGB(255, 215, 80)
+	end)
+
+	btn.MouseLeave:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(28, 36, 54)
+		btnStroke.Color = Color3.fromRGB(70, 60, 40)
+	end)
+
+	btn.Activated:Connect(function()
+		playClickSound()
+		emoteRemote:FireServer(soundText)
 		setPaletteOpen(false)
 	end)
 end

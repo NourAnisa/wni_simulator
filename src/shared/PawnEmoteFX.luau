@@ -6,6 +6,15 @@ local Workspace = game:GetService("Workspace")
 
 local PawnEmoteFX = {}
 
+local CUSTOM_SOUNDS: {[string]: {id: string, speed: number, vol: number}} = {
+	["🎺 Telolet Basuri!"] = {id = "rbxasset://sounds/electronicpingshort.wav", speed = 0.85, vol = 0.6},
+	["🚨 Sirine KPK!"] = {id = "rbxasset://sounds/electronicpingshort.wav", speed = 1.7, vol = 0.65},
+	["🔨 Palu Hakim!"] = {id = "rbxasset://sounds/impact_wood_heavy.mp3", speed = 1.0, vol = 0.7},
+	["🥳 Horeee Menang!"] = {id = "rbxasset://sounds/victory.wav", speed = 1.0, vol = 0.6},
+	["💦 Kecebur Kali!"] = {id = "rbxasset://sounds/splat.wav", speed = 0.9, vol = 0.55},
+	["🛵 Priiit Parkir!"] = {id = "rbxasset://sounds/button.wav", speed = 2.0, vol = 0.6},
+}
+
 local function findPawnPart(pawnOrSeat: Instance | number): BasePart?
 	if typeof(pawnOrSeat) == "number" then
 		local board = Workspace:FindFirstChild("WNIBoard")
@@ -96,14 +105,21 @@ function PawnEmoteFX.showEmote(pawnOrSeat: Instance | number, emojiText: string,
 	})
 	floatTween:Play()
 
-	-- Suara pop ceria
+	-- Suara pop ceria / efek soundboard
+	local custom = CUSTOM_SOUNDS[emojiText]
 	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxasset://sounds/switch.wav"
-	sound.Volume = 0.35
-	sound.PlaybackSpeed = 1.45 + (math.random() * 0.2)
+	if custom then
+		sound.SoundId = custom.id
+		sound.PlaybackSpeed = custom.speed
+		sound.Volume = custom.vol
+	else
+		sound.SoundId = "rbxasset://sounds/switch.wav"
+		sound.PlaybackSpeed = 1.45 + (math.random() * 0.2)
+		sound.Volume = 0.35
+	end
 	sound.Parent = targetPart
 	sound:Play()
-	Debris:AddItem(sound, 1.5)
+	Debris:AddItem(sound, 2.0)
 
 	-- Fade Out di 0.5 detik terakhir
 	task.delay(1.3, function()

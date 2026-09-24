@@ -34,6 +34,13 @@ local ALLOWED_EMOJIS = {
 	["GGWP! 🏆"] = true,
 	["Begal nih bos! 💀"] = true,
 	["Kabur dulu ah! 💨"] = true,
+	-- Soundboard Meme & Telolet Basuri
+	["🎺 Telolet Basuri!"] = true,
+	["🚨 Sirine KPK!"] = true,
+	["🔨 Palu Hakim!"] = true,
+	["🥳 Horeee Menang!"] = true,
+	["💦 Kecebur Kali!"] = true,
+	["🛵 Priiit Parkir!"] = true,
 }
 
 local COOLDOWN_SECONDS = 1.5
