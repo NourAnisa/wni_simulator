@@ -76,7 +76,7 @@ end
 local isCourtQTEActive = false
 local courtConnection: RBXScriptConnection? = nil
 
-local function startCourtMiniGame(onComplete: (isFree: boolean) -> ())
+local function startCourtMiniGame(serverIsFree: boolean, onComplete: (isFree: boolean) -> ())
 	if isCourtQTEActive then return end
 	isCourtQTEActive = true
 
@@ -207,7 +207,9 @@ local function startCourtMiniGame(onComplete: (isFree: boolean) -> ())
 		-- Palu sound
 		playSound("rbxasset://sounds/button.wav", 0.8)
 
-		local isFree = currentPos >= 0.35 and currentPos <= 0.65
+		local isFree = serverIsFree
+		currentPos = if isFree then 0.50 else 0.16
+		needle.Position = UDim2.new(currentPos, 0, 0.5, 0)
 
 		if isFree then
 			modal.BackgroundColor3 = Color3.fromRGB(20, 42, 28)
@@ -347,7 +349,8 @@ stateUpdated.OnClientEvent:Connect(function(snapshot: any)
 		if tile then
 			local kind = tile:GetAttribute("TileKind")
 			if kind == "Court" and not isCourtQTEActive then
-				startCourtMiniGame(function(_isFree)
+				local serverIsFree = (myPlayer.inJail ~= true)
+				startCourtMiniGame(serverIsFree, function(_isFree)
 					-- Mini-game diselesaikan pemain
 				end)
 			elseif kind == "Parking" then

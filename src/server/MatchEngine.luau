@@ -311,9 +311,9 @@ function Engine.processStockMarket(self: any, now: number)
 		end
 	end
 
-	-- 2. Fluktuasi harga bursa
-	local bumnDelta = (self.random:NextInteger(-15, 20)) / 100
-	local kriptoDelta = (self.random:NextInteger(-45, 75)) / 100
+	-- 2. Fluktuasi harga bursa yang lebih stabil dan terkendali
+	local bumnDelta = (self.random:NextInteger(-10, 15)) / 100
+	local kriptoDelta = (self.random:NextInteger(-25, 35)) / 100
 
 	local newBumn = math.clamp(math.floor(bumnPrice * (1 + bumnDelta)), 250000, 1200000)
 	local oldKripto = self.stockPrices.KRIPTO or 250000
@@ -341,7 +341,11 @@ function Engine.advance(self: any, now: number)
 		self:addLog(currentP.name .. " bermain lagi karena dadu kembar! 🎲")
 		return
 	end
-	for _ = 1, Rules.PlayerCount do
+
+	local maxIterations = Rules.PlayerCount * (Rules.MaxRounds + 2)
+	local iterations = 0
+	while iterations < maxIterations do
+		iterations += 1
 		self.activeSeat += 1
 		if self.activeSeat > Rules.PlayerCount then
 			self.activeSeat = 1
@@ -388,38 +392,39 @@ function Engine.advance(self: any, now: number)
 			if (p.skipTurns or 0) > 0 then
 				p.skipTurns -= 1
 				self:addLog(p.name .. " melewatkan giliran ini (" .. tostring(p.skipTurns) .. " lagi).")
-				self:advance(now)
-				return
-			end
-			if p.inBekasi then
-				local returnPosition = p.bekasiReturnPosition
-				if typeof(returnPosition) == "number" and returnPosition % 1 == 0 and returnPosition >= 1 and returnPosition <= Rules.TileCount then
-					p.position = returnPosition
+				-- Iterasi berlanjut ke kursi berikutnya tanpa rekursi (mencegah stack overflow)
+			else
+				if p.inBekasi then
+					local returnPosition = p.bekasiReturnPosition
+					if typeof(returnPosition) == "number" and returnPosition % 1 == 0 and returnPosition >= 1 and returnPosition <= Rules.TileCount then
+						p.position = returnPosition
+					end
+					p.inBekasi = false
+					p.bekasiReturnPosition = nil
+					self:addLog(p.name .. " kembali dari Bekasi ke " .. self.tiles[p.position].name .. " setelah melewati satu giliran (adaptasi kepulangan; aturan asli belum terverifikasi).")
 				end
-				p.inBekasi = false
-				p.bekasiReturnPosition = nil
-				self:addLog(p.name .. " kembali dari Bekasi ke " .. self.tiles[p.position].name .. " setelah melewati satu giliran (adaptasi kepulangan; aturan asli belum terverifikasi).")
-			end
-			if p.rentSuppressed then
-				p.rentSuppressed = false
-				self:addLog("Sewa tanah " .. p.name .. " aktif kembali.")
-			end
-			if p.inJail then
-				p.jailTries += 1
-				if p.jailTries >= 3 then
-					p.inJail = false
-					p.jailTries = 0
-					p.jailRentToState = false
-					self:addLog(p.name .. " keluar LAPAS otomatis pada percobaan ketiga.")
+				if p.rentSuppressed then
+					p.rentSuppressed = false
+					self:addLog("Sewa tanah " .. p.name .. " aktif kembali.")
+				end
+				if p.inJail then
+					p.jailTries += 1
+					if p.jailTries >= 3 then
+						p.inJail = false
+						p.jailTries = 0
+						p.jailRentToState = false
+						self:addLog(p.name .. " keluar LAPAS otomatis pada percobaan ketiga.")
+					end
+					self.phase = "AwaitRoll"
+					self.deadline = now + Rules.DecisionSeconds
+					return
 				end
 				self.phase = "AwaitRoll"
 				self.deadline = now + Rules.DecisionSeconds
 				return
 			end
-			self.phase = "AwaitRoll"
-			self.deadline = now + Rules.DecisionSeconds
-			return
 		end
+		if self:checkEnd() then return end
 	end
 end
 
@@ -584,7 +589,14 @@ function Engine.resolveTile(self: any, now: number)
 			end
 			-- Dynamic Round Event: Musim Mudik Lebaran
 			if self.activeEvent and self.activeEvent.id == "MusimMudik" then
-				if monoIsland == "Transportasi" or string.find(tile.name, "Bandara") or string.find(tile.name, "Pelabuhan") or string.find(tile.name, "Stasiun") or string.find(tile.name, "Whoosh") then
+				local tileNameLower = string.lower(tile.name)
+				local isTransport = (monoIsland == "Transportasi")
+					or string.find(tileNameLower, "bandara")
+					or string.find(tileNameLower, "pelabuhan")
+					or string.find(tileNameLower, "stasiun")
+					or string.find(tileNameLower, "whoosh")
+					or (tile.kind == "Transport")
+				if isTransport then
 					rent = rent * 2
 					label ..= " [MUDIK 2X]"
 				end
@@ -873,6 +885,7 @@ function Engine.runCardActions(self: any, effect: any, seat: number, now: number
 			self:addLog("Efek kartu " .. a.type .. " belum diimplementasi (" .. effect.name .. ").")
 		end
 	end
+	self:checkEnd()
 end
 
 function Engine.restart(self: any, now: number)
@@ -1032,12 +1045,15 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 		local stockId = targetTile.stockId
 		local count = math.clamp(tonumber(targetTile.count) or 1, 1, 10)
 		local currentPrice = self.stockPrices[stockId]
-		if not currentPrice then return false, "Saham tidak terdaftar." end
+		local currentOwned = (participant.portfolio and participant.portfolio[stockId]) or 0
+		if currentOwned + count > 10 then
+			return false, string.format("Maksimal kepemilikan 10 lot per instrumen (kamu sudah memiliki %d lot).", currentOwned)
+		end
 		local totalCost = currentPrice * count
 		if participant.cash < totalCost then return false, "Uang kas tidak cukup untuk membeli saham." end
 		participant.cash -= totalCost
 		participant.portfolio = participant.portfolio or {}
-		participant.portfolio[stockId] = (participant.portfolio[stockId] or 0) + count
+		participant.portfolio[stockId] = currentOwned + count
 		self:addLog(string.format("📈 %s membeli %d lot %s seharga %s!", participant.name, count, stockId, Rules.formatMoney(totalCost)))
 	elseif action == "SellStock" then
 		if typeof(targetTile) ~= "table" then return false, "Parameter saham tidak sah." end

@@ -183,8 +183,8 @@ function CardEngine.resolve(self: any, id: string, ctx: any): CardEffect
 			table.insert(actions, {type = "jail", seat = ctx.seat})
 		end
 	elseif id == "JalurMandiri" then
-		-- Bayar 20jt uang pangkal jalur mandiri
-		table.insert(actions, {type = "pay", seat = ctx.seat, amount = 20000000, to = nil, reason = "uang pangkal jalur mandiri PTN (tidak lulus SNBP)"})
+		-- Bayar 2.5jt uang pangkal jalur mandiri (diseimbangkan agar tidak langsung bangkrut di awal game)
+		table.insert(actions, {type = "pay", seat = ctx.seat, amount = 2500000, to = nil, reason = "uang pangkal jalur mandiri PTN (tidak lulus SNBP)"})
 	elseif id == "TahananRumahKPK" then
 		-- Tahanan rumah: sewa tanah nonaktif dan lewati 1 giliran
 		table.insert(actions, {type = "suppressRent", seat = ctx.seat})
@@ -198,14 +198,14 @@ function CardEngine.resolve(self: any, id: string, ctx: any): CardEffect
 			end
 		end
 	elseif id == "DitabrakEmakEmak" then
-		-- Santunan 50rb
-		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 50000, reason = "santunan ditabrak ibu-ibu (sen kanan belok kiri)"})
+		-- Santunan 500rb
+		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 500000, reason = "santunan ditabrak ibu-ibu (sen kanan belok kiri)"})
 	elseif id == "WhooshBandung" then
 		-- Tiket Whoosh langsung ke Bandung (Petak 37)
 		table.insert(actions, {type = "teleport", seat = ctx.seat, tile = 37})
 	elseif id == "SeranganFajar" then
-		-- Uang serangan fajar 50rb
-		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 50000, reason = "uang serangan fajar pemilu"})
+		-- Uang serangan fajar 500rb
+		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 500000, reason = "uang serangan fajar pemilu"})
 	elseif id == "TanahTerlantar" then
 		-- Tanah kosong (level 0) disita oleh Negara
 		local unbuilt: {number} = {}

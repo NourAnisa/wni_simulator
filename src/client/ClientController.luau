@@ -802,8 +802,18 @@ local function refresh(snap: any)
 		-- DiceRollBar handles roll when it's the player's turn — plain Roll button stays hidden
 		local wantDiceBar = not pausedForReconnect and phase == "AwaitRoll" and myTurn
 		setButton("Roll", false)
-		if showDiceRollBar then showDiceRollBar(wantDiceBar) end
-		setButton("Buy", not pausedForReconnect and phase == "AwaitBuy" and myTurn)
+		local buyText = "Beli"
+		if not pausedForReconnect and phase == "AwaitBuy" and myTurn and active then
+			local t = Tarif.get(active.position)
+			if t then
+				local price = t.price
+				if players[mySeat] and players[mySeat].role == "JURAGAN" then
+					price = math.floor(price * 0.85)
+				end
+				buyText = "BELI (" .. Rules.formatMoney(price) .. ")"
+			end
+		end
+		setButton("Buy", not pausedForReconnect and phase == "AwaitBuy" and myTurn, buyText)
 		setButton("Skip", not pausedForReconnect and phase == "AwaitBuy" and myTurn)
 		setButton("Build", not pausedForReconnect and phase == "AwaitBuild" and myTurn)
 		setButton("SkipBuild", not pausedForReconnect and phase == "AwaitBuild" and myTurn, "Lewati")
@@ -1925,6 +1935,7 @@ local function refreshHand()
 		local options = pending.options or {}
 		landOrdinal = math.clamp(landOrdinal, 1, math.max(1, #options))
 		local target = options[landOrdinal]
+		if target and focusTile then focusTile(target) end
 		local definition = CardData.get(pending.id)
 		handName.Text = if definition then definition.name else pending.id
 		handDescription.Text = if definition then definition.note else "Pilih tanah untuk kartu ini."
@@ -2839,13 +2850,17 @@ local function initPolishUI()
 		-- Panel utama: gradient merah-oranye seperti Get Rich
 		local drbPanel = Instance.new("Frame")
 		drbPanel.Name = "Panel"
-		drbPanel.Size = UDim2.new(0, 520, 0, 200)
+		drbPanel.Size = UDim2.new(0.92, 0, 0, 200)
 		drbPanel.AnchorPoint = Vector2.new(0.5, 1)
 		drbPanel.Position = UDim2.new(0.5, 0, 1, 0)
 		drbPanel.BackgroundColor3 = Color3.fromRGB(20, 10, 40)
 		drbPanel.BorderSizePixel = 0
 		drbPanel.ZIndex = 20
 		drbPanel.Parent = drbOverlay
+		local drbSizeConstraint = Instance.new("UISizeConstraint")
+		drbSizeConstraint.MaxSize = Vector2.new(520, 200)
+		drbSizeConstraint.MinSize = Vector2.new(280, 180)
+		drbSizeConstraint.Parent = drbPanel
 		local drbCorner = Instance.new("UICorner")
 		drbCorner.CornerRadius = UDim.new(0, 18)
 		drbCorner.Parent = drbPanel
@@ -2874,7 +2889,7 @@ local function initPolishUI()
 		-- Track bar latar
 		local barTrack = Instance.new("Frame")
 		barTrack.Name = "BarTrack"
-		barTrack.Size = UDim2.new(0, 380, 0, 28)
+		barTrack.Size = UDim2.new(0.85, 0, 0, 28)
 		barTrack.AnchorPoint = Vector2.new(0.5, 0)
 		barTrack.Position = UDim2.new(0.5, 0, 0, 42)
 		barTrack.BackgroundColor3 = Color3.fromRGB(30, 10, 60)

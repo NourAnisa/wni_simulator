@@ -95,6 +95,12 @@ function Economy.charge(participants: {Participant}, owners: Ownership, building
 	local bankrupt = paid < amount
 	if bankrupt then
 		payer.eliminated = true
+		payer.inBekasi = false
+		payer.bekasiReturnPosition = nil
+		payer.inJail = false
+		payer.jailTries = 0
+		payer.jailRentToState = false
+		payer.rentSuppressed = false
 		for tile = 1, Rules.TileCount do
 			if owners[tile] == seat then
 				owners[tile] = nil

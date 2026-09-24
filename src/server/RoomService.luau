@@ -74,9 +74,8 @@ function RoomService.reconnect(self: any, userId: number, now: number): boolean
 	if not self.members[userId] or not self.disconnected[userId] then return false end
 	local phase = self.engine.phase
 	if phase == "Waiting" or phase == "Finished" or phase == "Cancelled" then return false end
-	for _, expiresAt in self.disconnected do
-		if now >= expiresAt then return false end
-	end
+	local userExpiry = self.disconnected[userId]
+	if not userExpiry or now >= userExpiry then return false end
 	self.disconnected[userId] = nil
 	self.engine.revision += 1
 	if next(self.disconnected) == nil and self.pauseStarted then
