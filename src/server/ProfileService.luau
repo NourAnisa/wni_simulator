@@ -37,6 +37,7 @@ export type Profile = {
 	coins: number,
 	title: string,
 	diceSkin: string,
+	unlockedSkins: {[string]: boolean},
 }
 
 local STORE_NAME = "WNI_Profile_v1"
@@ -93,6 +94,7 @@ local function defaultProfile(): Profile
 		coins = 1000,
 		title = "Warga Biasa",
 		diceSkin = "Classic",
+		unlockedSkins = {Classic = true},
 	}
 end
 
@@ -116,6 +118,16 @@ local function sanitize(raw: any): Profile
 	profile.level = calculatedLevel
 	profile.title = ProgressionConfig.getTitleForLevel(calculatedLevel)
 	profile.diceSkin = if typeof(raw.diceSkin) == "string" and ProgressionConfig.DICE_SKINS[raw.diceSkin] ~= nil then raw.diceSkin else "Classic"
+
+	local unlockedSkins: {[string]: boolean} = {Classic = true}
+	if typeof(raw.unlockedSkins) == "table" then
+		for k, v in pairs(raw.unlockedSkins) do
+			if v == true and ProgressionConfig.DICE_SKINS[k] ~= nil then
+				unlockedSkins[k] = true
+			end
+		end
+	end
+	profile.unlockedSkins = unlockedSkins
 	profile.lastMatchId = if typeof(raw.lastMatchId) == "string" then string.sub(raw.lastMatchId, 1, 80) else ""
 
 	if typeof(raw.recentMatchIds) == "table" then
@@ -405,12 +417,59 @@ function ProfileService.recordMatch(self: any, userId: number, matchId: string, 
 	return true
 end
 
+function ProfileService.buyDiceSkin(self: any, userId: number, skinKey: string): (boolean, string)
+	local skinDef = ProgressionConfig.DICE_SKINS[skinKey]
+	if not skinDef then return false, "Skin dadu tidak ditemukan." end
+	local profile = self:get(userId)
+
+	profile.unlockedSkins = profile.unlockedSkins or {Classic = true}
+	if profile.unlockedSkins[skinKey] == true then
+		profile.diceSkin = skinKey
+		return true, "Skin dadu " .. skinDef.Name .. " berhasil dipasang!"
+	end
+
+	local reqLevel = skinDef.RequiredLevel or 1
+	if (profile.level or 1) < reqLevel then
+		return false, "Level belum cukup! Diperlukan Level " .. tostring(reqLevel) .. "."
+	end
+
+	local price = skinDef.Price or 0
+	local coins = profile.coins or 0
+	if coins < price then
+		return false, "Koin tidak cukup! Butuh " .. tostring(price) .. " 🪙, kamu punya " .. tostring(coins) .. " 🪙."
+	end
+
+	profile.coins = coins - price
+	profile.unlockedSkins[skinKey] = true
+	profile.diceSkin = skinKey
+
+	local key = "u_" .. tostring(userId)
+	if store then
+		task.spawn(function()
+			pcall(function()
+				store:UpdateAsync(key, function(raw)
+					local p = sanitize(raw)
+					p.coins = profile.coins
+					p.unlockedSkins = profile.unlockedSkins
+					p.diceSkin = skinKey
+					return p
+				end)
+			end)
+		end)
+	end
+	return true, "Selamat! Berhasil membeli & memakai skin " .. skinDef.Name .. "!"
+end
+
 function ProfileService.setDiceSkin(self: any, userId: number, skinKey: string): boolean
 	local skinDef = ProgressionConfig.DICE_SKINS[skinKey]
 	if not skinDef then return false end
 	local profile = self:get(userId)
-	if profile.level < skinDef.requiredLevel then return false end
+	local reqLevel = skinDef.RequiredLevel or 1
+	local isOwned = (profile.unlockedSkins and profile.unlockedSkins[skinKey] == true) or ((skinDef.Price or 0) == 0 and profile.level >= reqLevel)
+	if not isOwned then return false end
 
+	profile.unlockedSkins = profile.unlockedSkins or {Classic = true}
+	profile.unlockedSkins[skinKey] = true
 	profile.diceSkin = skinKey
 	local key = "u_" .. tostring(userId)
 	if store then
@@ -419,6 +478,7 @@ function ProfileService.setDiceSkin(self: any, userId: number, skinKey: string):
 				store:UpdateAsync(key, function(raw)
 					local p = sanitize(raw)
 					p.diceSkin = skinKey
+					p.unlockedSkins = profile.unlockedSkins
 					return p
 				end)
 			end)

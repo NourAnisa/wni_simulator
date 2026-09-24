@@ -24,6 +24,7 @@ local requestAction = Remotes:WaitForChild("RequestAction", 10) :: RemoteEvent?
 local rulesModule = shared:FindFirstChild("PrototypeRules")
 local Rules = if rulesModule and rulesModule:IsA("ModuleScript") then require(rulesModule) else nil
 local gameVersion = if Rules then Rules.Version else "1.5.3"
+local ProgressionConfig = require(shared:WaitForChild("ProgressionConfig", 5))
 
 -- ─── RESPONSIVE SCREEN GUI ───────────────────────────────────────────────────
 
@@ -106,11 +107,12 @@ local function makeToggleBtn(name: string, icon: string, yOffset: number, bg: Co
 	return btn
 end
 
-local toggleBtn = makeToggleBtn("LeaderboardToggle", "🏆", -100, Color3.fromRGB(22, 38, 50), Color3.fromRGB(250, 220, 80), Color3.fromRGB(200, 170, 40))
-local missionBtn = makeToggleBtn("MissionToggle", "📋", -50, Color3.fromRGB(30, 50, 30), Color3.fromRGB(100, 230, 130), Color3.fromRGB(60, 180, 80))
-local streakBtn = makeToggleBtn("StreakToggle", "📅", 0, Color3.fromRGB(18, 40, 50), Color3.fromRGB(100, 220, 255), Color3.fromRGB(40, 160, 200))
-local historyBtn = makeToggleBtn("HistoryToggle", "📜", 50, Color3.fromRGB(35, 30, 55), Color3.fromRGB(200, 170, 255), Color3.fromRGB(140, 110, 220))
-local achBtn = makeToggleBtn("AchievementToggle", "🏅", 100, Color3.fromRGB(50, 35, 22), Color3.fromRGB(255, 180, 90), Color3.fromRGB(220, 130, 40))
+local toggleBtn = makeToggleBtn("LeaderboardToggle", "🏆", -125, Color3.fromRGB(22, 38, 50), Color3.fromRGB(250, 220, 80), Color3.fromRGB(200, 170, 40))
+local missionBtn = makeToggleBtn("MissionToggle", "📋", -75, Color3.fromRGB(30, 50, 30), Color3.fromRGB(100, 230, 130), Color3.fromRGB(60, 180, 80))
+local streakBtn = makeToggleBtn("StreakToggle", "📅", -25, Color3.fromRGB(18, 40, 50), Color3.fromRGB(100, 220, 255), Color3.fromRGB(40, 160, 200))
+local shopBtn = makeToggleBtn("ShopToggle", "🛍️", 25, Color3.fromRGB(45, 32, 18), Color3.fromRGB(255, 190, 80), Color3.fromRGB(220, 140, 40))
+local historyBtn = makeToggleBtn("HistoryToggle", "📜", 75, Color3.fromRGB(35, 30, 55), Color3.fromRGB(200, 170, 255), Color3.fromRGB(140, 110, 220))
+local achBtn = makeToggleBtn("AchievementToggle", "🏅", 125, Color3.fromRGB(50, 35, 22), Color3.fromRGB(255, 180, 90), Color3.fromRGB(220, 130, 40))
 
 local streakBadge = Instance.new("TextLabel")
 streakBadge.Name = "Badge"
@@ -132,7 +134,7 @@ stroke(Color3.fromRGB(255, 255, 255), 1.5, streakBadge)
 local function makePanel(name: string, bg: Color3, strokeCol: Color3, h: number): Frame
 	local f = Instance.new("Frame")
 	f.Name = name
-	f.Size = UDim2.new(0, 285, 0, h)
+	f.Size = UDim2.new(0, 295, 0, h)
 	f.Position = UDim2.new(1, -62, 0.5, 0)
 	f.AnchorPoint = Vector2.new(1, 0.5)
 	f.BackgroundColor3 = bg
@@ -147,10 +149,11 @@ end
 local lbPanel = makePanel("LeaderboardPanel", Color3.fromRGB(14, 20, 32), Color3.fromRGB(200, 170, 40), 340)
 local missionPanel = makePanel("MissionPanel", Color3.fromRGB(14, 28, 22), Color3.fromRGB(60, 180, 80), 280)
 local streakPanel = makePanel("StreakPanel", Color3.fromRGB(16, 26, 36), Color3.fromRGB(40, 160, 200), 340)
+local shopPanel = makePanel("ShopPanel", Color3.fromRGB(26, 18, 16), Color3.fromRGB(220, 140, 40), 350)
 local historyPanel = makePanel("HistoryPanel", Color3.fromRGB(20, 16, 32), Color3.fromRGB(140, 110, 220), 310)
 local achPanel = makePanel("AchievementPanel", Color3.fromRGB(28, 20, 14), Color3.fromRGB(220, 130, 40), 320)
 
-local allPanels = {lbPanel, missionPanel, streakPanel, historyPanel, achPanel}
+local allPanels = {lbPanel, missionPanel, streakPanel, shopPanel, historyPanel, achPanel}
 
 for _, p in ipairs(allPanels) do
 	local layout = Instance.new("UIListLayout")
@@ -569,6 +572,150 @@ local function renderStreak(streakInfo: any)
 	end)
 end
 
+-- ─── RENDERING: 6. TOKO KOSMETIK NUSANTARA ────────────────────────────────────
+
+local function renderShop(profile: any)
+	clearChildren(shopPanel)
+	if typeof(profile) ~= "table" then return end
+
+	local coins = profile.coins or 0
+	local level = profile.level or 1
+	local currentSkin = profile.diceSkin or "Classic"
+	local unlockedSkins = profile.unlockedSkins or {Classic = true}
+
+	local head = label("🛍️ TOKO KOSMETIK DADU", 13, Color3.fromRGB(255, 195, 70), shopPanel)
+	head.LayoutOrder = 0
+
+	-- Info Saldo
+	local balBar = Instance.new("Frame")
+	balBar.Size = UDim2.new(1, 0, 0, 24)
+	balBar.BackgroundColor3 = Color3.fromRGB(38, 26, 16)
+	balBar.LayoutOrder = 1
+	balBar.Parent = shopPanel
+	corner(6, balBar)
+
+	local coinIcon = Instance.new("TextLabel")
+	coinIcon.Size = UDim2.new(1, -12, 1, 0)
+	coinIcon.Position = UDim2.new(0, 8, 0, 0)
+	coinIcon.Text = "🪙 Saldo: " .. tostring(coins) .. " Koin  •  ⭐ Level " .. tostring(level)
+	coinIcon.TextColor3 = Color3.fromRGB(255, 230, 130)
+	coinIcon.TextSize = 10
+	coinIcon.Font = Enum.Font.GothamBold
+	coinIcon.TextXAlignment = Enum.TextXAlignment.Left
+	coinIcon.BackgroundTransparency = 1
+	coinIcon.Parent = balBar
+
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Name = "ShopScroll"
+	scroll.Size = UDim2.new(1, 0, 1, -66)
+	scroll.BackgroundTransparency = 1
+	scroll.ScrollBarThickness = 3
+	scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 190, 80)
+	scroll.CanvasSize = UDim2.new(0, 0, 0, #ProgressionConfig.SKIN_ORDER * 52)
+	scroll.LayoutOrder = 2
+	scroll.Parent = shopPanel
+
+	local sList = Instance.new("UIListLayout")
+	sList.Padding = UDim.new(0, 4)
+	sList.Parent = scroll
+
+	for _, key in ipairs(ProgressionConfig.SKIN_ORDER) do
+		local skin = ProgressionConfig.DICE_SKINS[key]
+		if not skin then continue end
+
+		local isEquipped = key == currentSkin
+		local isOwned = unlockedSkins[key] == true
+		local isLevelLocked = level < skin.RequiredLevel
+		local canAfford = coins >= skin.Price
+
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, -4, 0, 48)
+		row.BackgroundColor3 = if isEquipped then Color3.fromRGB(28, 48, 36)
+			elseif isOwned then Color3.fromRGB(34, 30, 42)
+			elseif isLevelLocked then Color3.fromRGB(24, 22, 24)
+			else Color3.fromRGB(38, 30, 24)
+		row.BackgroundTransparency = 0.15
+		row.Parent = scroll
+		corner(6, row)
+		if isEquipped then
+			stroke(Color3.fromRGB(100, 240, 140), 1.5, row)
+		end
+
+		local iconL = Instance.new("TextLabel")
+		iconL.Size = UDim2.new(0, 34, 1, 0)
+		iconL.Text = skin.Icon or "🎲"
+		iconL.TextSize = 20
+		iconL.BackgroundTransparency = 1
+		iconL.Parent = row
+
+		local nameL = Instance.new("TextLabel")
+		nameL.Size = UDim2.new(1, -125, 0, 16)
+		nameL.Position = UDim2.new(0, 36, 0, 6)
+		nameL.Text = skin.Name .. " (Lv." .. skin.RequiredLevel .. ")"
+		nameL.TextColor3 = if isEquipped then Color3.fromRGB(140, 245, 170) elseif isOwned then Color3.fromRGB(220, 210, 240) else Color3.fromRGB(255, 230, 160)
+		nameL.TextSize = 10
+		nameL.Font = Enum.Font.GothamBold
+		nameL.TextXAlignment = Enum.TextXAlignment.Left
+		nameL.BackgroundTransparency = 1
+		nameL.Parent = row
+
+		local descL = Instance.new("TextLabel")
+		descL.Size = UDim2.new(1, -125, 0, 14)
+		descL.Position = UDim2.new(0, 36, 0, 24)
+		descL.Text = skin.Desc or ""
+		descL.TextColor3 = Color3.fromRGB(150, 150, 150)
+		descL.TextSize = 8
+		descL.Font = Enum.Font.Gotham
+		descL.TextXAlignment = Enum.TextXAlignment.Left
+		descL.TextTruncate = Enum.TextTruncate.AtEnd
+		descL.BackgroundTransparency = 1
+		descL.Parent = row
+
+		-- Action Button: Beli / Pasang / Digunakan
+		local actBtn = Instance.new("TextButton")
+		actBtn.Size = UDim2.new(0, 78, 0, 26)
+		actBtn.Position = UDim2.new(1, -84, 0.5, -13)
+		actBtn.Font = Enum.Font.GothamBold
+		actBtn.TextSize = 9
+		actBtn.Parent = row
+		corner(5, actBtn)
+
+		if isEquipped then
+			actBtn.Text = "✅ DIPAKAI"
+			actBtn.BackgroundColor3 = Color3.fromRGB(35, 120, 60)
+			actBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			actBtn.Active = false
+		elseif isOwned then
+			actBtn.Text = "PASANG"
+			actBtn.BackgroundColor3 = Color3.fromRGB(40, 95, 150)
+			actBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+			actBtn.Activated:Connect(function()
+				if requestAction then
+					requestAction:FireServer("SetDiceSkin", skin.Name, key)
+				end
+			end)
+		elseif isLevelLocked then
+			actBtn.Text = "🔒 LV." .. skin.RequiredLevel
+			actBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+			actBtn.TextColor3 = Color3.fromRGB(140, 140, 140)
+			actBtn.Active = false
+		else
+			actBtn.Text = "🛒 " .. tostring(skin.Price) .. " 🪙"
+			actBtn.BackgroundColor3 = if canAfford then Color3.fromRGB(190, 130, 30) else Color3.fromRGB(60, 50, 45)
+			actBtn.TextColor3 = if canAfford then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(160, 150, 140)
+			if canAfford then
+				actBtn.Activated:Connect(function()
+					if requestAction then
+						requestAction:FireServer("BuyDiceSkin", 0, gameVersion, key)
+						actBtn.Text = "⏳ MEMBELI..."
+						actBtn.Active = false
+					end
+				end)
+			end
+		end
+	end
+end
+
 -- ─── POPUP NOTIFIKASI PENCAPAIAN DIBUKA ───────────────────────────────────────
 
 local function showAchievementToast(ach: any)
@@ -663,6 +810,7 @@ end
 toggleBtn.Activated:Connect(function() togglePanel(lbPanel) end)
 missionBtn.Activated:Connect(function() togglePanel(missionPanel) end)
 streakBtn.Activated:Connect(function() togglePanel(streakPanel) end)
+shopBtn.Activated:Connect(function() togglePanel(shopPanel) end)
 historyBtn.Activated:Connect(function() togglePanel(historyPanel) end)
 achBtn.Activated:Connect(function() togglePanel(achPanel) end)
 
@@ -677,6 +825,7 @@ local function onStateUpdate(payload: any)
 	toggleBtn.Visible = not inMatch
 	missionBtn.Visible = not inMatch
 	streakBtn.Visible = not inMatch
+	shopBtn.Visible = not inMatch
 	historyBtn.Visible = not inMatch
 	achBtn.Visible = not inMatch
 
@@ -686,7 +835,7 @@ local function onStateUpdate(payload: any)
 		end
 	end
 
-	-- Render History, Achievements & Daily Streak jika ada di profile snapshot
+	-- Render History, Achievements, Daily Streak & Toko Kosmetik
 	if typeof(payload.profile) == "table" then
 		if typeof(payload.profile.matchHistory) == "table" then
 			renderHistory(payload.profile.matchHistory)
@@ -698,6 +847,7 @@ local function onStateUpdate(payload: any)
 			renderStreak(payload.profile.dailyStreak)
 			streakBadge.Visible = payload.profile.dailyStreak.canClaim == true
 		end
+		renderShop(payload.profile)
 	end
 end
 

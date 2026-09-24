@@ -8,6 +8,9 @@ export type DiceSkin = {
 	Color: Color3,
 	DotColor: Color3,
 	RequiredLevel: number,
+	Price: number,
+	Icon: string,
+	Desc: string,
 }
 
 local ProgressionConfig = {
@@ -28,7 +31,10 @@ local ProgressionConfig = {
 		{ MinLevel = 25, Title = "Sultan Nusantara 👑" },
 	},
 
-	-- Katalog Skin Dadu 3D
+	-- Urutan Tampilan di Toko Kosmetik
+	SKIN_ORDER = {"Classic", "Mahogany", "BatuAkik", "NeonCyan", "TahuBulat", "MerahPutih", "GoldSultan"},
+
+	-- Katalog Skin Dadu 3D Khas Nusantara
 	DICE_SKINS = {
 		Classic = {
 			Name = "Klasik Putih",
@@ -36,27 +42,69 @@ local ProgressionConfig = {
 			Color = Color3.fromRGB(245, 245, 245),
 			DotColor = Color3.fromRGB(25, 25, 25),
 			RequiredLevel = 1,
+			Price = 0,
+			Icon = "⬜",
+			Desc = "Dadu standar andalan warga nusantara.",
 		},
 		Mahogany = {
-			Name = "Kayu Mahoni Emas",
+			Name = "Kayu Jati Jepara",
 			Material = Enum.Material.WoodPlanks,
 			Color = Color3.fromRGB(115, 65, 35),
 			DotColor = Color3.fromRGB(240, 200, 90),
-			RequiredLevel = 3,
+			RequiredLevel = 2,
+			Price = 500,
+			Icon = "🪵",
+			Desc = "Ukiran kayu jati asli Jepara nan berwibawa.",
+		},
+		BatuAkik = {
+			Name = "Batu Akik Bacan",
+			Material = Enum.Material.Glass,
+			Color = Color3.fromRGB(35, 160, 110),
+			DotColor = Color3.fromRGB(255, 255, 255),
+			RequiredLevel = 4,
+			Price = 1200,
+			Icon = "💎",
+			Desc = "Pancaran hijau giok pembawa hoki dan berkah.",
 		},
 		NeonCyan = {
-			Name = "Kristal Neon Cyan",
+			Name = "Kristal Monas",
 			Material = Enum.Material.Neon,
 			Color = Color3.fromRGB(45, 220, 200),
 			DotColor = Color3.fromRGB(255, 255, 255),
-			RequiredLevel = 7,
+			RequiredLevel = 6,
+			Price = 2500,
+			Icon = "🩵",
+			Desc = "Cahaya neon futuristik kebanggaan ibu kota.",
+		},
+		TahuBulat = {
+			Name = "Tahu Bulat Gurih",
+			Material = Enum.Material.Sand,
+			Color = Color3.fromRGB(215, 150, 65),
+			DotColor = Color3.fromRGB(60, 35, 15),
+			RequiredLevel = 8,
+			Price = 4500,
+			Icon = "🧆",
+			Desc = "Digoreng dadakan di mobil lima ratusan, gurih!",
+		},
+		MerahPutih = {
+			Name = "Garuda Merah Putih",
+			Material = Enum.Material.SmoothPlastic,
+			Color = Color3.fromRGB(220, 45, 45),
+			DotColor = Color3.fromRGB(255, 255, 255),
+			RequiredLevel = 10,
+			Price = 7500,
+			Icon = "🇮🇩",
+			Desc = "Kobaran semangat juang persatuan Nusantara.",
 		},
 		GoldSultan = {
-			Name = "Emas Batangan Sultan",
+			Name = "Emas Antam 24K",
 			Material = Enum.Material.Metal,
 			Color = Color3.fromRGB(245, 195, 50),
 			DotColor = Color3.fromRGB(50, 40, 20),
-			RequiredLevel = 12,
+			RequiredLevel = 15,
+			Price = 15000,
+			Icon = "👑",
+			Desc = "Kemewahan mutlak sang Sultan sejati Nusantara.",
 		},
 	} :: {[string]: DiceSkin},
 }
@@ -84,9 +132,8 @@ end
 
 -- Returns ordered list of {key, skin} that player has unlocked at given level
 function ProgressionConfig.getUnlockedSkins(level: number): {{key: string, skin: DiceSkin}}
-	local ORDER = {"Classic", "Mahogany", "NeonCyan", "GoldSultan"}
 	local unlocked: {{key: string, skin: DiceSkin}} = {}
-	for _, key in ipairs(ORDER) do
+	for _, key in ipairs(ProgressionConfig.SKIN_ORDER) do
 		local skin = ProgressionConfig.DICE_SKINS[key]
 		if skin and level >= skin.RequiredLevel then
 			table.insert(unlocked, {key = key, skin = skin})

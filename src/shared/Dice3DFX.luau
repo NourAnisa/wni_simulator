@@ -89,7 +89,9 @@ local FACE_VALUES: {[Enum.NormalId]: number} = {
 	[Enum.NormalId.Left] = 4,
 }
 
-local function paintDie(die: BasePart)
+local function paintDie(die: BasePart, skinKey: string?)
+	local skin = (skinKey and ProgressionConfig.DICE_SKINS[skinKey]) or ProgressionConfig.DICE_SKINS.Classic
+	local dotColor = skin.DotColor or Color3.fromRGB(35, 35, 40)
 	for normalId, val in pairs(FACE_VALUES) do
 		local layout = PIP_LAYOUTS[val]
 		if not layout then continue end
@@ -104,7 +106,7 @@ local function paintDie(die: BasePart)
 				pip.AnchorPoint = Vector2.new(0.5, 0.5)
 				pip.Position = UDim2.fromScale(uv.X, uv.Y)
 				pip.Size = UDim2.fromScale(0.18, 0.18)
-				pip.BackgroundColor3 = if val == 1 then Color3.fromRGB(220, 50, 40) else Color3.fromRGB(35, 35, 40)
+				pip.BackgroundColor3 = if val == 1 and skinKey == "Classic" then Color3.fromRGB(220, 50, 40) else dotColor
 				pip.BorderSizePixel = 0
 				pip.Parent = found
 				local corner = Instance.new("UICorner")
@@ -124,7 +126,7 @@ function Dice3DFX.rollDice3D(d1: number, d2: number, skinKey: string?)
 		local value = values[index]
 		if typeof(value) ~= "number" or value < 1 or value > 6 then return end
 		local die = buildDie(skinKey)
-		paintDie(die)
+		paintDie(die, skinKey)
 		local sideOffset = if index == 1 then -0.9 else 0.9
 		local launch = CFrame.new(center + Vector3.new(sideOffset, 9, -2)) * CFrame.Angles(math.random() * 6, math.random() * 6, math.random() * 6)
 		die.CFrame = launch

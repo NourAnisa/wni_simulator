@@ -298,6 +298,7 @@ local function snapshotFor(player: Player): any
 		matchHistory = profile.matchHistory or {},
 		achievements = profile.achievements or {},
 		dailyStreak = profiles:getDailyStreakInfo(player.UserId),
+		unlockedSkins = profile.unlockedSkins or {Classic = true},
 	}
 	snapshot.matchmaking = if useGlobalMatchmaking then globalMatchmaking:snapshot(player.UserId) else matchmaking:snapshot(player.UserId)
 	snapshot.routing = {
@@ -489,6 +490,18 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 				broadcast()
 			else
 				synchronize(player, "Skin dadu belum terbuka atau tidak valid.")
+			end
+		end
+		return
+	end
+	if action == "BuyDiceSkin" then
+		local skinKey = tostring(version or targetTile or revision or "")
+		if skinKey ~= "" then
+			local ok, msg = profiles:buyDiceSkin(player.UserId, skinKey)
+			if ok then
+				broadcast()
+			else
+				synchronize(player, msg)
 			end
 		end
 		return
