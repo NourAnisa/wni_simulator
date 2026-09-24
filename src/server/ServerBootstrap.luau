@@ -23,6 +23,11 @@ local remotes = child(shared, "Remotes")
 local request = child(remotes, "RequestAction")
 local updated = child(remotes, "StateUpdated")
 assert(request:IsA("RemoteEvent") and updated:IsA("RemoteEvent"), "Invalid remotes")
+if not remotes:FindFirstChild("AchievementUnlocked") then
+	local re = Instance.new("RemoteEvent")
+	re.Name = "AchievementUnlocked"
+	re.Parent = remotes
+end
 local board = child(Workspace, "WNIBoard")
 local tileFolder = child(board, "Tiles")
 local pawnFolder = child(board, "Pawns")
@@ -255,7 +260,10 @@ local function recordFinishedMatch()
 		if participant.isBot == true then continue end
 		local outcome = if winningTeam == nil then "draw" elseif participant.team == winningTeam then "win" else "loss"
 		task.spawn(function()
-			profiles:recordMatch(participant.userId, matchId, outcome)
+			profiles:recordMatch(participant.userId, matchId, outcome, tostring(engine.result or ""))
+			if outcome == "win" and (participant.cash or 0) < 1000000 then
+				profiles:unlockAchievement(participant.userId, "survive_bankrupt")
+			end
 			if LeaderboardService then
 				local p = profiles:get(participant.userId)
 				LeaderboardService.updatePlayerXP(participant.userId, p.xp)
@@ -282,6 +290,8 @@ local function snapshotFor(player: Player): any
 		coins = profile.coins or 1000,
 		title = profile.title or "Warga Biasa",
 		diceSkin = profile.diceSkin or "Classic",
+		matchHistory = profile.matchHistory or {},
+		achievements = profile.achievements or {},
 	}
 	snapshot.matchmaking = if useGlobalMatchmaking then globalMatchmaking:snapshot(player.UserId) else matchmaking:snapshot(player.UserId)
 	snapshot.routing = {
@@ -657,7 +667,48 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		revision = engine.revision
 	end
 	local ok, message = engine:handle(player.UserId, action, revision, now, targetTile)
-	if ok then broadcast() else synchronize(player, message) end
+	if ok then
+		broadcast()
+		task.spawn(function()
+			local seat = engine:seatFor(player.UserId)
+			if not seat then return end
+			if action == "PlayCard" then
+				profiles:unlockAchievement(player.UserId, "card_master")
+			elseif action == "Bail" then
+				profiles:unlockAchievement(player.UserId, "escape_jail")
+			elseif action == "Buy" then
+				local landCount = 0
+				for _, owner in engine.owners do
+					if owner == seat then landCount += 1 end
+				end
+				if landCount >= 4 then
+					profiles:unlockAchievement(player.UserId, "land_tycoon")
+				end
+				-- Monopoli check
+				local myTeam = engine.players[seat] and engine.players[seat].team
+				if myTeam then
+					for _, cluster in ipairs({
+						{2, 3, 5, 6, 8}, {10, 11, 13, 14, 16},
+						{18, 19, 21, 22, 24}, {26, 27, 29, 30, 32}, {34, 35, 37, 38, 40},
+					}) do
+						local allMine = true
+						for _, t in ipairs(cluster) do
+							local o = engine.owners[t]
+							if not o or (engine.players[o] and engine.players[o].team ~= myTeam) then
+								allMine = false; break
+							end
+						end
+						if allMine then
+							profiles:unlockAchievement(player.UserId, "monopoly_king")
+							break
+						end
+					end
+				end
+			end
+		end)
+	else
+		synchronize(player, message)
+	end
 end)
 local function markGlobalTeleportFailure(player: Player, route: any, reason: string)
 	routing:clearReconnectRoster(route.roster)
