@@ -24,6 +24,30 @@ local stateUpdated = waitFor(remotes, "StateUpdated") :: RemoteEvent
 local gui = script.Parent :: ScreenGui
 local root = waitFor(gui, "Root")
 local interfaceScale = waitFor(root, "InterfaceScale") :: UIScale
+
+-- Responsive UI: sesuaikan skala seluruh antarmuka secara adaptif terhadap ukuran layar / device
+local camera = WS.CurrentCamera or WS:WaitForChild("Camera") :: Camera
+local function updateInterfaceScale()
+	local vp = camera.ViewportSize
+	if vp.X <= 0 or vp.Y <= 0 then return end
+	-- Resolusi baseline standar: 1366 x 768
+	local scaleX = vp.X / 1366
+	local scaleY = vp.Y / 768
+	local targetScale = math.min(scaleX, scaleY)
+	interfaceScale.Scale = math.clamp(targetScale, 0.52, 1.25)
+end
+
+camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateInterfaceScale)
+WS:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	local newCam = WS.CurrentCamera
+	if newCam then
+		camera = newCam
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateInterfaceScale)
+		updateInterfaceScale()
+	end
+end)
+task.spawn(updateInterfaceScale)
+
 local header = waitFor(root, "Header")
 local hSub = waitFor(header, "Subtitle") :: TextLabel
 local hRound = waitFor(header, "Round") :: TextLabel

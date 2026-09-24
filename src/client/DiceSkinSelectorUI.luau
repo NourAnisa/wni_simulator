@@ -1,11 +1,12 @@
 --!strict
 -- DiceSkinSelectorUI.luau (LocalScript)
--- Panel pemilihan skin dadu yang muncul di Lobby (phase Waiting).
+-- Panel pemilihan skin dadu di Lobby: responsive dock di sisi kanan tengah.
 -- Mengirim pilihan ke server via RequestAction("SetDiceSkin", skinKey).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 local lp = Players.LocalPlayer
 local pgui = lp:WaitForChild("PlayerGui")
@@ -18,47 +19,73 @@ local stateUpdated = Remotes:WaitForChild("StateUpdated", 10)
 local requestAction = Remotes:WaitForChild("RequestAction", 10)
 local ProgressionConfig = require(shared:WaitForChild("ProgressionConfig", 5))
 
+-- ─── RESPONSIVE SCREEN GUI ───────────────────────────────────────────────────
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "WNIDiceSkinUI"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 6
+screenGui.Parent = pgui
+
+local uiScale = Instance.new("UIScale")
+uiScale.Name = "InterfaceScale"
+uiScale.Parent = screenGui
+
+local camera = Workspace.CurrentCamera or Workspace:WaitForChild("Camera") :: Camera
+local function updateScale()
+	local vp = camera.ViewportSize
+	if vp.X <= 0 or vp.Y <= 0 then return end
+	local target = math.min(vp.X / 1366, vp.Y / 768)
+	uiScale.Scale = math.clamp(target, 0.52, 1.25)
+end
+
+camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	local c = Workspace.CurrentCamera
+	if c then
+		camera = c
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+		updateScale()
+	end
+end)
+task.spawn(updateScale)
+
 -- ─── DATA ────────────────────────────────────────────────────────────────────
 
 local SKIN_ORDER = {"Classic", "Mahogany", "NeonCyan", "GoldSultan"}
 local SKIN_COLORS = {
-	Classic   = Color3.fromRGB(245, 245, 245),
-	Mahogany  = Color3.fromRGB(115, 65, 35),
-	NeonCyan  = Color3.fromRGB(45, 220, 200),
+	Classic    = Color3.fromRGB(245, 245, 245),
+	Mahogany   = Color3.fromRGB(115, 65, 35),
+	NeonCyan   = Color3.fromRGB(45, 220, 200),
 	GoldSultan = Color3.fromRGB(245, 195, 50),
 }
 local SKIN_EMOJIS = {Classic = "⬜", Mahogany = "🟫", NeonCyan = "🩵", GoldSultan = "🟡"}
 
 -- ─── BUILD UI ────────────────────────────────────────────────────────────────
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "WNIDiceSkinUI"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Parent = pgui
-
--- Toggle button (kanan bawah)
+-- Toggle button (kanan tengah, Y offset +55)
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "DiceSkinToggle"
-toggleBtn.Size = UDim2.new(0, 44, 0, 44)
-toggleBtn.Position = UDim2.new(1, -56, 1, -130)
-toggleBtn.AnchorPoint = Vector2.new(1, 1)
+toggleBtn.Size = UDim2.new(0, 42, 0, 42)
+toggleBtn.Position = UDim2.new(1, -12, 0.5, 55)
+toggleBtn.AnchorPoint = Vector2.new(1, 0.5)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
 toggleBtn.TextColor3 = Color3.fromRGB(245, 195, 50)
 toggleBtn.Text = "🎲"
-toggleBtn.TextSize = 22
+toggleBtn.TextSize = 20
 toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.Visible = false
 toggleBtn.Parent = screenGui
-local tc = Instance.new("UICorner"); tc.CornerRadius = UDim.new(0, 22); tc.Parent = toggleBtn
+local tc = Instance.new("UICorner"); tc.CornerRadius = UDim.new(0, 21); tc.Parent = toggleBtn
 local ts = Instance.new("UIStroke"); ts.Color = Color3.fromRGB(245, 195, 50); ts.Thickness = 2; ts.Parent = toggleBtn
 
--- Panel utama
+-- Panel utama (slide in dari kanan, Y-centered)
 local panel = Instance.new("Frame")
 panel.Name = "Panel"
-panel.Size = UDim2.new(0, 260, 0, 300)
-panel.Position = UDim2.new(1, -56, 1, -180)
-panel.AnchorPoint = Vector2.new(1, 1)
+panel.Size = UDim2.new(0, 260, 0, 290)
+panel.Position = UDim2.new(1, -62, 0.5, 0)
+panel.AnchorPoint = Vector2.new(1, 0.5)
 panel.BackgroundColor3 = Color3.fromRGB(14, 20, 28)
 panel.BackgroundTransparency = 0.08
 panel.Visible = false
@@ -74,7 +101,7 @@ pPad.PaddingLeft = UDim.new(0, 10); pPad.PaddingRight = UDim.new(0, 10); pPad.Pa
 local titleL = Instance.new("TextLabel")
 titleL.Size = UDim2.new(1, 0, 0, 22)
 titleL.Text = "🎲 Pilih Skin Dadu"
-titleL.TextSize = 14; titleL.TextColor3 = Color3.fromRGB(245, 195, 50)
+titleL.TextSize = 13; titleL.TextColor3 = Color3.fromRGB(245, 195, 50)
 titleL.BackgroundTransparency = 1; titleL.Font = Enum.Font.GothamBold
 titleL.LayoutOrder = 0; titleL.Parent = panel
 
@@ -82,7 +109,7 @@ local subL = Instance.new("TextLabel")
 subL.Name = "SubLabel"
 subL.Size = UDim2.new(1, 0, 0, 16)
 subL.Text = "Level kamu: ?"
-subL.TextSize = 11; subL.TextColor3 = Color3.fromRGB(160, 160, 160)
+subL.TextSize = 10; subL.TextColor3 = Color3.fromRGB(160, 160, 160)
 subL.BackgroundTransparency = 1; subL.Font = Enum.Font.Gotham
 subL.LayoutOrder = 1; subL.Parent = panel
 
@@ -117,11 +144,11 @@ for i, key in ipairs(SKIN_ORDER) do
 	local skin = ProgressionConfig.DICE_SKINS[key]
 	local btn = Instance.new("TextButton")
 	btn.Name = "Skin_" .. key
-	btn.Size = UDim2.new(1, 0, 0, 44)
+	btn.Size = UDim2.new(1, 0, 0, 42)
 	btn.BackgroundColor3 = Color3.fromRGB(40, 50, 65)
 	btn.TextColor3 = Color3.fromRGB(230, 230, 230)
 	btn.Text = SKIN_EMOJIS[key] .. "  " .. skin.Name .. "  (Lv." .. skin.RequiredLevel .. ")"
-	btn.TextSize = 12; btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11; btn.Font = Enum.Font.GothamBold
 	btn.TextXAlignment = Enum.TextXAlignment.Left
 	btn.LayoutOrder = i + 1
 	btn.Parent = panel
@@ -132,7 +159,6 @@ for i, key in ipairs(SKIN_ORDER) do
 
 	btn.Activated:Connect(function()
 		if playerLevel < skin.RequiredLevel then
-			-- Flash merah jika terkunci
 			TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(100, 30, 30)}):Play()
 			task.delay(0.3, function()
 				TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = Color3.fromRGB(30, 30, 40)}):Play()
@@ -141,7 +167,6 @@ for i, key in ipairs(SKIN_ORDER) do
 		end
 		selectedSkin = key
 		refreshButtons()
-		-- Kirim ke server
 		pcall(function()
 			requestAction:FireServer("SetDiceSkin", skin.Name, key)
 		end)
@@ -167,7 +192,6 @@ stateUpdated.OnClientEvent:Connect(function(payload: any)
 	toggleBtn.Visible = inLobby
 	if not inLobby then showPanel(false) end
 
-	-- Ambil level & diceSkin dari profile pemain lokal
 	if typeof(payload.players) == "table" then
 		local localUserId = lp.UserId
 		for _, p in ipairs(payload.players) do

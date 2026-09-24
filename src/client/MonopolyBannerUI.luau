@@ -6,6 +6,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 local lp = Players.LocalPlayer
 local pgui = lp:WaitForChild("PlayerGui")
@@ -16,7 +17,7 @@ local Remotes = shared:WaitForChild("Remotes", 10)
 if not Remotes then return end
 local stateUpdated = Remotes:WaitForChild("StateUpdated", 10)
 
--- ─── SCREEN GUI ──────────────────────────────────────────────────────────────
+-- ─── RESPONSIVE SCREEN GUI ───────────────────────────────────────────────────
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "WNIBannerUI"
@@ -25,12 +26,39 @@ screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 10
 screenGui.Parent = pgui
 
+local uiScale = Instance.new("UIScale")
+uiScale.Name = "InterfaceScale"
+uiScale.Parent = screenGui
+
+local camera = Workspace.CurrentCamera or Workspace:WaitForChild("Camera") :: Camera
+local function updateScale()
+	local vp = camera.ViewportSize
+	if vp.X <= 0 or vp.Y <= 0 then return end
+	local target = math.min(vp.X / 1366, vp.Y / 768)
+	uiScale.Scale = math.clamp(target, 0.52, 1.25)
+end
+
+camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+	local c = Workspace.CurrentCamera
+	if c then
+		camera = c
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+		updateScale()
+	end
+end)
+task.spawn(updateScale)
+
 -- ─── MONOPOLY BANNER ─────────────────────────────────────────────────────────
 
 local function showMonopolyBanner(teamLabel: string, islandName: string, teamColor: Color3)
 	-- Buat banner baru setiap kali (auto-destroy setelah animasi)
 	local banner = Instance.new("Frame")
-	banner.Size = UDim2.new(0.7, 0, 0, 80)
+	banner.Size = UDim2.new(0.65, 0, 0, 75)
+	local bannerConstraint = Instance.new("UISizeConstraint")
+	bannerConstraint.MinSize = Vector2.new(280, 60)
+	bannerConstraint.MaxSize = Vector2.new(550, 85)
+	bannerConstraint.Parent = banner
 	banner.Position = UDim2.new(0.5, 0, 0, -90)
 	banner.AnchorPoint = Vector2.new(0.5, 0)
 	banner.BackgroundColor3 = teamColor
@@ -99,7 +127,11 @@ local function buildScorecard(payload: any)
 
 	local card = Instance.new("Frame")
 	card.Name = "ScoreCard"
-	card.Size = UDim2.new(0, 380, 0, 240)
+	card.Size = UDim2.new(0.85, 0, 0, 250)
+	local cardConstraint = Instance.new("UISizeConstraint")
+	cardConstraint.MinSize = Vector2.new(280, 220)
+	cardConstraint.MaxSize = Vector2.new(440, 280)
+	cardConstraint.Parent = card
 	card.Position = UDim2.new(0.5, 0, 0.5, 0)
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
 	card.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
