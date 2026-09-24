@@ -351,7 +351,7 @@ syncAvatarPawns = function()
 			if currentUserId then cleanupAvatarForSeat(seat) end
 		else
 			local player = Players:GetPlayerByUserId(participant.userId)
-			if not currentUserId and player and avatarSpawnPending[seat] ~= participant.userId then
+			if not currentUserId and (player or participant.isBot == true or participant.userId < 0) and avatarSpawnPending[seat] ~= participant.userId then
 				avatarSpawnPending[seat] = participant.userId
 				local userId = participant.userId
 				local position = participant.position or 1
@@ -359,8 +359,9 @@ syncAvatarPawns = function()
 				local offset = Vector3.new((seat - 2.5) * 1.35, 1.2, 0)
 				local startCFrame = tile.CFrame * CFrame.new(offset)
 				task.spawn(function()
-					local prof = profiles:get(userId)
-					local spawned = avatarPawns:spawnPawn(seat, player, startCFrame, prof.title)
+					local prof = if player then profiles:get(userId) else nil
+					local roleTitle = if prof then prof.title else (participant.role or "Warga")
+					local spawned = avatarPawns:spawnPawn(seat, player, startCFrame, roleTitle, participant.name, userId)
 					if avatarSpawnPending[seat] == userId then
 						avatarSpawnPending[seat] = nil
 					end
@@ -618,11 +619,50 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		if ok then broadcast() else synchronize(player, message) end
 		return
 	end
+	if action == "QuickPlaySolo" then
+		if isMatchPlace then
+			synchronize(player, "Quick Play hanya tersedia di server utama.")
+			return
+		end
+		if rooms.code ~= nil and rooms:count() == 0 then
+			rooms:closeIfEmpty()
+		end
+		if not rooms.members[player.UserId] then
+			if rooms.code == nil then
+				local created, createErr = rooms:handle(player.UserId, player.DisplayName, "CreateRoom", rooms.revision, nil, now)
+				if not created then
+					synchronize(player, createErr or "Gagal membuat room Quick Play.")
+					return
+				end
+			else
+				local joined, joinErr = rooms:handle(player.UserId, player.DisplayName, "JoinRoom", rooms.revision, rooms.code, now)
+				if not joined then
+					synchronize(player, "Room sedang berjalan: " .. tostring(joinErr))
+					return
+				end
+			end
+		end
+		if engine.phase == "Waiting" then
+			botAI:fillEmptySeats(rooms, now)
+			botAI:readyWaitingBots(rooms, now)
+			local readyOk, readyMsg = engine:handle(player.UserId, "Ready", engine.revision, now, nil)
+			if not readyOk then
+				synchronize(player, readyMsg or "Gagal menyatakan siap.")
+			end
+			broadcast()
+		else
+			synchronize(player, "Pertandingan sudah berjalan.")
+		end
+		return
+	end
 	if action == "CreateRoom" or action == "JoinRoom" or action == "LeaveRoom" then
 		local matchmakingBusy = if useGlobalMatchmaking then (globalMatchmaking:isQueued(player.UserId) or globalMatchmaking:getPlayerProposal(player.UserId) ~= nil) else (matchmaking:isQueued(player.UserId) or matchmaking:isPending(player.UserId))
 		if action ~= "LeaveRoom" and matchmakingBusy then
 			synchronize(player, "Selesaikan matchmaking terlebih dahulu.")
 			return
+		end
+		if rooms.code ~= nil and rooms:count() == 0 then
+			rooms:closeIfEmpty()
 		end
 		if not useGlobalMatchmaking and action == "CreateRoom" and (matchmaking:count() > 0 or matchmaking:hasProposal()) then
 			synchronize(player, "Matchmaking sedang aktif di server ini.")

@@ -15,13 +15,13 @@ export type Service = typeof(setmetatable({} :: {
 	tweenValues: {[number]: CFrameValue},
 }, AvatarPawnService))
 
-local function createSeatBadge(head: BasePart, seat: number, playerTitle: string?): BillboardGui
+local function createSeatBadge(head: BasePart, seat: number, playerTitle: string?, displayName: string?): BillboardGui
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "SeatBadge"
-	badge.Size = UDim2.fromOffset(132, 32)
-	badge.StudsOffset = Vector3.new(0, 1.6, 0)
+	badge.Size = UDim2.fromOffset(140, 32)
+	badge.StudsOffset = Vector3.new(0, 1.8, 0)
 	badge.AlwaysOnTop = true
-	badge.MaxDistance = 90
+	badge.MaxDistance = 120
 	badge.Adornee = head
 	badge.Parent = head
 
@@ -31,12 +31,13 @@ local function createSeatBadge(head: BasePart, seat: number, playerTitle: string
 	label.BackgroundColor3 = Color3.fromRGB(25, 34, 36)
 	label.BackgroundTransparency = 0.18
 	label.BorderSizePixel = 0
-	label.TextColor3 = Color3.fromRGB(245, 236, 207)
+	label.TextColor3 = Color3.fromRGB(255, 235, 175)
 	label.TextStrokeTransparency = 0.65
 	label.Font = Enum.Font.GothamBold
 	label.TextScaled = true
 	local titleText = playerTitle or "Warga"
-	label.Text = "P" .. seat .. " • " .. titleText
+	local nameText = displayName or ("P" .. seat)
+	label.Text = nameText .. " • " .. titleText
 	label.Parent = badge
 
 	local corner = Instance.new("UICorner")
@@ -135,23 +136,48 @@ function AvatarPawnService:destroyPawn(seat: number)
 	self.userIds[seat] = nil
 end
 
-function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition: CFrame, playerTitle: string?): boolean
+function AvatarPawnService:spawnPawn(seat: number, player: Player?, startPosition: CFrame, playerTitle: string?, displayName: string?, targetUserId: number?): boolean
 	if self.pawns[seat] then
 		self:destroyPawn(seat)
 	end
 
-	local descriptionSuccess, description = pcall(function()
-		return Players:GetHumanoidDescriptionFromUserIdAsync(player.UserId)
-	end)
-	if not descriptionSuccess or not description then
-		warn("[AvatarPawnService] Gagal mengambil HumanoidDescription untuk seat " .. seat)
-		return false
+	local model: Model? = nil
+	local assignedUserId = targetUserId or (player and player.UserId or -seat)
+
+	if player then
+		local descriptionSuccess, description = pcall(function()
+			return Players:GetHumanoidDescriptionFromUserIdAsync(player.UserId)
+		end)
+		if descriptionSuccess and description then
+			local modelSuccess, m = pcall(function()
+				return Players:CreateHumanoidModelFromDescriptionAsync(description, Enum.HumanoidRigType.R15)
+			end)
+			if modelSuccess and m and m:IsA("Model") then
+				model = m
+			end
+		end
 	end
 
-	local modelSuccess, model = pcall(function()
-		return Players:CreateHumanoidModelFromDescriptionAsync(description, Enum.HumanoidRigType.R15)
-	end)
-	if not modelSuccess or not model or not model:IsA("Model") then
+	-- If no model created (e.g. Bot AI or player description failure), create styled R15 bot avatar!
+	if not model then
+		local desc = Instance.new("HumanoidDescription")
+		local teamColor = (seat == 1 or seat == 3) and Color3.fromRGB(75, 215, 195) or Color3.fromRGB(255, 160, 55)
+		local skinTone = if seat % 2 == 0 then Color3.fromRGB(245, 205, 165) else Color3.fromRGB(220, 180, 140)
+		desc.HeadColor = skinTone
+		desc.TorsoColor = teamColor
+		desc.LeftArmColor = skinTone
+		desc.RightArmColor = skinTone
+		desc.LeftLegColor = Color3.fromRGB(40, 48, 56)
+		desc.RightLegColor = Color3.fromRGB(40, 48, 56)
+		local ok, m = pcall(function()
+			return Players:CreateHumanoidModelFromDescriptionAsync(desc, Enum.HumanoidRigType.R15)
+		end)
+		if ok and m and m:IsA("Model") then
+			model = m
+		end
+	end
+
+	if not model then
 		warn("[AvatarPawnService] Gagal membuat rig R15 untuk seat " .. seat)
 		return false
 	end
@@ -169,7 +195,7 @@ function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition
 
 	local head = model:FindFirstChild("Head")
 	if head and head:IsA("BasePart") then
-		createSeatBadge(head, seat, playerTitle)
+		createSeatBadge(head, seat, playerTitle, displayName or (player and player.DisplayName))
 	end
 	createPawnPedestal(model, seat)
 
@@ -184,7 +210,7 @@ function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition
 
 	model.Parent = pawnFolder
 	self.pawns[seat] = model
-	self.userIds[seat] = player.UserId
+	self.userIds[seat] = assignedUserId
 	return true
 end
 

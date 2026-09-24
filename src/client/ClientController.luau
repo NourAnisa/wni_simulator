@@ -266,6 +266,35 @@ local roomCode = waitFor(roomPanel, "CodeInput") :: TextBox
 local createRoom = waitFor(roomPanel, "CreateButton") :: TextButton
 local joinRoom = waitFor(roomPanel, "JoinButton") :: TextButton
 local leaveRoom = waitFor(roomPanel, "LeaveButton") :: TextButton
+local quickPlayButton: TextButton = roomPanel:FindFirstChild("QuickPlayButton") :: any
+if not quickPlayButton then
+	local btn = Instance.new("TextButton")
+	btn.Name = "QuickPlayButton"
+	btn.Size = UDim2.new(0.84, 0, 0.15, 0)
+	btn.Position = UDim2.new(0.08, 0, 0.50, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(240, 180, 45)
+	btn.Font = Enum.Font.GothamBlack
+	btn.Text = "⚡ MAIN SEKARANG (SOLO + BOT)"
+	btn.TextColor3 = Color3.fromRGB(20, 28, 30)
+	btn.TextSize = 14
+	btn.TextScaled = false
+	btn.AutoButtonColor = true
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = btn
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(255, 220, 110)
+	stroke.Thickness = 2
+	stroke.Parent = btn
+	local uigrad = Instance.new("UIGradient")
+	uigrad.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 215, 60)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 140, 30)),
+	})
+	uigrad.Parent = btn
+	btn.Parent = roomPanel
+	quickPlayButton = btn
+end
 local matchmakingPanel = waitFor(root, "MatchmakingPanel") :: Frame
 local matchmakingStatus = waitFor(matchmakingPanel, "Status") :: TextLabel
 local queueButton = waitFor(matchmakingPanel, "QueueButton") :: TextButton
@@ -540,7 +569,8 @@ local function refreshRoom(snap: any)
 		button.AutoButtonColor = enabled
 		button.TextTransparency = if enabled then 0 else 0.55
 	end
-	control(createRoom, not member, not member and not matchmakingLocked and not room.exists)
+	control(quickPlayButton, not member, not member and not matchmakingLocked)
+	control(createRoom, not member, not member and not matchmakingLocked)
 	control(joinRoom, not member, not member and not matchmakingLocked and room.exists and preparation and room.count < room.capacity)
 	control(leaveRoom, member and (preparation or finished), member and (preparation or finished))
 	local teamCounts = {A = 0, B = 0}
@@ -831,7 +861,18 @@ for k in buttons do
 end
 hConn.Text = "Menyambung ke server..."
 
-buttons.Roll.Activated:Connect(function() if allowed.Roll then send("Roll") end end)
+buttons.Roll.Activated:Connect(function()
+	if allowed.Roll then
+		if audio then audio:playSfx("RollDice", true) end
+		task.spawn(function()
+			for _ = 1, 6 do
+				diceText.Text = string.format("🎲  %d + %d  =  ?", math.random(1, 6), math.random(1, 6))
+				task.wait(0.04)
+			end
+		end)
+		send("Roll")
+	end
+end)
 buttons.Buy.Activated:Connect(function() if allowed.Buy then send("Buy") end end)
 buttons.Skip.Activated:Connect(function() if allowed.Skip then send("Skip") end end)
 buttons.Ready.Activated:Connect(function()
@@ -852,7 +893,26 @@ buttons.SkipBuild.Activated:Connect(function() if allowed.SkipBuild then send("S
 buttons.Bail.Activated:Connect(function() if allowed.Bail then send("Bail") end end)
 buttons.ReturnLobby.Activated:Connect(function() if allowed.ReturnLobby then send("ReturnLobby") end end)
 
-createRoom.Activated:Connect(function() if createRoom.Active then sendRoom("CreateRoom") end end)
+quickPlayButton.Activated:Connect(function()
+	if quickPlayButton.Active then
+		roomMessage.Text = "Menyiapkan pertandingan solo vs 3 bot..."
+		if audio then audio:playSfx("Click", true) end
+		local snap = latest
+		if snap then
+			requestAction:FireServer("QuickPlaySolo", snap.revision, snap.version)
+		end
+	end
+end)
+createRoom.Activated:Connect(function()
+	if createRoom.Active then
+		local snap = latest
+		if snap and snap.room and snap.room.exists then
+			roomMessage.Text = "Room sudah aktif di server ini (Kode: " .. tostring(snap.room.code or "") .. "). Masukkan kode atau tekan 'Main Sekarang'!"
+			return
+		end
+		sendRoom("CreateRoom")
+	end
+end)
 joinRoom.Activated:Connect(function() if joinRoom.Active then sendRoom("JoinRoom") end end)
 leaveRoom.Activated:Connect(function() if leaveRoom.Active then sendRoom("LeaveRoom") end end)
 roomCode.FocusLost:Connect(function(enterPressed: boolean)
@@ -1042,20 +1102,22 @@ applyResponsiveLayout = function(viewport: Vector2)
 			panel.Position = UDim2.new(0.5, 0, 1, -6)
 			panel.Size = UDim2.new(0.52, 0, 0, 92)
 
-			roomHeading.Position = UDim2.fromScale(0.06, 0.04)
-			roomHeading.Size = UDim2.fromScale(0.88, 0.11)
-			roomDescription.Position = UDim2.fromScale(0.06, 0.16)
-			roomDescription.Size = UDim2.fromScale(0.88, 0.13)
-			roomInfo.Position = UDim2.fromScale(0.06, 0.30)
-			roomInfo.Size = UDim2.fromScale(0.88, 0.11)
-			roomCode.Position = UDim2.fromScale(0.08, 0.43)
-			roomCode.Size = UDim2.fromScale(0.84, 0.14)
-			createRoom.Position = UDim2.fromScale(0.08, 0.60)
-			createRoom.Size = UDim2.fromScale(0.40, 0.16)
-			joinRoom.Position = UDim2.fromScale(0.52, 0.60)
-			joinRoom.Size = UDim2.fromScale(0.40, 0.16)
-			roomMessage.Position = UDim2.fromScale(0.06, 0.79)
-			roomMessage.Size = UDim2.fromScale(0.88, 0.17)
+			roomHeading.Position = UDim2.fromScale(0.06, 0.02)
+			roomHeading.Size = UDim2.fromScale(0.88, 0.08)
+			roomDescription.Position = UDim2.fromScale(0.06, 0.10)
+			roomDescription.Size = UDim2.fromScale(0.88, 0.09)
+			quickPlayButton.Position = UDim2.fromScale(0.08, 0.20)
+			quickPlayButton.Size = UDim2.fromScale(0.84, 0.16)
+			roomInfo.Position = UDim2.fromScale(0.06, 0.38)
+			roomInfo.Size = UDim2.fromScale(0.88, 0.08)
+			roomCode.Position = UDim2.fromScale(0.08, 0.47)
+			roomCode.Size = UDim2.fromScale(0.84, 0.12)
+			createRoom.Position = UDim2.fromScale(0.08, 0.61)
+			createRoom.Size = UDim2.fromScale(0.40, 0.15)
+			joinRoom.Position = UDim2.fromScale(0.52, 0.61)
+			joinRoom.Size = UDim2.fromScale(0.40, 0.15)
+			roomMessage.Position = UDim2.fromScale(0.06, 0.78)
+			roomMessage.Size = UDim2.fromScale(0.88, 0.18)
 		end
 
 		-- MatchmakingPanel (right): cleanly below Header, no overlap with RoomPanel
@@ -1187,12 +1249,14 @@ applyResponsiveLayout = function(viewport: Vector2)
 		roomDescription.Size = desktopLayout.roomDescSize
 		roomInfo.Position = desktopLayout.roomInfoPos
 		roomInfo.Size = desktopLayout.roomInfoSize
-		roomCode.Position = desktopLayout.roomCodePos
-		roomCode.Size = desktopLayout.roomCodeSize
-		createRoom.Position = desktopLayout.createRoomPos
-		createRoom.Size = desktopLayout.createRoomSize
-		joinRoom.Position = desktopLayout.joinRoomPos
-		joinRoom.Size = desktopLayout.joinRoomSize
+		quickPlayButton.Position = UDim2.new(0.08, 0, 0.48, 0)
+		quickPlayButton.Size = UDim2.new(0.84, 0, 0.14, 0)
+		roomCode.Position = UDim2.new(0.08, 0, 0.64, 0)
+		roomCode.Size = UDim2.new(0.84, 0, 0.11, 0)
+		createRoom.Position = UDim2.new(0.08, 0, 0.77, 0)
+		createRoom.Size = UDim2.new(0.40, 0, 0.11, 0)
+		joinRoom.Position = UDim2.new(0.52, 0, 0.77, 0)
+		joinRoom.Size = UDim2.new(0.40, 0, 0.11, 0)
 		leaveRoom.Position = desktopLayout.leaveRoomPos
 		leaveRoom.Size = desktopLayout.leaveRoomSize
 		teamButtons.A.Position = desktopLayout.teamAPos
@@ -1671,6 +1735,18 @@ local function playSnapshotFeedback(previous: any, current: any)
 	if previousParticipant and currentParticipant and previousParticipant.inJail ~= true and currentParticipant.inJail == true then
 		if showActionBanner then
 			showActionBanner("🚨 TERCIDUK! KAMU MASUK LAPAS!")
+		end
+	end
+
+	if previousParticipant and currentParticipant and not previousParticipant.inBekasi and currentParticipant.inBekasi then
+		if showActionBanner then
+			showActionBanner("🚀 TERLEMPAR KE PLANET BEKASI! 🛸")
+		end
+	end
+
+	if previousParticipant and currentParticipant and previousParticipant.position ~= currentParticipant.position and (currentParticipant.position == 11 or currentParticipant.position == 31) then
+		if showActionBanner then
+			showActionBanner("⚖️ SIDANG TIPIDKOR! SIAPKAN 2 DADU! ⚖️")
 		end
 	end
 

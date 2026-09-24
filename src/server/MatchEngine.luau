@@ -132,6 +132,7 @@ function Engine.join(self: any, userId: number, name: string): boolean
 		hand = {}, extraTurn = false, doaTier = nil,
 		role = assignedRole,
 		portfolio = {BBUMN = 0, KRIPTO = 0},
+		isBot = (userId < 0),
 	})
 	for _, participant in self.players do
 		participant.ready = false
