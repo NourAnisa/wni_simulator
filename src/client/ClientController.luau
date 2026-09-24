@@ -587,7 +587,7 @@ local function refresh(snap: any)
 		hRound.Text = "Ronde " .. snap.round .. " / " .. Rules.MaxRounds
 	end
 	dicePanel.Visible = phase ~= "Waiting"
-	hSub.Text = if over and #snap.result > 0 then snap.result else "NUSANTARA • 2v2"
+	hSub.Text = if over and #snap.result > 0 then snap.result else (if snap.gameMode == "SoloFFA" then "BOARD GAME • SOLO FFA" else "BOARD GAME • 2v2")
 	hConn.Text = "🟢 Online"
 	local profile = snap.profile
 	if typeof(profile) == "table" then
