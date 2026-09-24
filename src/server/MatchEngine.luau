@@ -14,8 +14,63 @@ assert(tarifModule and tarifModule:IsA("ModuleScript"), "TarifData missing")
 local Tarif = require(tarifModule)
 type Participant = Economy.Participant
 export type Tile = {name: string, kind: string}
+
+local ISLAND_TILES: {[string]: {number}} = {
+	SUMATERA = {2, 3, 5, 6, 8},
+	KALIMANTAN = {10, 11, 13, 14, 16},
+	SULAWESI = {18, 19, 21, 22, 24},
+	PAPUA = {26, 27, 29, 30, 32},
+	JAWA = {34, 35, 37, 38, 40},
+}
+
+local ISLAND_NAMES: {[string]: string} = {
+	SUMATERA = "Sumatera",
+	KALIMANTAN = "Kalimantan",
+	SULAWESI = "Sulawesi",
+	PAPUA = "Papua",
+	JAWA = "Jawa",
+}
+
 local Engine = {}
 Engine.__index = Engine
+
+function Engine.isTileMonopolized(self: any, tileIndex: number): (boolean, string?)
+	local owner = self.owners[tileIndex]
+	if not owner or not self.players[owner] then return false, nil end
+	local team = self.players[owner].team
+	for islandKey, tileList in pairs(ISLAND_TILES) do
+		if table.find(tileList, tileIndex) then
+			for _, idx in ipairs(tileList) do
+				local o = self.owners[idx]
+				if not o or not self.players[o] or self.players[o].team ~= team then
+					return false, nil
+				end
+			end
+			return true, ISLAND_NAMES[islandKey] or islandKey
+		end
+	end
+	return false, nil
+end
+
+function Engine.getIslandMonopolies(self: any): {[string]: {string}}
+	local res: {[string]: {string}} = {A = {}, B = {}}
+	for _, team in ipairs({"A", "B"}) do
+		for islandKey, tileList in pairs(ISLAND_TILES) do
+			local ownedAll = true
+			for _, idx in ipairs(tileList) do
+				local o = self.owners[idx]
+				if not o or not self.players[o] or self.players[o].team ~= team then
+					ownedAll = false
+					break
+				end
+			end
+			if ownedAll then
+				table.insert(res[team], islandKey)
+			end
+		end
+	end
+	return res
+end
 
 function Engine.new(tiles: {Tile})
 	assert(#tiles == Rules.TileCount, "Expected complete prototype board")
@@ -286,7 +341,20 @@ function Engine.resolveTile(self: any, now: number)
 			local landlord = self.players[owner]
 			local level = self.buildings[participant.position] or 0
 			local rent = Tarif.get(participant.position).rents[level + 1]
+			local isMono, monoIsland = self:isTileMonopolized(participant.position)
+			if isMono then
+				rent = rent * 2
+			end
+			if self.round >= 6 then
+				rent = math.floor(rent * 1.5)
+			end
 			local label = if level == 0 then "sewa kosong " .. tile.name else "sewa " .. self:levelName(level) .. " " .. tile.name
+			if isMono and monoIsland then
+				label = label .. " [MONOPOLI " .. monoIsland .. " 2X]"
+			end
+			if self.round >= 6 then
+				label = label .. " [INFLASI R" .. self.round .. "]"
+			end
 			-- Proposed team ruleset: suppression precedes detention and teammate exemption.
 			if landlord.rentSuppressed then
 				self:addLog("Sewa " .. tile.name .. " sedang dinonaktifkan; tidak ada tagihan.")
@@ -729,6 +797,10 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 				local ok, message = Economy.buy(self.players, self.owners, seat, participant.position)
 				if not ok then return false, message end
 				self:addLog(participant.name .. " membeli " .. self.tiles[participant.position].name .. " seharga " .. Rules.formatMoney(Tarif.get(participant.position).price))
+				local isMono, monoIsland = self:isTileMonopolized(participant.position)
+				if isMono and monoIsland then
+					self:addLog("👑 MONOPOLI NUSANTARA: Tim " .. participant.team .. " menguasai seluruh wilayah " .. monoIsland .. "! Sewa berlipat ganda 2x!")
+				end
 			else
 				self:addLog(participant.name .. " melewati pembelian.")
 			end
@@ -789,6 +861,7 @@ function Engine.snapshot(self: any)
 		logs = table.clone(self.logs), result = self.result,
 		matchId = self.matchId, rematchVotes = table.clone(self.rematchVotes),
 		rematchUnavailable = self.rematchUnavailable,
+		monopolies = self:getIslandMonopolies(),
 		teamSwap = if self.phase == "Waiting" and self.teamSwap then table.clone(self.teamSwap) else nil,
 		cardChoice = if self.phase == "AwaitCardChoice" and self.pendingCardChoice then {
 			id = self.pendingCardChoice.id, seat = self.pendingCardChoice.seat,

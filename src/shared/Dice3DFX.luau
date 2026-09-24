@@ -4,6 +4,9 @@ local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProgressionConfig = require(ReplicatedStorage:WaitForChild("WNI"):WaitForChild("ProgressionConfig"))
+
 local Dice3DFX = {}
 local DICE_SIZE = 1.2
 local FACE_ORIENTATIONS: {[number]: Vector3} = {
@@ -54,17 +57,18 @@ local PIP_LAYOUTS: {[number]: {Vector2}} = {
 }
 local NORMAL_FACES: {Enum.NormalId} = {Enum.NormalId.Top, Enum.NormalId.Bottom, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right}
 
-local function buildDie(): BasePart
+local function buildDie(skinKey: string?): BasePart
+	local skin = (skinKey and ProgressionConfig.DICE_SKINS[skinKey]) or ProgressionConfig.DICE_SKINS.Classic
 	local die = Instance.new("Part")
 	die.Name = "Dice3D"
 	die.Size = Vector3.new(DICE_SIZE, DICE_SIZE, DICE_SIZE)
-	die.Color = Color3.fromRGB(245, 240, 228)
-	die.Material = Enum.Material.SmoothPlastic
+	die.Color = skin.Color
+	die.Material = skin.Material
 	die.Anchored = true
 	die.CanCollide = false
 	die.CanQuery = false
 	die.CanTouch = false
-	die.CastShadow = false
+	die.CastShadow = true
 	for _, normalId in ipairs(NORMAL_FACES) do
 		local face = Instance.new("SurfaceGui")
 		face.Name = "Pips"
@@ -111,7 +115,7 @@ local function paintDie(die: BasePart)
 	end
 end
 
-function Dice3DFX.rollDice3D(d1: number, d2: number)
+function Dice3DFX.rollDice3D(d1: number, d2: number, skinKey: string?)
 	local board = workspace:FindFirstChild("WNIBoard")
 	local center = if board then board:GetPivot().Position else Vector3.new(9, 9, 8)
 	local values = {d1, d2}
@@ -119,7 +123,7 @@ function Dice3DFX.rollDice3D(d1: number, d2: number)
 	for index = 1, 2 do
 		local value = values[index]
 		if typeof(value) ~= "number" or value < 1 or value > 6 then return end
-		local die = buildDie()
+		local die = buildDie(skinKey)
 		paintDie(die)
 		local sideOffset = if index == 1 then -0.9 else 0.9
 		local launch = CFrame.new(center + Vector3.new(sideOffset, 9, -2)) * CFrame.Angles(math.random() * 6, math.random() * 6, math.random() * 6)

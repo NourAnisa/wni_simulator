@@ -2043,6 +2043,17 @@ stateUpdated.OnClientEvent:Connect(function(payload)
 	if showTutorialIfPending then
 		showTutorialIfPending(payload.phase)
 	end
+	if audio then
+		if payload.phase == "Waiting" or payload.phase == "Preparation" or payload.phase == "Ended" then
+			audio:crossfadeBgm("Lobby", 1.2)
+		elseif payload.phase == "Active" then
+			if typeof(payload.round) == "number" and payload.round >= 6 then
+				audio:crossfadeBgm("Climax", 1.0)
+			else
+				audio:crossfadeBgm("Match", 1.2)
+			end
+		end
+	end
 end)
 
 task.spawn(function()

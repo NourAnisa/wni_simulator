@@ -2,6 +2,9 @@
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProgressionConfig = require(ReplicatedStorage:WaitForChild("WNI"):WaitForChild("ProgressionConfig"))
+
 export type Profile = {
 	version: number,
 	matches: number,
@@ -10,10 +13,15 @@ export type Profile = {
 	draws: number,
 	lastMatchId: string,
 	recentMatchIds: {string},
+	xp: number,
+	level: number,
+	coins: number,
+	title: string,
+	diceSkin: string,
 }
 
 local STORE_NAME = "WNI_Profile_v1"
-local PROFILE_VERSION = 2
+local PROFILE_VERSION = 3
 local store: any = nil
 local storeOK, storeResult = pcall(function()
 	return DataStoreService:GetDataStore(STORE_NAME)
@@ -34,6 +42,11 @@ local function defaultProfile(): Profile
 		draws = 0,
 		lastMatchId = "",
 		recentMatchIds = {},
+		xp = 0,
+		level = 1,
+		coins = 1000,
+		title = "Warga Biasa",
+		diceSkin = "Classic",
 	}
 end
 
@@ -48,6 +61,12 @@ local function sanitize(raw: any): Profile
 	profile.wins = safeInt(raw.wins)
 	profile.losses = safeInt(raw.losses)
 	profile.draws = safeInt(raw.draws)
+	profile.xp = safeInt(raw.xp)
+	profile.coins = if typeof(raw.coins) == "number" and raw.coins >= 0 then math.floor(raw.coins) else 1000
+	local calculatedLevel = ProgressionConfig.calculateLevel(profile.xp)
+	profile.level = calculatedLevel
+	profile.title = ProgressionConfig.getTitleForLevel(calculatedLevel)
+	profile.diceSkin = if typeof(raw.diceSkin) == "string" and ProgressionConfig.DICE_SKINS[raw.diceSkin] ~= nil then raw.diceSkin else "Classic"
 	profile.lastMatchId = if typeof(raw.lastMatchId) == "string" then string.sub(raw.lastMatchId, 1, 80) else ""
 	if typeof(raw.recentMatchIds) == "table" then
 		local seen: {[string]: boolean} = {}
@@ -115,6 +134,13 @@ function ProfileService.recordMatch(self: any, userId: number, matchId: string, 
 				local profile = sanitize(raw)
 				if table.find(profile.recentMatchIds, matchId) then return profile end
 				profile.matches += 1
+				local xpGain = if outcome == "win" then 250 elseif outcome == "draw" then 100 else 50
+				local coinGain = if outcome == "win" then 500 elseif outcome == "draw" then 250 else 100
+				profile.xp = (profile.xp or 0) + xpGain
+				profile.coins = (profile.coins or 1000) + coinGain
+				local newLevel = ProgressionConfig.calculateLevel(profile.xp)
+				profile.level = newLevel
+				profile.title = ProgressionConfig.getTitleForLevel(newLevel)
 				if outcome == "win" then
 					profile.wins += 1
 				elseif outcome == "loss" then
@@ -138,6 +164,13 @@ function ProfileService.recordMatch(self: any, userId: number, matchId: string, 
 
 	-- Studio/API-disabled fallback: keep useful session stats without overwriting persistent data.
 	cached.matches += 1
+	local xpGain = if outcome == "win" then 250 elseif outcome == "draw" then 100 else 50
+	local coinGain = if outcome == "win" then 500 elseif outcome == "draw" then 250 else 100
+	cached.xp = (cached.xp or 0) + xpGain
+	cached.coins = (cached.coins or 1000) + coinGain
+	local fallbackLevel = ProgressionConfig.calculateLevel(cached.xp)
+	cached.level = fallbackLevel
+	cached.title = ProgressionConfig.getTitleForLevel(fallbackLevel)
 	if outcome == "win" then
 		cached.wins += 1
 	elseif outcome == "loss" then

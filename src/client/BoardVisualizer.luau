@@ -64,4 +64,32 @@ stateUpdated.OnClientEvent:Connect(function(current)
 			end
 		end
 	end
+	if typeof(current.monopolies) == "table" then
+		for _, team in ipairs({"A", "B"}) do
+			local islands = current.monopolies[team]
+			if typeof(islands) == "table" then
+				local ISLAND_TILES: {[string]: {number}} = {
+					SUMATERA = {2, 3, 5, 6, 8},
+					KALIMANTAN = {10, 11, 13, 14, 16},
+					SULAWESI = {18, 19, 21, 22, 24},
+					PAPUA = {26, 27, 29, 30, 32},
+					JAWA = {34, 35, 37, 38, 40},
+				}
+				for _, islandKey in ipairs(islands) do
+					local tileList = ISLAND_TILES[islandKey]
+					if tileList then
+						for _, idx in ipairs(tileList) do
+							local t = tileAt(idx)
+							local container = t and t:FindFirstChild("Face") and t.Face:FindFirstChild("TileCardContainer")
+							local stroke = container and container:FindFirstChildOfClass("UIStroke")
+							if stroke then
+								stroke.Color = if team == "A" then Color3.fromRGB(80, 240, 200) else Color3.fromRGB(255, 175, 75)
+								stroke.Thickness = 8
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 end)

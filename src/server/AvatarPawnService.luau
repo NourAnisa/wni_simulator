@@ -15,10 +15,10 @@ export type Service = typeof(setmetatable({} :: {
 	tweenValues: {[number]: CFrameValue},
 }, AvatarPawnService))
 
-local function createSeatBadge(head: BasePart, seat: number): BillboardGui
+local function createSeatBadge(head: BasePart, seat: number, playerTitle: string?): BillboardGui
 	local badge = Instance.new("BillboardGui")
 	badge.Name = "SeatBadge"
-	badge.Size = UDim2.fromOffset(88, 30)
+	badge.Size = UDim2.fromOffset(132, 32)
 	badge.StudsOffset = Vector3.new(0, 1.6, 0)
 	badge.AlwaysOnTop = true
 	badge.MaxDistance = 90
@@ -35,11 +35,12 @@ local function createSeatBadge(head: BasePart, seat: number): BillboardGui
 	label.TextStrokeTransparency = 0.65
 	label.Font = Enum.Font.GothamBold
 	label.TextScaled = true
-	label.Text = "P" .. seat
+	local titleText = playerTitle or "Warga"
+	label.Text = "P" .. seat .. " • " .. titleText
 	label.Parent = badge
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(1, 0) -- capsule badge
 	corner.Parent = label
 
 	local textLimit = Instance.new("UITextSizeConstraint")
@@ -134,7 +135,7 @@ function AvatarPawnService:destroyPawn(seat: number)
 	self.userIds[seat] = nil
 end
 
-function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition: CFrame): boolean
+function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition: CFrame, playerTitle: string?): boolean
 	if self.pawns[seat] then
 		self:destroyPawn(seat)
 	end
@@ -168,7 +169,7 @@ function AvatarPawnService:spawnPawn(seat: number, player: Player, startPosition
 
 	local head = model:FindFirstChild("Head")
 	if head and head:IsA("BasePart") then
-		createSeatBadge(head, seat)
+		createSeatBadge(head, seat, playerTitle)
 	end
 	createPawnPedestal(model, seat)
 

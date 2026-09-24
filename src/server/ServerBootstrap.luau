@@ -266,6 +266,11 @@ local function snapshotFor(player: Player): any
 		wins = profile.wins,
 		losses = profile.losses,
 		draws = profile.draws,
+		xp = profile.xp or 0,
+		level = profile.level or 1,
+		coins = profile.coins or 1000,
+		title = profile.title or "Warga Biasa",
+		diceSkin = profile.diceSkin or "Classic",
 	}
 	snapshot.matchmaking = if useGlobalMatchmaking then globalMatchmaking:snapshot(player.UserId) else matchmaking:snapshot(player.UserId)
 	snapshot.routing = {
@@ -326,7 +331,8 @@ syncAvatarPawns = function()
 				local offset = Vector3.new((seat - 2.5) * 1.35, 1.2, 0)
 				local startCFrame = tile.CFrame * CFrame.new(offset)
 				task.spawn(function()
-					local spawned = avatarPawns:spawnPawn(seat, player, startCFrame)
+					local prof = profiles:get(userId)
+					local spawned = avatarPawns:spawnPawn(seat, player, startCFrame, prof.title)
 					if avatarSpawnPending[seat] == userId then
 						avatarSpawnPending[seat] = nil
 					end

@@ -27,6 +27,7 @@ stateUpdated.OnClientEvent:Connect(function(current)
 		changed = previous.dice[1] ~= d1 or previous.dice[2] ~= d2
 	end
 	if changed then
-		Dice3DFX.rollDice3D(d1, d2)
+		local skin = (typeof(current.profile) == "table" and current.profile.diceSkin) or "Classic"
+		Dice3DFX.rollDice3D(d1, d2, skin)
 	end
 end)
