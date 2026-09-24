@@ -161,7 +161,7 @@ function CardEngine.resolve(self: any, id: string, ctx: any): CardEffect
 		if target then
 			table.insert(actions, {type = "seizeLand", seat = ctx.seat, tile = target})
 		end
-	elseif id == "KaburAjaDulu" or id == "OrangDalam" then
+	elseif id == "KaburAjaDulu" or id == "OrangDalam" or id == "DoaOrangTua" then
 		-- Kartu tangan: tidak dieksekusi saat ditarik; masuk hand pemain.
 		table.insert(actions, {type = "toHand", seat = ctx.seat, card = id})
 	end

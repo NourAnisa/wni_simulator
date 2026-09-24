@@ -1630,8 +1630,8 @@ local function refreshHand()
 	handOrdinal = math.clamp(handOrdinal, 1, math.max(1, #hand))
 	local id = hand[handOrdinal]
 	local definition = if id then CardData.get(id) else nil
-	local supported = id == "KaburAjaDulu" or id == "OrangDalam"
-	local maximum = if id == "KaburAjaDulu" then Rules.TileCount else 6
+	local supported = id == "KaburAjaDulu" or id == "OrangDalam" or id == "DoaOrangTua"
+	local maximum = if id == "KaburAjaDulu" then Rules.TileCount elseif id == "OrangDalam" then 6 else 3
 	cardChoice = math.clamp(cardChoice, 1, maximum)
 	handName.Text = if definition then definition.name .. " (" .. handOrdinal .. "/" .. #hand .. ")" else "Belum ada kartu simpanan"
 	handDescription.Text = if definition then definition.note else "Kartu simpanan yang kamu peroleh akan muncul di sini."
@@ -1640,17 +1640,29 @@ local function refreshHand()
 		handChoice.Text = "Tujuan " .. cardChoice .. ": " .. tileName
 	elseif id == "OrangDalam" then
 		handChoice.Text = "Dadu Musibah berikutnya: " .. cardChoice
+	elseif id == "DoaOrangTua" then
+		local TIERS = {"high", "mid", "low"}
+		local TIER_LABELS = {high = "✅ Aman (5-6)", mid = "⚠️ Sedang (3-4)", low = "❌ Berat (1-2)"}
+		local tierKey = TIERS[cardChoice] or "high"
+		handChoice.Text = "Tier: " .. (TIER_LABELS[tierKey] or tierKey)
 	else
 		handChoice.Text = "-"
 	end
 	local canUse = supported and participant ~= nil and not participant.eliminated and latest.phase == "AwaitRoll" and latest.activeSeat == seat
 	if id == "OrangDalam" and participant and participant.insiderDie then canUse = false end
+	if id == "DoaOrangTua" and participant and participant.doaTier then canUse = false end
 	cardControl(useCard, canUse)
 	cardControl(previousCard, #hand > 1)
 	cardControl(nextCard, #hand > 1)
 	cardControl(previousChoice, supported)
 	cardControl(nextChoice, supported)
-	handMessage.Text = if participant and id == "OrangDalam" and participant.insiderDie then "Orang Dalam sudah siap: dadu " .. participant.insiderDie .. "." elseif canUse then "Sekali pakai. Pastikan pilihanmu sebelum menggunakan kartu." else "Gunakan sebelum melempar dadu pada giliranmu."
+	local statusMsg = if participant and id == "OrangDalam" and participant.insiderDie
+		then "Orang Dalam sudah siap: dadu " .. participant.insiderDie .. "."
+		elseif participant and id == "DoaOrangTua" and participant.doaTier
+		then "Doa Orang Tua sudah siap: tier " .. (participant.doaTier or "") .. "."
+		elseif canUse then "Sekali pakai. Pastikan pilihanmu sebelum menggunakan kartu."
+		else "Gunakan sebelum melempar dadu pada giliranmu."
+	handMessage.Text = statusMsg
 	if latest and typeof(latest.error) == "string" and #latest.error > 0 then handMessage.Text = latest.error end
 end
 handButton.Activated:Connect(function()
@@ -1677,8 +1689,8 @@ local function cycleCardChoice(direction: number)
 	end
 	local hand = ownHand()
 	local id = hand[handOrdinal]
-	if id ~= "KaburAjaDulu" and id ~= "OrangDalam" then return end
-	local maximum = if id == "KaburAjaDulu" then Rules.TileCount else 6
+	if id ~= "KaburAjaDulu" and id ~= "OrangDalam" and id ~= "DoaOrangTua" then return end
+	local maximum = if id == "KaburAjaDulu" then Rules.TileCount elseif id == "OrangDalam" then 6 else 3
 	cardChoice = (cardChoice - 1 + direction) % maximum + 1
 	refreshHand()
 end
@@ -1699,7 +1711,12 @@ useCard.Activated:Connect(function()
 	local id = hand[handOrdinal]
 	if not id then return end
 	lastCardRequest = os.clock()
-	requestAction:FireServer("PlayCard", latest.revision, latest.version, {cardId = id, choice = cardChoice})
+	local choice: any = cardChoice
+	if id == "DoaOrangTua" then
+		local TIERS = {"high", "mid", "low"}
+		choice = TIERS[cardChoice] or "high"
+	end
+	requestAction:FireServer("PlayCard", latest.revision, latest.version, {cardId = id, choice = choice})
 end)
 
 skipCardChoice.Activated:Connect(function()

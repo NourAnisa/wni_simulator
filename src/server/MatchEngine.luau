@@ -119,7 +119,7 @@ function Engine.join(self: any, userId: number, name: string): boolean
 		cash = Rules.StartingCash, position = 1, ready = false, eliminated = false,
 		inJail = false, jailTries = 0, jailRentToState = false, rentSuppressed = false,
 		inBekasi = false, bekasiReturnPosition = nil,
-		hand = {}, extraTurn = false,
+		hand = {}, extraTurn = false, doaTier = nil,
 	})
 	for _, participant in self.players do
 		participant.ready = false
@@ -491,6 +491,13 @@ function Engine.drawCard(self: any, seat: number, deckKind: string, now: number)
 		die = self.players[seat].insiderDie
 		self.players[seat].insiderDie = nil
 		self:addLog(self.players[seat].name .. " menggunakan Orang Dalam: hasil dadu ditetapkan " .. die .. ".")
+	elseif deckName == "Disaster" and self.players[seat].doaTier then
+		local tier = self.players[seat].doaTier
+		self.players[seat].doaTier = nil
+		-- Konversi tier ke nilai representatif: high=6, mid=4, low=2
+		die = if tier == "high" then 6 elseif tier == "mid" then 4 else 2
+		local tierLabel = if tier == "high" then "aman (5-6)" elseif tier == "mid" then "sedang (3-4)" else "berat (1-2)"
+		self:addLog(self.players[seat].name .. " menggunakan Doa Orang Tua: tier " .. tierLabel .. " (dadu " .. die .. ").")
 	end
 	local mostExpensive: number? = nil
 	local bestValue = -1
@@ -648,7 +655,7 @@ function Engine.restart(self: any, now: number)
 			cash = Rules.StartingCash, position = 1, ready = true, eliminated = false,
 			inJail = false, jailTries = 0, jailRentToState = false, rentSuppressed = false,
 			inBekasi = false, bekasiReturnPosition = nil,
-			hand = {}, extraTurn = false,
+			hand = {}, extraTurn = false, doaTier = nil,
 		})
 	end
 	self.players = freshPlayers
@@ -760,25 +767,40 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 			if typeof(targetTile) ~= "table" then return false, "Pilihan kartu tidak sah." end
 			local cardId = targetTile.cardId
 			local choice = targetTile.choice
-			if cardId ~= "KaburAjaDulu" and cardId ~= "OrangDalam" then return false, "Kartu tidak dapat dimainkan." end
-			local maximum = if cardId == "KaburAjaDulu" then Rules.TileCount else 6
-			if typeof(choice) ~= "number" or choice ~= choice or choice % 1 ~= 0 or choice < 1 or choice > maximum then
-				return false, "Pilih tujuan atau nilai dadu yang sah."
+			if cardId ~= "KaburAjaDulu" and cardId ~= "OrangDalam" and cardId ~= "DoaOrangTua" then return false, "Kartu tidak dapat dimainkan." end
+			if cardId == "KaburAjaDulu" then
+				local maximum = Rules.TileCount
+				if typeof(choice) ~= "number" or choice ~= choice or choice % 1 ~= 0 or choice < 1 or choice > maximum then
+					return false, "Pilih tujuan petak yang sah (1-" .. maximum .. ")."
+				end
+				if not self.tiles[choice] then return false, "Petak tujuan tidak tersedia." end
+			elseif cardId == "OrangDalam" then
+				if typeof(choice) ~= "number" or choice ~= choice or choice % 1 ~= 0 or choice < 1 or choice > 6 then
+					return false, "Pilih nilai dadu yang sah (1-6)."
+				end
+				if participant.insiderDie then return false, "Orang Dalam sudah disiapkan untuk Musibah berikutnya." end
+			elseif cardId == "DoaOrangTua" then
+				if choice ~= "high" and choice ~= "mid" and choice ~= "low" then
+					return false, "Pilih tier: 'high' (aman), 'mid' (sedang), atau 'low' (berat)."
+				end
+				if participant.doaTier then return false, "Doa Orang Tua sudah disiapkan untuk Musibah berikutnya." end
 			end
-			if cardId == "KaburAjaDulu" and not self.tiles[choice] then return false, "Petak tujuan tidak tersedia." end
-			if cardId == "OrangDalam" and participant.insiderDie then return false, "Orang Dalam sudah disiapkan untuk Musibah berikutnya." end
 			local handIndex = table.find(participant.hand, cardId)
 			if not handIndex then return false, "Kartu tidak ada di tanganmu." end
 			table.remove(participant.hand, handIndex)
 			if cardId == "KaburAjaDulu" then
-				participant.position = choice
+				participant.position = choice :: number
 				participant.inBekasi = false
 				participant.bekasiReturnPosition = nil
-				self:addLog(participant.name .. " kabur ke " .. self.tiles[choice].name .. " (Kabur Aja Dulu); tanpa gaji START, efek lokasi tetap berlaku.")
+				self:addLog(participant.name .. " kabur ke " .. self.tiles[choice :: number].name .. " (Kabur Aja Dulu); tanpa gaji START, efek lokasi tetap berlaku.")
 				self:resolveTile(now)
-			else
-				participant.insiderDie = choice
-				self:addLog(participant.name .. " menyiapkan Orang Dalam: Musibah berikutnya dipicu dadu " .. choice .. " (adaptasi pilih tingkat).")
+			elseif cardId == "OrangDalam" then
+				participant.insiderDie = choice :: number
+				self:addLog(participant.name .. " menyiapkan Orang Dalam: Musibah berikutnya dipicu dadu " .. (choice :: number) .. " (adaptasi pilih tingkat).")
+			else -- DoaOrangTua
+				participant.doaTier = choice :: string
+				local tierLabel = if choice == "high" then "aman (5-6)" elseif choice == "mid" then "sedang (3-4)" else "berat (1-2)"
+				self:addLog(participant.name .. " menyiapkan Doa Orang Tua: tier " .. tierLabel .. " untuk Musibah berikutnya.")
 			end
 			self.revision += 1
 			return true, ""

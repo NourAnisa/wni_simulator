@@ -35,6 +35,7 @@ add("Buzzer", DISASTER, "Buzzer", true, "partial", "Genap +800rb dari Negara. Ca
 -- Kartu tangan (simpanan): KaburAjaDulu & OrangDalam masuk hand, tidak langsung jalan.
 add("KaburAjaDulu", FATE, "Kabur Aja Dulu", false, "verified", "Sekali pakai, main sebelum lempar dadu: pindah ke lokasi mana pun, efek lokasi tetap berlaku. Gaji START saat kabur belum terverifikasi (adaptasi: tanpa gaji).")
 add("OrangDalam", FATE, "Orang Dalam", false, "partial", "ADAPTASI: gunakan sebelum lempar dadu pada giliranmu, pilih nilai 1-6 untuk Musibah berikutnya. Sekali pakai; tidak dapat ditumpuk selama pilihan sebelumnya belum terpakai. Waktu pemakaian dan dek belum terverifikasi sebagai aturan asli.")
+add("DoaOrangTua", FATE, "Doa Orang Tua", false, "verified", "Sekali pakai. Saat menjalankan efek Kartu Musibah, kamu BOLEH memilih tier hukuman (high=5-6, mid=3-4, low=1-2) tanpa melempar dadu. Gunakan sebelum menarik Musibah di giliranmu.")
 add("TukarNasib", DISASTER, "Tukar Nasib", false, "partial", "Pemain dengan uang terbanyak dan paling sedikit bertukar SELURUH uang, bukan aset. Dek ditetapkan sebagai adaptasi; klausul seri belum terverifikasi (adaptasi: kursi terkecil diutamakan).")
 add("Sengketa", FATE, "Sengketa", false, "partial", "Ambil tanah lawan beserta bangunannya (adaptasi: tanah termahal milik lawan; dek ditetapkan sebagai adaptasi). Teks lengkap belum terbaca.")
 local CardData = {}
