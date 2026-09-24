@@ -44,6 +44,7 @@ local function createHazardMarker(tilePart: BasePart, hazard: {kind: string, nam
 	stroke.Parent = frame
 
 	local iconLbl = Instance.new("TextLabel")
+	iconLbl.Name = "IconLabel"
 	iconLbl.Size = UDim2.new(0, 30, 1, 0)
 	iconLbl.Position = UDim2.new(0, 4, 0, 0)
 	iconLbl.BackgroundTransparency = 1
@@ -52,6 +53,7 @@ local function createHazardMarker(tilePart: BasePart, hazard: {kind: string, nam
 	iconLbl.Parent = frame
 
 	local titleLbl = Instance.new("TextLabel")
+	titleLbl.Name = "TitleLabel"
 	titleLbl.Size = UDim2.new(1, -38, 0, 20)
 	titleLbl.Position = UDim2.new(0, 34, 0, 3)
 	titleLbl.BackgroundTransparency = 1
@@ -63,6 +65,7 @@ local function createHazardMarker(tilePart: BasePart, hazard: {kind: string, nam
 	titleLbl.Parent = frame
 
 	local subLbl = Instance.new("TextLabel")
+	subLbl.Name = "SubLabel"
 	subLbl.Size = UDim2.new(1, -38, 0, 16)
 	subLbl.Position = UDim2.new(0, 34, 0, 22)
 	subLbl.BackgroundTransparency = 1
@@ -84,7 +87,14 @@ end
 
 stateUpdated.OnClientEvent:Connect(function(payload: any)
 	if typeof(payload) ~= "table" then return end
-	local hazards = payload.activeHazards or {}
+	local hazardsRaw = payload.activeHazards or {}
+	local hazards: {[number]: any} = {}
+	for k, v in pairs(hazardsRaw) do
+		local n = tonumber(k)
+		if n then
+			hazards[n] = v
+		end
+	end
 
 	-- Hapus marker lama yang sudah tidak aktif
 	for tileIdx, marker in pairs(activeMarkers) do
@@ -102,7 +112,8 @@ stateUpdated.OnClientEvent:Connect(function(payload: any)
 				activeMarkers[tileIdx] = createHazardMarker(tilePart, hazard)
 			else
 				-- Update teks durasi ronde tersisa
-				local subLbl = activeMarkers[tileIdx]:FindFirstChild("Frame") and activeMarkers[tileIdx].Frame:FindFirstChild("TextLabel")
+				local frame = activeMarkers[tileIdx]:FindFirstChild("Frame") :: Frame?
+				local subLbl = frame and frame:FindFirstChild("SubLabel") :: TextLabel?
 				if subLbl then
 					subLbl.Text = "(" .. tostring(hazard.roundsLeft) .. " ronde lagi)"
 				end

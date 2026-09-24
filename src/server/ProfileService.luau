@@ -302,6 +302,29 @@ function ProfileService.unlockAchievement(self: any, userId: number, achId: stri
 	profile.level = newLevel
 	profile.title = ProgressionConfig.getTitleForLevel(newLevel)
 
+	local key = "u_" .. tostring(userId)
+	if store then
+		task.spawn(function()
+			pcall(function()
+				store:UpdateAsync(key, function(raw)
+					local p = sanitize(raw)
+					p.achievements = p.achievements or {}
+					p.achievements[achId] = {
+						id = achId,
+						unlocked = true,
+						unlockedAt = os.time(),
+					}
+					p.xp = (p.xp or 0) + def.xp
+					p.coins = (p.coins or 1000) + def.coins
+					local nl = ProgressionConfig.calculateLevel(p.xp)
+					p.level = nl
+					p.title = ProgressionConfig.getTitleForLevel(nl)
+					return p
+				end)
+			end)
+		end)
+	end
+
 	-- Fire notification to online player
 	local player = Players:GetPlayerByUserId(userId)
 	if player then
@@ -363,7 +386,13 @@ function ProfileService.recordMatch(self: any, userId: number, matchId: string, 
 					timestamp = os.time(),
 					summary = summary,
 				})
-				while #profile.matchHistory > 10 do table.remove(profile.matchHistory) end
+				-- Preserve achievements from cached session
+				profile.achievements = profile.achievements or {}
+				for achKey, achVal in pairs(cached.achievements or {}) do
+					if achVal and achVal.unlocked then
+						profile.achievements[achKey] = achVal
+					end
+				end
 
 				return profile
 			end)
@@ -487,7 +516,57 @@ function ProfileService.setDiceSkin(self: any, userId: number, skinKey: string):
 	return true
 end
 
+function ProfileService.save(self: any, userId: number): boolean
+	local cached = self.cache[userId]
+	if not cached or not store then return false end
+	local key = "u_" .. tostring(userId)
+	local ok, _ = pcall(function()
+		return store:UpdateAsync(key, function(raw)
+			local p = sanitize(raw)
+			p.matches = math.max(p.matches, cached.matches)
+			p.wins = math.max(p.wins, cached.wins)
+			p.losses = math.max(p.losses, cached.losses)
+			p.draws = math.max(p.draws, cached.draws)
+			p.xp = math.max(p.xp, cached.xp)
+			p.coins = cached.coins
+			p.level = ProgressionConfig.calculateLevel(p.xp)
+			p.title = ProgressionConfig.getTitleForLevel(p.level)
+			p.diceSkin = cached.diceSkin or p.diceSkin
+			p.streakDays = math.max(p.streakDays, cached.streakDays or 0)
+			p.lastClaimDay = math.max(p.lastClaimDay, cached.lastClaimDay or 0)
+			if cached.unlockedSkins then
+				p.unlockedSkins = p.unlockedSkins or {Classic = true}
+				for k, v in pairs(cached.unlockedSkins) do
+					p.unlockedSkins[k] = v
+				end
+			end
+			if cached.achievements then
+				p.achievements = p.achievements or {}
+				for k, v in pairs(cached.achievements) do
+					p.achievements[k] = v
+				end
+			end
+			if #cached.recentMatchIds > 0 then
+				p.recentMatchIds = cached.recentMatchIds
+				p.lastMatchId = cached.lastMatchId
+			end
+			if cached.matchHistory and #cached.matchHistory > 0 then
+				p.matchHistory = cached.matchHistory
+			end
+			return p
+		end)
+	end)
+	return ok
+end
+
+function ProfileService.saveAll(self: any)
+	for userId, _ in pairs(self.cache) do
+		self:save(userId)
+	end
+end
+
 function ProfileService.release(self: any, userId: number)
+	self:save(userId)
 	self.cache[userId] = nil
 	self.loaded[userId] = nil
 	self.warned[userId] = nil

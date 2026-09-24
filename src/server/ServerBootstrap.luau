@@ -477,6 +477,10 @@ Players.PlayerRemoving:Connect(function(player: Player)
 	if queueChanged or roomChanged then broadcast() end
 	if not heldForReconnect then profiles:release(player.UserId) end
 end)
+game:BindToClose(function()
+	profiles:saveAll()
+	task.wait(1.5)
+end)
 request.OnServerEvent:Connect(function(player: Player, action: any, revision: any, version: any, targetTile: any)
 	local now = Workspace:GetServerTimeNow()
 	if now - (lastRequest[player] or -math.huge) < Rules.RequestInterval then return end
