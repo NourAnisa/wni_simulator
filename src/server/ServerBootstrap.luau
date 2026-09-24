@@ -523,7 +523,8 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		local cheerRemote = remotes:FindFirstChild("SpectatorCheer")
 		if cheerRemote and cheerRemote:IsA("RemoteEvent") then
 			local cheererName = player.DisplayName or player.Name
-			cheerRemote:FireAllClients(player.UserId, cheererName)
+			local reaction = if typeof(targetTile) == "string" then targetTile else "🌸"
+			cheerRemote:FireAllClients(player.UserId, cheererName, reaction)
 		end
 		return
 	end
@@ -656,7 +657,8 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		end
 		return
 	end
-	if action ~= "Ready" and action ~= "Roll" and action ~= "Buy" and action ~= "Skip" and action ~= "Build" and action ~= "SkipBuild" and action ~= "Bail" and action ~= "Rematch" and action ~= "PlayCard" and action ~= "SelectCardLand" and action ~= "SkipCardChoice" and action ~= "ChooseTeam" and action ~= "RequestTeamSwap" and action ~= "AcceptTeamSwap" and action ~= "CancelTeamSwap" then return end
+	if action ~= "Ready" and action ~= "Roll" and action ~= "Buy" and action ~= "Skip" and action ~= "Build" and action ~= "SkipBuild" and action ~= "Bail" and action ~= "Rematch" and action ~= "PlayCard" and action ~= "SelectCardLand" and action ~= "SkipCardChoice" and action ~= "ChooseTeam" and action ~= "RequestTeamSwap" and action ~= "AcceptTeamSwap" and action ~= "CancelTeamSwap"
+		and action ~= "BailoutTeammate" and action ~= "BailTeammateFromJail" and action ~= "BuyStock" and action ~= "SellStock" and action ~= "SetGameMode" and action ~= "SelectRole" then return end
 	if typeof(revision) ~= "number" or revision ~= revision or revision % 1 ~= 0 or revision < 0 or revision > 1000000000 then return end
 	if typeof(version) ~= "string" or version ~= Rules.Version then
 		synchronize(player, "Versi aturan tidak cocok.")
@@ -677,6 +679,18 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 			synchronize(player, "Pilih Tim A atau Tim B.")
 			return
 		end
+	elseif action == "SetGameMode" or action == "SelectRole" then
+		if typeof(targetTile) ~= "string" then
+			synchronize(player, "Pilihan tidak sah.")
+			return
+		end
+	elseif action == "BuyStock" or action == "SellStock" then
+		if typeof(targetTile) ~= "table" then
+			synchronize(player, "Parameter saham tidak sah.")
+			return
+		end
+	elseif action == "BailoutTeammate" or action == "BailTeammateFromJail" then
+		-- targetTile can be nil
 	elseif action == "PlayCard" then
 		if typeof(targetTile) ~= "table" then
 			synchronize(player, "Pilihan kartu tidak sah.")

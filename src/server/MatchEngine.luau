@@ -12,6 +12,10 @@ local Economy = require(economyModule)
 local tarifModule = shared:WaitForChild("TarifData", 5)
 assert(tarifModule and tarifModule:IsA("ModuleScript"), "TarifData missing")
 local Tarif = require(tarifModule)
+local roleConfigModule = shared:WaitForChild("RoleConfig", 5)
+local RoleConfig = if roleConfigModule and roleConfigModule:IsA("ModuleScript") then require(roleConfigModule) else nil
+local stockMarketModule = shared:WaitForChild("StockMarketConfig", 5)
+local StockMarket = if stockMarketModule and stockMarketModule:IsA("ModuleScript") then require(stockMarketModule) else nil
 type Participant = Economy.Participant
 export type Tile = {name: string, kind: string}
 
@@ -93,6 +97,10 @@ function Engine.new(tiles: {Tile})
 	self.rematchUnavailable = false
 	self.buyBanReleaseSeat = nil
 	self.activeEvent = nil
+	self.gameMode = "Team2v2"
+	self.activeHazards = {} :: {[number]: {kind: string, name: string, roundsLeft: number}}
+	self.stockPrices = {BBUMN = 500000, KRIPTO = 250000}
+	self.stockNews = "Bursa Efek Nusantara: Pasar dibuka dengan optimisme tinggi."
 	self:addLog("Mode prototipe: 4 pemain, tim 2v2, batas 8 ronde.")
 	return self
 end
@@ -115,18 +123,21 @@ function Engine.join(self: any, userId: number, name: string): boolean
 	local counts = {A = 0, B = 0}
 	for _, member in self.players do counts[member.team] += 1 end
 	local assignedTeam = if counts.A <= counts.B then "A" else "B"
+	local assignedRole = if RoleConfig then RoleConfig.assignRole(#self.players + 1) else "PNS"
 	table.insert(self.players, {
 		userId = userId, name = name, team = assignedTeam,
 		cash = Rules.StartingCash, position = 1, ready = false, eliminated = false,
 		inJail = false, jailTries = 0, jailRentToState = false, rentSuppressed = false,
 		inBekasi = false, bekasiReturnPosition = nil,
 		hand = {}, extraTurn = false, doaTier = nil,
+		role = assignedRole,
+		portfolio = {BBUMN = 0, KRIPTO = 0},
 	})
 	for _, participant in self.players do
 		participant.ready = false
 	end
 	self.revision += 1
-	self:addLog(name .. " bergabung. Semua peserta perlu menyatakan siap.")
+	self:addLog(name .. " (" .. assignedRole .. ") bergabung. Semua peserta perlu menyatakan siap.")
 	return true
 end
 
@@ -156,6 +167,24 @@ function Engine.leave(self: any, userId: number): boolean
 end
 
 function Engine.checkEnd(self: any): boolean
+	if self.gameMode == "SoloFFA" then
+		local aliveCount = 0
+		local lastStanding = nil
+		for _, participant in self.players do
+			if not participant.eliminated then
+				aliveCount += 1
+				lastStanding = participant
+			end
+		end
+		if aliveCount <= 1 then
+			self.phase = "Finished"
+			self.deadline = 0
+			self.result = if lastStanding then "👑 SULTAN TUNGGAL MENANG: " .. lastStanding.name .. "!" else "SEMUA PEMAIN TELAH BANGKRUT"
+			self:addLog(self.result)
+			return true
+		end
+		return false
+	end
 	local alive = {A = false, B = false}
 	for _, participant in self.players do
 		if not participant.eliminated then alive[participant.team] = true end
@@ -234,6 +263,72 @@ function Engine.processRoundEvent(self: any, now: number)
 	end
 end
 
+function Engine.processHazards(self: any, now: number)
+	-- Kurangi durasi hazard yang ada
+	for tileIndex, h in pairs(self.activeHazards) do
+		h.roundsLeft -= 1
+		if h.roundsLeft <= 0 then
+			self.activeHazards[tileIndex] = nil
+			self:addLog("Cuaca kembali normal di " .. self.tiles[tileIndex].name .. ".")
+		end
+	end
+
+	-- Munculkan Hazard baru di Ronde 2, 4, 6
+	if self.round == 2 or self.round == 4 or self.round == 6 then
+		local candidates = {}
+		for idx = 1, Rules.TileCount do
+			if self.tiles[idx].kind == "Property" and not self.activeHazards[idx] then
+				table.insert(candidates, idx)
+			end
+		end
+		if #candidates > 0 then
+			local target = candidates[self.random:NextInteger(1, #candidates)]
+			local isBanjir = (self.random:NextInteger(1, 2) == 1)
+			local hKind = if isBanjir then "Banjir" else "Macet"
+			local hName = if isBanjir then "Banjir Musiman 🌊" else "Macet Horor Pantura 🚗"
+			self.activeHazards[target] = {
+				kind = hKind,
+				name = hName,
+				roundsLeft = 2,
+			}
+			self:addLog("📢 PERINGATAN BENCANA: " .. hName .. " melanda " .. self.tiles[target].name .. " selama 2 ronde!")
+		end
+	end
+end
+
+function Engine.processStockMarket(self: any, now: number)
+	if not StockMarket then return end
+	local bumnPrice = self.stockPrices.BBUMN or 500000
+	-- 1. Pembagian dividen BBUMN untuk semua pemegang saham
+	for _, p in ipairs(self.players) do
+		if not p.eliminated and p.portfolio and p.portfolio.BBUMN and p.portfolio.BBUMN > 0 then
+			local dividend = math.floor(p.portfolio.BBUMN * bumnPrice * 0.08)
+			if dividend > 0 then
+				Economy.credit(p, dividend)
+				self:addLog("💰 DIVIDEN BUMN: " .. p.name .. " menerima dividen " .. Rules.formatMoney(dividend) .. " (" .. p.portfolio.BBUMN .. " lot)!")
+			end
+		end
+	end
+
+	-- 2. Fluktuasi harga bursa
+	local bumnDelta = (self.random:NextInteger(-15, 20)) / 100
+	local kriptoDelta = (self.random:NextInteger(-45, 75)) / 100
+
+	local newBumn = math.clamp(math.floor(bumnPrice * (1 + bumnDelta)), 250000, 1200000)
+	local oldKripto = self.stockPrices.KRIPTO or 250000
+	local newKripto = math.clamp(math.floor(oldKripto * (1 + kriptoDelta)), 50000, 2000000)
+
+	self.stockPrices.BBUMN = newBumn
+	self.stockPrices.KRIPTO = newKripto
+
+	local bumnTrend = if bumnDelta >= 0 then "+" .. tostring(math.floor(bumnDelta * 100)) .. "%" else tostring(math.floor(bumnDelta * 100)) .. "%"
+	local kriptoTrend = if kriptoDelta >= 0 then "+" .. tostring(math.floor(kriptoDelta * 100)) .. "%" else tostring(math.floor(kriptoDelta * 100)) .. "%"
+
+	self.stockNews = string.format("Bursa Saham R%d: BBUMN %s (%s) | GAJAH %s (%s)", 
+		self.round, Rules.formatMoney(newBumn), bumnTrend, Rules.formatMoney(newKripto), kriptoTrend)
+	self:addLog("📈 " .. self.stockNews)
+end
+
 function Engine.advance(self: any, now: number)
 	if self:checkEnd() then return end
 	-- Cek apakah pemain aktif mendapat giliran ekstra (dari dadu kembar)
@@ -251,11 +346,31 @@ function Engine.advance(self: any, now: number)
 			self.activeSeat = 1
 			self.round += 1
 			self:processRoundEvent(now)
+			self:processHazards(now)
+			self:processStockMarket(now)
 			if self.round > Rules.MaxRounds then
 				self.round = Rules.MaxRounds
-				local scores = Economy.teamScores(self.players, self.owners, self.buildings)
-				self.result = if scores.A > scores.B then "TIM A MENANG" elseif scores.B > scores.A then "TIM B MENANG" else "HASIL SERI"
-				self.result ..= " | A " .. Rules.formatMoney(scores.A) .. " | B " .. Rules.formatMoney(scores.B)
+				if self.gameMode == "SoloFFA" then
+					local ranked = {}
+					for seat, p in ipairs(self.players) do
+						local netWorth = p.cash
+						for tIdx, o in pairs(self.owners) do
+							if o == seat then netWorth += Tarif.get(tIdx).liquidationValue end
+						end
+						if p.portfolio then
+							for sId, shares in pairs(p.portfolio) do
+								netWorth += shares * (self.stockPrices[sId] or 0)
+							end
+						end
+						table.insert(ranked, {name = p.name, score = netWorth})
+					end
+					table.sort(ranked, function(a, b) return a.score > b.score end)
+					self.result = string.format("👑 SULTAN MENANG: %s (%s)!", ranked[1].name, Rules.formatMoney(ranked[1].score))
+				else
+					local scores = Economy.teamScores(self.players, self.owners, self.buildings)
+					self.result = if scores.A > scores.B then "TIM A MENANG" elseif scores.B > scores.A then "TIM B MENANG" else "HASIL SERI"
+					self.result ..= " | A " .. Rules.formatMoney(scores.A) .. " | B " .. Rules.formatMoney(scores.B)
+				end
 				self.phase = "Finished"
 				self.deadline = 0
 				self:addLog(self.result)
@@ -345,7 +460,12 @@ function Engine.upgradeCost(self: any, tileIndex: number): number?
 	local level = self.buildings[tileIndex] or 0
 	if level >= 3 then return nil end
 	local t = Tarif.get(tileIndex)
-	return if level >= 2 then t.buildOKB else t.buildSubsidi
+	local cost = if level >= 2 then t.buildOKB else t.buildSubsidi
+	local owner = self.owners[tileIndex]
+	if owner and self.players[owner] and self.players[owner].role == "JURAGAN" then
+		cost = math.floor(cost * 0.85) -- Diskon 15% Juragan Tanah
+	end
+	return cost
 end
 
 function Engine.hasBuildable(self: any, seat: number): boolean
@@ -385,14 +505,31 @@ function Engine.roll(self: any, now: number)
 		end
 	end
 	local destination = participant.position + d1 + d2
+	-- Cek Hazard: Macet
+	for pos = participant.position + 1, destination do
+		local checkPos = (pos - 1) % Rules.TileCount + 1
+		local h = self.activeHazards and self.activeHazards[checkPos]
+		if h and h.kind == "Macet" then
+			destination = math.max(participant.position + 1, destination - 2)
+			self:addLog("🚗 " .. participant.name .. " tertahan macet di " .. self.tiles[checkPos].name .. "! Langkah dikurangi 2!")
+			break
+		end
+	end
 	local salaryGranted = destination > Rules.TileCount
 	if salaryGranted then
 		if participant.salaryBanned then
 			participant.salaryBanned = false
 			self:addLog(participant.name .. " tidak menerima gaji (dibekukan satu putaran).")
 		else
-			Economy.credit(participant, Rules.StartSalary)
-			self:addLog(participant.name .. " menerima gaji START " .. Rules.formatMoney(Rules.StartSalary))
+			local salary = Rules.StartSalary
+			if participant.role == "PNS" then
+				salary = math.floor(salary * 1.25)
+				Economy.credit(participant, salary)
+				self:addLog(participant.name .. " [PNS TELADAN] menerima THR & gaji START " .. Rules.formatMoney(salary) .. " (+25%)!")
+			else
+				Economy.credit(participant, salary)
+				self:addLog(participant.name .. " menerima gaji START " .. Rules.formatMoney(salary))
+			end
 		end
 	end
 	participant.position = (destination - 1) % Rules.TileCount + 1
@@ -411,6 +548,14 @@ function Engine.resolveTile(self: any, now: number)
 	local seat = self.activeSeat
 	local participant = self.players[seat]
 	local tile = self.tiles[participant.position]
+	-- Cek Hazard Banjir
+	if self.activeHazards and self.activeHazards[participant.position] then
+		local h = self.activeHazards[participant.position]
+		if h.kind == "Banjir" then
+			self:pay(seat, 200000, nil, "sewa perahu getek banjir (" .. h.name .. ")")
+			self:addLog("🌊 " .. participant.name .. " menerjang " .. h.name .. "! Bayar sewa perahu getek Rp200.000!")
+		end
+	end
 	if tile.kind == "Property" and self.tolls and self.tolls[participant.position] then
 		self:addLog(tile.name .. " kini TOL: sewa properti lama tidak berlaku.")
 	elseif tile.kind == "Property" then
@@ -458,9 +603,17 @@ function Engine.resolveTile(self: any, now: number)
 			end
 		end
 	elseif tile.kind == "Tax" then
-		self:pay(seat, Rules.TaxAmount, nil, "pajak tetap prototipe")
+		if participant.role == "INFLUENCER" then
+			self:addLog("📸 [INFLUENCER VIRAL] " .. participant.name .. " bebas pajak berkat endorsement story IG!")
+		else
+			self:pay(seat, Rules.TaxAmount, nil, "pajak tetap prototipe")
+		end
 	elseif tile.kind == "Parking" then
-		self:pay(seat, Rules.ParkingAmount, nil, "parkir prototipe")
+		if participant.role == "INFLUENCER" then
+			self:addLog("📸 [INFLUENCER VIRAL] " .. participant.name .. " bebas pungli parkir (dikenal akamsi)!")
+		else
+			self:pay(seat, Rules.ParkingAmount, nil, "parkir prototipe")
+		end
 	elseif tile.kind == "Fate" or tile.kind == "Disaster" then
 		self:drawCard(seat, tile.kind, now)
 		return
@@ -479,6 +632,10 @@ function Engine.court(self: any, seat: number, now: number)
 	local d1 = self.random:NextInteger(1, 6)
 	local d2 = self.random:NextInteger(1, 6)
 	local roll = d1 + d2
+	if participant.role == "PENGACARA" then
+		roll = math.min(12, roll + 2)
+		self:addLog("⚖️ [PENGACARA KONDANG] Lobi praperadilan lihai memberi bonus dadu sidang +2! (Hasil: " .. roll .. ")")
+	end
 	self.dice = {d1, d2}
 	self:addLog(participant.name .. " di Pengadilan, dadu " .. d1 .. "+" .. d2 .. "=" .. roll .. ".")
 	if roll >= 9 then
@@ -725,15 +882,23 @@ function Engine.restart(self: any, now: number)
 	end
 	local freshPlayers: {Participant} = {}
 	for _, previous in self.players do
+		local assignedRole = previous.role or (if RoleConfig then RoleConfig.assignRole(#freshPlayers + 1) else "PNS")
 		table.insert(freshPlayers, {
 			userId = previous.userId, name = previous.name, team = previous.team,
 			cash = Rules.StartingCash, position = 1, ready = true, eliminated = false,
 			inJail = false, jailTries = 0, jailRentToState = false, rentSuppressed = false,
 			inBekasi = false, bekasiReturnPosition = nil,
 			hand = {}, extraTurn = false, doaTier = nil,
+			role = assignedRole,
+			portfolio = {BBUMN = 0, KRIPTO = 0},
 		})
 	end
 	self.players = freshPlayers
+	if self.gameMode == "SoloFFA" then
+		for idx, member in ipairs(self.players) do
+			member.team = tostring(idx)
+		end
+	end
 	self.owners = {}
 	self.buildings = {}
 	self.tolls = {}
@@ -749,6 +914,9 @@ function Engine.restart(self: any, now: number)
 	self.matchId = HttpService:GenerateGUID(false)
 	self.rematchVotes = {false, false, false, false}
 	self.activeEvent = nil
+	self.activeHazards = {}
+	self.stockPrices = {BBUMN = 500000, KRIPTO = 250000}
+	self.stockNews = "Bursa Efek dibuka kembali dengan optimisme baru."
 	self:addLog("Semua peserta setuju. Pertandingan baru dimulai dengan uang dan aset awal.")
 end
 
@@ -804,6 +972,83 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 			self:addLog(participant.name .. " membatalkan atau menolak permintaan tukar tim.")
 		end
 		self.teamSwap = nil
+	elseif action == "SetGameMode" then
+		if self.phase ~= "Waiting" then return false, "Mode permainan hanya bisa diubah di lobi." end
+		if targetTile ~= "Team2v2" and targetTile ~= "SoloFFA" then return false, "Pilihan mode tidak sah." end
+		self.gameMode = targetTile
+		for _, member in self.players do member.ready = false end
+		self:addLog("Mode permainan diubah: " .. (if targetTile == "SoloFFA" then "👑 SOLO SULTAN (1v1v1v1 FFA)" else "🤝 TIM 2v2 NUSANTARA") .. ". Nyatakan siap kembali.")
+	elseif action == "SelectRole" then
+		if self.phase ~= "Waiting" then return false, "Profesi hanya bisa dipilih di lobi." end
+		if targetTile ~= "PNS" and targetTile ~= "JURAGAN" and targetTile ~= "INFLUENCER" and targetTile ~= "PENGACARA" then
+			return false, "Profesi tidak dikenal."
+		end
+		participant.role = targetTile
+		local roleDef = if RoleConfig then RoleConfig.get(targetTile) else nil
+		local roleName = if roleDef then roleDef.icon .. " " .. roleDef.name else targetTile
+		self:addLog(participant.name .. " memilih profesi " .. roleName .. ".")
+	elseif action == "BailoutTeammate" then
+		if self.gameMode == "SoloFFA" then return false, "Tidak ada rekan di mode Solo." end
+		local teammateSeat = nil
+		for s, p in ipairs(self.players) do
+			if s ~= seat and p.team == participant.team and not p.eliminated then
+				teammateSeat = s
+				break
+			end
+		end
+		if not teammateSeat then return false, "Rekan tidak ditemukan atau sudah tereliminasi." end
+		local teammate = self.players[teammateSeat]
+		local transferAmount = 1000000
+		if participant.cash < transferAmount + 100000 then return false, "Saldo kasmu tidak mencukupi untuk membantu rekan." end
+		participant.cash -= transferAmount
+		teammate.cash += transferAmount
+		self:addLog("🤝 GOTONG ROYONG! " .. participant.name .. " mentransfer " .. Rules.formatMoney(transferAmount) .. " ke rekan setimnya " .. teammate.name .. "!")
+	elseif action == "BailTeammateFromJail" then
+		if self.gameMode == "SoloFFA" then return false, "Tidak ada rekan di mode Solo." end
+		local teammateSeat = nil
+		for s, p in ipairs(self.players) do
+			if s ~= seat and p.team == participant.team and not p.eliminated then
+				teammateSeat = s
+				break
+			end
+		end
+		if not teammateSeat then return false, "Rekan tidak ditemukan." end
+		local teammate = self.players[teammateSeat]
+		if not teammate.inJail then return false, "Rekan tidak sedang berada di LAPAS." end
+		local cost = Rules.JailBailAmount
+		if participant.role == "PENGACARA" or teammate.role == "PENGACARA" then
+			cost = math.floor(cost * 0.5) -- Diskon 50% Pengacara
+		end
+		if participant.cash < cost then return false, "Uang kas tidak cukup untuk tebusan LAPAS." end
+		participant.cash -= cost
+		teammate.inJail = false
+		teammate.jailTries = 0
+		teammate.jailRentToState = false
+		self:addLog("🔓 TEBUSAN LAPAS! " .. participant.name .. " menebus kebebasan " .. teammate.name .. " seharga " .. Rules.formatMoney(cost) .. "!")
+	elseif action == "BuyStock" then
+		if typeof(targetTile) ~= "table" then return false, "Parameter saham tidak sah." end
+		local stockId = targetTile.stockId
+		local count = math.clamp(tonumber(targetTile.count) or 1, 1, 10)
+		local currentPrice = self.stockPrices[stockId]
+		if not currentPrice then return false, "Saham tidak terdaftar." end
+		local totalCost = currentPrice * count
+		if participant.cash < totalCost then return false, "Uang kas tidak cukup untuk membeli saham." end
+		participant.cash -= totalCost
+		participant.portfolio = participant.portfolio or {}
+		participant.portfolio[stockId] = (participant.portfolio[stockId] or 0) + count
+		self:addLog(string.format("📈 %s membeli %d lot %s seharga %s!", participant.name, count, stockId, Rules.formatMoney(totalCost)))
+	elseif action == "SellStock" then
+		if typeof(targetTile) ~= "table" then return false, "Parameter saham tidak sah." end
+		local stockId = targetTile.stockId
+		local count = math.clamp(tonumber(targetTile.count) or 1, 1, 10)
+		participant.portfolio = participant.portfolio or {}
+		local owned = participant.portfolio[stockId] or 0
+		if owned < count then return false, "Jumlah lot saham yang kamu miliki tidak cukup." end
+		local currentPrice = self.stockPrices[stockId] or 0
+		local totalIncome = currentPrice * count
+		participant.portfolio[stockId] -= count
+		participant.cash += totalIncome
+		self:addLog(string.format("📉 %s menjual %d lot %s seharga %s!", participant.name, count, stockId, Rules.formatMoney(totalIncome)))
 	elseif action == "ChooseTeam" then
 		if self.phase ~= "Waiting" then return false, "Tim terkunci setelah pertandingan dimulai." end
 		if targetTile ~= "A" and targetTile ~= "B" then return false, "Pilih Tim A atau Tim B." end
@@ -817,7 +1062,7 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 		self:addLog(participant.name .. " memilih Tim " .. targetTile .. ". Semua peserta perlu menyatakan siap kembali.")
 	elseif action == "Ready" then
 		if self.phase ~= "Waiting" then return false, "Persiapan sudah berakhir." end
-		if #self.players == Rules.PlayerCount then
+		if #self.players == Rules.PlayerCount and self.gameMode ~= "SoloFFA" then
 			local countA, countB = 0, 0
 			for _, member in self.players do
 				if member.team == "A" then countA += 1 elseif member.team == "B" then countB += 1 end
@@ -829,17 +1074,28 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 		for _, member in self.players do if not member.ready then allReady = false end end
 		if allReady then
 			self.teamSwap = nil
-			local teamA: {Participant} = {}
-			local teamB: {Participant} = {}
-			for _, member in self.players do
-				table.insert(if member.team == "A" then teamA else teamB, member)
+			if self.gameMode == "SoloFFA" then
+				for idx, member in ipairs(self.players) do
+					member.team = tostring(idx)
+				end
+				self.round = 1
+				self.activeSeat = 1
+				self.phase = "AwaitRoll"
+				self.deadline = now + Rules.DecisionSeconds
+				self:addLog("👑 MODE SOLO SULTAN DIMULAI! Tidak ada rekan, jadilah Sultan terkaya!")
+			else
+				local teamA: {Participant} = {}
+				local teamB: {Participant} = {}
+				for _, member in self.players do
+					table.insert(if member.team == "A" then teamA else teamB, member)
+				end
+				self.players = {teamA[1], teamB[1], teamA[2], teamB[2]}
+				self.round = 1
+				self.activeSeat = 1
+				self.phase = "AwaitRoll"
+				self.deadline = now + Rules.DecisionSeconds
+				self:addLog("Prototipe dimulai. Giliran A1, B1, A2, B2; batas 8 ronde.")
 			end
-			self.players = {teamA[1], teamB[1], teamA[2], teamB[2]}
-			self.round = 1
-			self.activeSeat = 1
-			self.phase = "AwaitRoll"
-			self.deadline = now + Rules.DecisionSeconds
-			self:addLog("Prototipe dimulai. Giliran A1, B1, A2, B2; batas 8 ronde.")
 		end
 	else
 		if seat ~= self.activeSeat or participant.eliminated then return false, "Bukan giliranmu." end
@@ -923,12 +1179,21 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 			if action == "Buy" then
 				if participant.buyBanned then return false, "Pembelian sedang dilarang (efek kartu)." end
 				if self.tiles[participant.position].kind ~= "Property" then return false, "Bukan tanah." end
-				local ok, message = Economy.buy(self.players, self.owners, seat, participant.position)
-				if not ok then return false, message end
-				self:addLog(participant.name .. " membeli " .. self.tiles[participant.position].name .. " seharga " .. Rules.formatMoney(Tarif.get(participant.position).price))
+				local price = Tarif.get(participant.position).price
+				if participant.role == "JURAGAN" then
+					price = math.floor(price * 0.85) -- Diskon 15% Juragan Tanah
+				end
+				if participant.cash < price then return false, "Uang kas tidak mencukupi." end
+				participant.cash -= price
+				self.owners[participant.position] = seat
+				self:addLog(participant.name .. " membeli " .. self.tiles[participant.position].name .. " seharga " .. Rules.formatMoney(price) .. (if participant.role == "JURAGAN" then " [DISKON JURAGAN 15%]" else ""))
 				local isMono, monoIsland = self:isTileMonopolized(participant.position)
 				if isMono and monoIsland then
-					self:addLog("👑 MONOPOLI NUSANTARA: Tim " .. participant.team .. " menguasai seluruh wilayah " .. monoIsland .. "! Sewa berlipat ganda 2x!")
+					if self.gameMode == "SoloFFA" then
+						self:addLog("👑 MONOPOLI SULTAN: " .. participant.name .. " menguasai seluruh wilayah " .. monoIsland .. "! Sewa berlipat ganda 2x!")
+					else
+						self:addLog("👑 MONOPOLI NUSANTARA: Tim " .. participant.team .. " menguasai seluruh wilayah " .. monoIsland .. "! Sewa berlipat ganda 2x!")
+					end
 				end
 			else
 				self:addLog(participant.name .. " melewati pembelian.")
@@ -976,7 +1241,11 @@ end
 
 function Engine.snapshot(self: any)
 	local participants = {}
-	for _, participant in self.players do table.insert(participants, table.clone(participant)) end
+	for _, participant in self.players do
+		local pClone = table.clone(participant)
+		pClone.portfolio = if participant.portfolio then table.clone(participant.portfolio) else {BBUMN = 0, KRIPTO = 0}
+		table.insert(participants, pClone)
+	end
 	local ownership = {}
 	for index = 1, Rules.TileCount do ownership[index] = self.owners[index] or 0 end
 	local buildings = {}
@@ -993,6 +1262,10 @@ function Engine.snapshot(self: any)
 		monopolies = self:getIslandMonopolies(),
 		teamSwap = if self.phase == "Waiting" and self.teamSwap then table.clone(self.teamSwap) else nil,
 		activeEvent = if self.activeEvent then table.clone(self.activeEvent) else nil,
+		gameMode = self.gameMode or "Team2v2",
+		activeHazards = if self.activeHazards then table.clone(self.activeHazards) else {},
+		stockPrices = if self.stockPrices then table.clone(self.stockPrices) else {},
+		stockNews = self.stockNews or "",
 		cardChoice = if self.phase == "AwaitCardChoice" and self.pendingCardChoice then {
 			id = self.pendingCardChoice.id, seat = self.pendingCardChoice.seat,
 			options = self:cardLandChoices(self.pendingCardChoice.seat, self.pendingCardChoice.id),
