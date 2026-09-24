@@ -70,8 +70,18 @@ function CardEngine.resolve(self: any, id: string, ctx: any): CardEffect
 	elseif id == "PengalihanIsu" then
 		table.insert(actions, {type = "jail", seat = ctx.seat})
 	elseif id == "Begal" then
-		table.insert(actions, {type = "pay", seat = ctx.seat, amount = 400000, to = nil, reason = "korban begal"})
-		table.insert(actions, {type = "skipTurn", seat = ctx.seat, turns = 1})
+		-- Lempar 1 dadu. 5/6: motor hilang + skip + 400rb. 1/2: ke Lampung + skip. 3/4: adaptasi 200rb.
+		if d >= 5 then
+			table.insert(actions, {type = "pay", seat = ctx.seat, amount = 400000, to = nil, reason = "korban begal (motor hilang)"})
+			table.insert(actions, {type = "skipTurn", seat = ctx.seat, turns = 1})
+		elseif d >= 3 then
+			-- 3/4: bagian tertutup → adaptasi denda sedang
+			table.insert(actions, {type = "pay", seat = ctx.seat, amount = 200000, to = nil, reason = "korban begal sedang (adaptasi)"})
+		else
+			-- 1/2: pindah ke Lampung (Petak 5) + skip giliran
+			table.insert(actions, {type = "teleport", seat = ctx.seat, tile = 5})
+			table.insert(actions, {type = "skipTurn", seat = ctx.seat, turns = 1})
+		end
 	elseif id == "MafiaTanah" then
 		if ctx.freeLandIndex and not ctx.owners[ctx.freeLandIndex] then
 			table.insert(actions, {type = "grantLand", seat = ctx.seat, tile = ctx.freeLandIndex})
@@ -164,6 +174,59 @@ function CardEngine.resolve(self: any, id: string, ctx: any): CardEffect
 	elseif id == "KaburAjaDulu" or id == "OrangDalam" or id == "DoaOrangTua" then
 		-- Kartu tangan: tidak dieksekusi saat ditarik; masuk hand pemain.
 		table.insert(actions, {type = "toHand", seat = ctx.seat, card = id})
+	elseif id == "BPJSNunggak" then
+		-- Bayar denda 1jt atau masuk penjara jika uang tidak cukup
+		local p = ctx.players[ctx.seat]
+		if p and p.cash >= 1000000 then
+			table.insert(actions, {type = "pay", seat = ctx.seat, amount = 1000000, to = nil, reason = "denda BPJS Perusahaan menunggak"})
+		else
+			table.insert(actions, {type = "jail", seat = ctx.seat})
+		end
+	elseif id == "JalurMandiri" then
+		-- Bayar 20jt uang pangkal jalur mandiri
+		table.insert(actions, {type = "pay", seat = ctx.seat, amount = 20000000, to = nil, reason = "uang pangkal jalur mandiri PTN (tidak lulus SNBP)"})
+	elseif id == "TahananRumahKPK" then
+		-- Tahanan rumah: sewa tanah nonaktif dan lewati 1 giliran
+		table.insert(actions, {type = "suppressRent", seat = ctx.seat})
+		table.insert(actions, {type = "skipTurn", seat = ctx.seat, turns = 1})
+	elseif id == "PungliAKAMSI" then
+		-- Semua pemain membayar uang keamanan 1jt
+		for s = 1, #ctx.players do
+			local q = ctx.players[s]
+			if not q.eliminated then
+				table.insert(actions, {type = "pay", seat = s, amount = 1000000, to = nil, reason = "uang keamanan AKAMSI"})
+			end
+		end
+	elseif id == "DitabrakEmakEmak" then
+		-- Santunan 50rb
+		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 50000, reason = "santunan ditabrak ibu-ibu (sen kanan belok kiri)"})
+	elseif id == "WhooshBandung" then
+		-- Tiket Whoosh langsung ke Bandung (Petak 37)
+		table.insert(actions, {type = "teleport", seat = ctx.seat, tile = 37})
+	elseif id == "SeranganFajar" then
+		-- Uang serangan fajar 50rb
+		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 50000, reason = "uang serangan fajar pemilu"})
+	elseif id == "TanahTerlantar" then
+		-- Tanah kosong (level 0) disita oleh Negara
+		local unbuilt: {number} = {}
+		for index, owner in ctx.owners do
+			if owner == ctx.seat and not (ctx.tolls and ctx.tolls[index]) then
+				local bLevel = (ctx.buildings and ctx.buildings[index]) or 0
+				if bLevel == 0 then
+					table.insert(unbuilt, index)
+				end
+			end
+		end
+		if #unbuilt > 0 then
+			for _, t in ipairs(unbuilt) do
+				table.insert(actions, {type = "returnLand", seat = ctx.seat, tile = t})
+			end
+		else
+			table.insert(actions, {type = "noOp", reason = "Tidak ada tanah kosong terlantar milikmu."})
+		end
+	elseif id == "TenderKoperasi" then
+		-- Menang tender 1jt dipotong pajak 11% = 890.000 bersih
+		table.insert(actions, {type = "credit", seat = ctx.seat, amount = 890000, reason = "tender proyek Koperasi Merah Putih (dipotong pajak 11%)"})
 	end
 	return {id = id, deck = card.deck, name = card.name, status = card.status, note = card.note, dice = {d}, actions = actions}
 end
