@@ -686,9 +686,18 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 			return false, "Main ulang hanya tersedia setelah selesai dengan seluruh peserta tetap terhubung."
 		end
 		self.rematchVotes[seat] = not self.rematchVotes[seat]
+		-- Auto-vote untuk semua bot seat agar tidak menghalangi rematch
+		for index = 1, Rules.PlayerCount do
+			local p = self.players[index]
+			if p and p.isBot == true then
+				self.rematchVotes[index] = true
+			end
+		end
+		-- Unanimous: semua human seat sudah vote (bot seat dianggap selalu setuju)
 		local unanimous = #self.players == Rules.PlayerCount
 		for index = 1, Rules.PlayerCount do
-			if not self.rematchVotes[index] then unanimous = false end
+			local p = self.players[index]
+			if p and not p.isBot and not self.rematchVotes[index] then unanimous = false end
 		end
 		if unanimous then self:restart(now) end
 	elseif action == "RequestTeamSwap" then
