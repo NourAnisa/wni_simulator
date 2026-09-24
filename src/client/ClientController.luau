@@ -87,36 +87,27 @@ local btnBase: {[string]: Color3} = {}
 for k, b in buttons do
 	btnBase[k] = b.TextColor3
 end
-local startupViewport = if WS.CurrentCamera then WS.CurrentCamera.ViewportSize else Vector2.new(1920, 1080)
-local studioPhoneViewport = RunService:IsStudio() and startupViewport.X <= 1000 and startupViewport.Y <= 500
-local mobileTouchMode = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or studioPhoneViewport
+do
+	local startupViewport = if WS.CurrentCamera then WS.CurrentCamera.ViewportSize else Vector2.new(1920, 1080)
+	local studioPhoneViewport = RunService:IsStudio() and startupViewport.X <= 1000 and startupViewport.Y <= 500
+	local mobileTouchMode = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or studioPhoneViewport
 
-local function enforceMinimumTouchTarget(instance: Instance)
-	if not instance:IsA("TextButton") then return end
-	local existing = instance:FindFirstChild("MobileMinTouchTarget")
-	local constraint = if existing and existing:IsA("UISizeConstraint") then existing else nil
-	if not constraint then
-		constraint = Instance.new("UISizeConstraint")
-		constraint.Name = "MobileMinTouchTarget"
-		constraint.Parent = instance
+	local function enforceMinimumTouchTarget(instance: Instance)
+		if not instance:IsA("TextButton") then return end
+		local existing = instance:FindFirstChild("MobileMinTouchTarget")
+		local constraint = if existing and existing:IsA("UISizeConstraint") then existing else nil
+		if not constraint then
+			constraint = Instance.new("UISizeConstraint")
+			constraint.Name = "MobileMinTouchTarget"
+			constraint.Parent = instance
+		end
+		constraint.MinSize = if mobileTouchMode then Vector2.new(44, 28) else Vector2.zero
 	end
-	constraint.MinSize = if mobileTouchMode then Vector2.new(44, 28) else Vector2.zero
-end
 
-for _, descendant in root:GetDescendants() do
-	enforceMinimumTouchTarget(descendant)
-end
-root.DescendantAdded:Connect(enforceMinimumTouchTarget)
-
-local desktopActionPanelPosition = panel.Position
-local desktopActionPanelSize = panel.Size
-local desktopStatusPosition = status.Position
-local desktopStatusSize = status.Size
-local desktopHintPosition = hint.Position
-local desktopHintSize = hint.Size
-local desktopActionButtons: {[string]: {position: UDim2, size: UDim2}} = {}
-for key, button in buttons do
-	desktopActionButtons[key] = {position = button.Position, size = button.Size}
+	for _, descendant in root:GetDescendants() do
+		enforceMinimumTouchTarget(descendant)
+	end
+	root.DescendantAdded:Connect(enforceMinimumTouchTarget)
 end
 
 local propTile = waitFor(waitFor(root, "PropertyPanel"), "TileName") :: TextLabel
@@ -991,6 +982,19 @@ local closeHand = waitFor(handPanel, "Close") :: TextButton
 local skipCardChoice = waitFor(handPanel, "SkipChoice") :: TextButton
 
 local desktopLayout = {
+	actionPanelPos = panel.Position,
+	actionPanelSize = panel.Size,
+	statusPos = status.Position,
+	statusSize = status.Size,
+	hintPos = hint.Position,
+	hintSize = hint.Size,
+	actionButtons = (function()
+		local t = {}
+		for key, button in buttons do
+			t[key] = {position = button.Position, size = button.Size}
+		end
+		return t
+	end)(),
 	headerPos = header.Position,
 	headerSize = header.Size,
 	roundPos = hRound.Position,
@@ -1355,13 +1359,13 @@ applyResponsiveLayout = function(viewport: Vector2)
 		declineMatchButton.Size = desktopLayout.declineBtnSize
 
 		panel.AnchorPoint = Vector2.new(0.5, 1)
-		panel.Position = desktopActionPanelPosition
-		panel.Size = desktopActionPanelSize
-		status.Position = desktopStatusPosition
-		status.Size = desktopStatusSize
-		hint.Position = desktopHintPosition
-		hint.Size = desktopHintSize
-		for key, original in desktopActionButtons do
+		panel.Position = desktopLayout.actionPanelPos
+		panel.Size = desktopLayout.actionPanelSize
+		status.Position = desktopLayout.statusPos
+		status.Size = desktopLayout.statusSize
+		hint.Position = desktopLayout.hintPos
+		hint.Size = desktopLayout.hintSize
+		for key, original in desktopLayout.actionButtons do
 			buttons[key].AnchorPoint = Vector2.new(0.5, 0)
 			buttons[key].Position = original.position
 			buttons[key].Size = original.size
@@ -2084,10 +2088,11 @@ WS:GetPropertyChangedSignal("CurrentCamera"):Connect(bindViewport)
 bindViewport()
 
 -- Phase 2 client polish: local-only SFX, onboarding, and panel transitions.
-local uiSounds = waitFor(gui, "UISounds")
-local AudioHelper = require(waitFor(gui, "AudioHelper") :: ModuleScript)
-audio = AudioHelper.new(uiSounds)
-audio:startBgm()
+do
+	local uiSounds = waitFor(gui, "UISounds")
+	local AudioHelper = require(waitFor(gui, "AudioHelper") :: ModuleScript)
+	audio = AudioHelper.new(uiSounds)
+	audio:startBgm()
 local clickSound = waitFor(uiSounds, "Click") :: Sound
 local diceSound = waitFor(uiSounds, "RollDice") :: Sound
 local cardSound = waitFor(uiSounds, "CardDraw") :: Sound
@@ -2814,6 +2819,7 @@ local function initPolishUI()
 	end
 end
 initPolishUI()
+end
 
 stateUpdated.OnClientEvent:Connect(function(payload)
 	if typeof(payload) ~= "table" then return end
