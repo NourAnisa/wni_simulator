@@ -19,6 +19,8 @@ local Engine = require(engineModule)
 local buildingVisualsModule = child(script.Parent, "BuildingVisualService")
 assert(buildingVisualsModule:IsA("ModuleScript"), "Invalid BuildingVisualService")
 local BuildingVisuals = require(buildingVisualsModule)
+local islandEnvModule = script.Parent:FindFirstChild("IslandEnvironmentService")
+local IslandEnv = if islandEnvModule and islandEnvModule:IsA("ModuleScript") then require(islandEnvModule) else nil
 local remotes = child(shared, "Remotes")
 local request = child(remotes, "RequestAction")
 local updated = child(remotes, "StateUpdated")
@@ -34,6 +36,11 @@ if not remotes:FindFirstChild("SpectatorCheer") then
 	sc.Parent = remotes
 end
 local board = child(Workspace, "WNIBoard")
+if IslandEnv and IslandEnv.generateEnvironment then
+	task.spawn(function()
+		IslandEnv.generateEnvironment(board)
+	end)
+end
 local tileFolder = child(board, "Tiles")
 local pawnFolder = child(board, "Pawns")
 local bekasiDisplay = child(child(board, "Decorations"), "BekasiDisplay")

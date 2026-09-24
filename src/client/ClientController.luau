@@ -126,8 +126,12 @@ local diceText = waitFor(dicePanel, "Result") :: TextLabel
 local logPanel = waitFor(root, "LogPanel") :: Frame
 local logText = waitFor(logPanel, "Entries") :: TextLabel
 local logHeading = logPanel:FindFirstChild("Heading") :: TextLabel?
-local logCollapsed = false
+local logCollapsed = true
 local originalLogHeight = 175
+
+-- Rapi secara default: sembunyikan log teks panjang agar tampilan 3D bersih
+logPanel.Size = UDim2.new(logPanel.Size.X.Scale, logPanel.Size.X.Offset, 0, 30)
+logText.Visible = false
 
 if logHeading then
 	local toggleLogBtn = Instance.new("TextButton")
@@ -137,7 +141,7 @@ if logHeading then
 	toggleLogBtn.Position = UDim2.new(0.96, 0, 0.5, 0)
 	toggleLogBtn.BackgroundColor3 = Color3.fromRGB(30, 42, 60)
 	toggleLogBtn.TextColor3 = Color3.fromRGB(240, 245, 255)
-	toggleLogBtn.Text = "▼"
+	toggleLogBtn.Text = "▲"
 	toggleLogBtn.TextSize = 10
 	toggleLogBtn.Font = Enum.Font.GothamBold
 	toggleLogBtn.AutoButtonColor = true
@@ -332,6 +336,9 @@ local function send(action: string)
 end
 
 local allowed: {[string]: boolean} = {}
+local rollPulseTween: Tween? = nil
+local rollScale: UIScale? = nil
+
 local function setButton(key: string, enabled: boolean, text: string?)
 	local b = buttons[key]
 	allowed[key] = enabled
@@ -341,6 +348,39 @@ local function setButton(key: string, enabled: boolean, text: string?)
 	b.Selectable = enabled
 	b.TextColor3 = if enabled then btnBase[key] else OFFC
 	if text then b.Text = text end
+
+	-- Efek Visual Dadu Emas Membal (Bouncing Gold Dice) saat giliran tiba
+	if key == "Roll" then
+		if not rollScale then
+			local existing = b:FindFirstChild("RollScale")
+			if existing and existing:IsA("UIScale") then
+				rollScale = existing
+			else
+				local s = Instance.new("UIScale")
+				s.Name = "RollScale"
+				s.Parent = b
+				rollScale = s
+			end
+		end
+
+		if enabled then
+			b.BackgroundColor3 = Color3.fromRGB(248, 180, 24)
+			b.TextColor3 = Color3.fromRGB(255, 255, 255)
+			b.Text = "🎲 KOCOK DADU!"
+			if not rollPulseTween and rollScale then
+				local tInfo = TweenInfo.new(0.55, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+				rollPulseTween = TweenService:Create(rollScale, tInfo, {Scale = 1.07})
+				rollPulseTween:Play()
+			end
+		else
+			if rollPulseTween then
+				rollPulseTween:Cancel()
+				rollPulseTween = nil
+			end
+			if rollScale then rollScale.Scale = 1 end
+			b.BackgroundColor3 = Color3.fromRGB(36, 42, 54)
+		end
+	end
 end
 
 local function applyActionLayout()
@@ -925,6 +965,8 @@ roomCode.FocusLost:Connect(function(enterPressed: boolean)
 end)
 
 local CardData = require(waitFor(shared, "CardData") :: ModuleScript)
+local coinFlipModule = shared:FindFirstChild("CoinFlipMiniGame")
+local CoinFlipMiniGame = if coinFlipModule and coinFlipModule:IsA("ModuleScript") then require(coinFlipModule) else nil
 local handPanel = waitFor(root, "HandPanel") :: Frame
 local handButton = waitFor(root, "HandButton") :: TextButton
 local handName = waitFor(handPanel, "CardName") :: TextLabel
@@ -1773,7 +1815,20 @@ local function playSnapshotFeedback(previous: any, current: any)
 		local tilesFolder = board and board:FindFirstChild("Tiles")
 		local tile = tilesFolder and tilesFolder:FindFirstChild(string.format("Tile_%02d", currentParticipant.position))
 		local kind = if tile then tile:GetAttribute("TileKind") else nil
-		if typeof(kind) == "string" then showSpecialTileToast(kind) end
+		if typeof(kind) == "string" then
+			showSpecialTileToast(kind)
+			if current.activeSeat == mySeat and (kind == "Fate" or kind == "Parking") then
+				if CoinFlipMiniGame and CoinFlipMiniGame.start and root.Parent and root.Parent:IsA("ScreenGui") then
+					task.delay(0.65, function()
+						CoinFlipMiniGame.start(root.Parent :: ScreenGui, function(won)
+							if won and audio then
+								audio:playSfx("WinJingle", false)
+							end
+						end)
+					end)
+				end
+			end
+		end
 	end
 	local previousHand = if previousParticipant and typeof(previousParticipant.hand) == "table" then previousParticipant.hand else {}
 	local currentHand = if currentParticipant and typeof(currentParticipant.hand) == "table" then currentParticipant.hand else {}
