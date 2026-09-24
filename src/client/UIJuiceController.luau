@@ -180,12 +180,44 @@ if roster then
 					end
 					crown.Visible = (seat == richestSeat and maxCash > 0)
 
-					-- C. Rolling Cash Odometer
+					-- C. Rolling Cash Odometer & Floating Cash Popup
 					local balLabel = seatFrame:FindFirstChild("Balance") :: TextLabel?
 					local targetCash = typeof(p.cash) == "number" and p.cash or 0
 					local currentCash = displayedCash[seat] or targetCash
 
 					if balLabel and currentCash ~= targetCash then
+						local diff = targetCash - currentCash
+						if math.abs(diff) >= 50000 then
+							local floatLabel = Instance.new("TextLabel")
+							floatLabel.Name = "FloatingCash"
+							floatLabel.Size = UDim2.fromOffset(130, 20)
+							floatLabel.Position = UDim2.new(1, 8, 0.5, 0)
+							floatLabel.AnchorPoint = Vector2.new(0, 0.5)
+							floatLabel.BackgroundTransparency = 1
+							floatLabel.Font = Enum.Font.GothamBlack
+							floatLabel.TextSize = 13
+							floatLabel.TextXAlignment = Enum.TextXAlignment.Left
+							if diff > 0 then
+								floatLabel.Text = "+" .. formatMoney(diff)
+								floatLabel.TextColor3 = Color3.fromRGB(80, 240, 140)
+							else
+								floatLabel.Text = "-" .. formatMoney(-diff)
+								floatLabel.TextColor3 = Color3.fromRGB(255, 90, 90)
+							end
+							floatLabel.ZIndex = 85
+							floatLabel.Parent = seatFrame
+
+							local targetPos = floatLabel.Position + UDim2.fromOffset(0, -28)
+							local fTween = TweenService:Create(floatLabel, TweenInfo.new(1.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+								Position = targetPos,
+								TextTransparency = 1,
+							})
+							fTween:Play()
+							fTween.Completed:Once(function()
+								floatLabel:Destroy()
+							end)
+						end
+
 						local tweenVal = Instance.new("NumberValue")
 						tweenVal.Value = currentCash
 						local tw = TweenService:Create(

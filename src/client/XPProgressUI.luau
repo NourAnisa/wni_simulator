@@ -52,76 +52,76 @@ task.spawn(updateScale)
 
 -- ─── BUILD UI ────────────────────────────────────────────────────────────────
 
--- Pill container: diposisikan di tengah horizontal tepat di bawah Header (Y = 68)
+-- Pill container: diposisikan menyatu dengan bar atas Header (bebas pandang ke papan 3D)
 local pill = Instance.new("Frame")
 pill.Name = "XPPill"
-pill.Size = UDim2.new(0, 230, 0, 56)
-pill.Position = UDim2.new(0.5, 0, 0, 68)
-pill.AnchorPoint = Vector2.new(0.5, 0)
-pill.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
+pill.Size = UDim2.new(0, 190, 0, 38)
+pill.Position = UDim2.new(0.98, -370, 0, 20)
+pill.AnchorPoint = Vector2.new(1, 0)
+pill.BackgroundColor3 = Color3.fromRGB(14, 20, 32)
 pill.BackgroundTransparency = 0.15
 pill.Parent = screenGui
 
-local pc = Instance.new("UICorner"); pc.CornerRadius = UDim.new(0, 28); pc.Parent = pill
-local ps = Instance.new("UIStroke"); ps.Color = Color3.fromRGB(90, 180, 255); ps.Thickness = 2; ps.Parent = pill
+local pc = Instance.new("UICorner"); pc.CornerRadius = UDim.new(0, 12); pc.Parent = pill
+local ps = Instance.new("UIStroke"); ps.Color = Color3.fromRGB(70, 140, 220); ps.Thickness = 1.5; ps.Parent = pill
 
 -- Level badge (kiri)
 local lvlBadge = Instance.new("Frame")
-lvlBadge.Size = UDim2.new(0, 44, 0, 44)
-lvlBadge.Position = UDim2.new(0, 6, 0.5, 0)
+lvlBadge.Size = UDim2.new(0, 30, 0, 30)
+lvlBadge.Position = UDim2.new(0, 4, 0.5, 0)
 lvlBadge.AnchorPoint = Vector2.new(0, 0.5)
-lvlBadge.BackgroundColor3 = Color3.fromRGB(40, 100, 200)
+lvlBadge.BackgroundColor3 = Color3.fromRGB(35, 90, 180)
 lvlBadge.Parent = pill
-local lbc = Instance.new("UICorner"); lbc.CornerRadius = UDim.new(0, 22); lbc.Parent = lvlBadge
+local lbc = Instance.new("UICorner"); lbc.CornerRadius = UDim.new(0, 15); lbc.Parent = lvlBadge
 
 local lvlLabel = Instance.new("TextLabel")
 lvlLabel.Name = "LvLabel"
 lvlLabel.Size = UDim2.new(1, 0, 1, 0)
 lvlLabel.Text = "1"
-lvlLabel.TextSize = 18; lvlLabel.Font = Enum.Font.GothamBold
+lvlLabel.TextSize = 13; lvlLabel.Font = Enum.Font.GothamBold
 lvlLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 lvlLabel.BackgroundTransparency = 1
 lvlLabel.Parent = lvlBadge
 
 -- Info kanan
 local infoFrame = Instance.new("Frame")
-infoFrame.Size = UDim2.new(1, -60, 1, 0)
-infoFrame.Position = UDim2.new(0, 56, 0, 0)
+infoFrame.Size = UDim2.new(1, -40, 1, 0)
+infoFrame.Position = UDim2.new(0, 36, 0, 0)
 infoFrame.BackgroundTransparency = 1
 infoFrame.Parent = pill
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "TitleLabel"
-titleLabel.Size = UDim2.new(1, -6, 0, 16)
-titleLabel.Position = UDim2.new(0, 0, 0, 6)
+titleLabel.Size = UDim2.new(1, -4, 0, 13)
+titleLabel.Position = UDim2.new(0, 0, 0, 2)
 titleLabel.Text = "Warga Biasa"
-titleLabel.TextSize = 11; titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 10; titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextColor3 = Color3.fromRGB(220, 200, 90)
 titleLabel.BackgroundTransparency = 1; titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = infoFrame
 
 -- XP bar background
 local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(1, -8, 0, 8)
-barBg.Position = UDim2.new(0, 0, 0, 24)
+barBg.Size = UDim2.new(1, -6, 0, 6)
+barBg.Position = UDim2.new(0, 0, 0, 16)
 barBg.BackgroundColor3 = Color3.fromRGB(30, 40, 55)
 barBg.Parent = infoFrame
-local bbc = Instance.new("UICorner"); bbc.CornerRadius = UDim.new(0, 4); bbc.Parent = barBg
+local bbc = Instance.new("UICorner"); bbc.CornerRadius = UDim.new(0, 3); bbc.Parent = barBg
 
 local barFill = Instance.new("Frame")
 barFill.Name = "XPFill"
 barFill.Size = UDim2.new(0, 0, 1, 0)
 barFill.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
 barFill.Parent = barBg
-local bfc = Instance.new("UICorner"); bfc.CornerRadius = UDim.new(0, 4); bfc.Parent = barFill
+local bfc = Instance.new("UICorner"); bfc.CornerRadius = UDim.new(0, 3); bfc.Parent = barFill
 
 -- Teks XP kecil di bawah bar
 local xpLabel = Instance.new("TextLabel")
 xpLabel.Name = "XPLabel"
-xpLabel.Size = UDim2.new(1, -8, 0, 14)
-xpLabel.Position = UDim2.new(0, 0, 0, 34)
+xpLabel.Size = UDim2.new(1, -6, 0, 12)
+xpLabel.Position = UDim2.new(0, 0, 0, 23)
 xpLabel.Text = "0 / 350 XP"
-xpLabel.TextSize = 9; xpLabel.Font = Enum.Font.Gotham
+xpLabel.TextSize = 8; xpLabel.Font = Enum.Font.Gotham
 xpLabel.TextColor3 = Color3.fromRGB(140, 180, 220)
 xpLabel.BackgroundTransparency = 1; xpLabel.TextXAlignment = Enum.TextXAlignment.Left
 xpLabel.Parent = infoFrame

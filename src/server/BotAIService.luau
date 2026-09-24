@@ -17,8 +17,8 @@ BotAIService.__index = BotAIService
 local BOT_NAMES = {"Bot Budi", "Bot Siti", "Bot Joko", "Bot Rina", "Bot Agus", "Bot Dewi"}
 local BOT_ID_BASE = -910000
 local CASH_RESERVE = 1000000
-local THINK_MIN = 1.0
-local THINK_MAX = 1.5
+local THINK_MIN = 0.25
+local THINK_MAX = 0.45
 
 function BotAIService.new()
 	local self: any = setmetatable({}, BotAIService)

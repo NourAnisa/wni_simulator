@@ -168,11 +168,11 @@ roleLobbyBtn.Activated:Connect(function()
 	modal.Visible = not modal.Visible
 end)
 
--- Banner Info Perk Pasif Pemain Lokal Saat Match Berlangsung
+-- Banner Info Perk Pasif Pemain Lokal Saat Match Berlangsung (Diposisikan rapi tepat di bawah Roster)
 local myPerkBadge = Instance.new("Frame")
 myPerkBadge.Name = "MyPerkBadge"
-myPerkBadge.Size = UDim2.fromOffset(240, 38)
-myPerkBadge.Position = UDim2.new(0, 20, 0, 130)
+myPerkBadge.Size = UDim2.new(0.18, 0, 0, 36)
+myPerkBadge.Position = UDim2.new(0.02, 0, 0, 354)
 myPerkBadge.BackgroundColor3 = Color3.fromRGB(20, 26, 40)
 myPerkBadge.BackgroundTransparency = 0.15
 myPerkBadge.Visible = false
@@ -188,7 +188,11 @@ mpbText.Position = UDim2.new(0, 8, 0, 0)
 mpbText.BackgroundTransparency = 1
 mpbText.TextColor3 = Color3.fromRGB(255, 235, 170)
 mpbText.Font = Enum.Font.GothamMedium
-mpbText.TextSize = 11
+mpbText.TextScaled = true
+local mpbTextConstraint = Instance.new("UITextSizeConstraint")
+mpbTextConstraint.MinTextSize = 8
+mpbTextConstraint.MaxTextSize = 11
+mpbTextConstraint.Parent = mpbText
 mpbText.TextXAlignment = Enum.TextXAlignment.Left
 mpbText.Parent = myPerkBadge
 

@@ -125,6 +125,39 @@ local dicePanel = waitFor(root, "DicePanel") :: Frame
 local diceText = waitFor(dicePanel, "Result") :: TextLabel
 local logPanel = waitFor(root, "LogPanel") :: Frame
 local logText = waitFor(logPanel, "Entries") :: TextLabel
+local logHeading = logPanel:FindFirstChild("Heading") :: TextLabel?
+local logCollapsed = false
+local originalLogHeight = 175
+
+if logHeading then
+	local toggleLogBtn = Instance.new("TextButton")
+	toggleLogBtn.Name = "ToggleLogBtn"
+	toggleLogBtn.Size = UDim2.new(0, 24, 0, 18)
+	toggleLogBtn.AnchorPoint = Vector2.new(1, 0.5)
+	toggleLogBtn.Position = UDim2.new(0.96, 0, 0.5, 0)
+	toggleLogBtn.BackgroundColor3 = Color3.fromRGB(30, 42, 60)
+	toggleLogBtn.TextColor3 = Color3.fromRGB(240, 245, 255)
+	toggleLogBtn.Text = "▼"
+	toggleLogBtn.TextSize = 10
+	toggleLogBtn.Font = Enum.Font.GothamBold
+	toggleLogBtn.AutoButtonColor = true
+	toggleLogBtn.ZIndex = logHeading.ZIndex + 1
+	local tCorner = Instance.new("UICorner"); tCorner.CornerRadius = UDim.new(0, 4); tCorner.Parent = toggleLogBtn
+	toggleLogBtn.Parent = logHeading
+
+	toggleLogBtn.Activated:Connect(function()
+		logCollapsed = not logCollapsed
+		if logCollapsed then
+			logPanel.Size = UDim2.new(logPanel.Size.X.Scale, logPanel.Size.X.Offset, 0, 30)
+			logText.Visible = false
+			toggleLogBtn.Text = "▲"
+		else
+			logPanel.Size = UDim2.new(logPanel.Size.X.Scale, logPanel.Size.X.Offset, 0, originalLogHeight)
+			logText.Visible = true
+			toggleLogBtn.Text = "▼"
+		end
+	end)
+end
 
 local TEAMC: {[string]: Color3} = {A = Color3.fromRGB(174, 221, 202), B = Color3.fromRGB(242, 196, 167)}
 local HINTC = hint.TextColor3
@@ -1608,6 +1641,36 @@ local function playSnapshotFeedback(previous: any, current: any)
 					break
 				end
 			end
+		end
+	end
+
+	-- Heroic Turn & Event Banners (Feedback Anti-Bosan)
+	local wasMyTurn = typeof(previous) == "table" and previous.phase == "AwaitRoll" and previous.activeSeat == currentSeat
+	local isMyTurn = current.phase == "AwaitRoll" and current.activeSeat == currentSeat
+	if isMyTurn and not wasMyTurn then
+		if showActionBanner then
+			showActionBanner("🎯 GILIRAN KAMU! LEMPAR DADU!")
+		end
+		if audio then
+			audio:playSfx("DiceRoll", false)
+		end
+	end
+
+	if current.phase == "AwaitRoll" and isMyTurn and current.dice and current.dice[1] > 0 and current.dice[1] == current.dice[2] then
+		if showActionBanner then
+			showActionBanner("🎲 DADU KEMBAR (" .. current.dice[1] .. "-" .. current.dice[2] .. ")! GILIRAN EKSTRA!")
+		end
+	end
+
+	if previousParticipant and currentParticipant and currentParticipant.position == 1 and previousParticipant.position ~= 1 then
+		if showActionBanner then
+			showActionBanner("💰 GAJI KELILING START! +Rp 1.000.000!")
+		end
+	end
+
+	if previousParticipant and currentParticipant and previousParticipant.inJail ~= true and currentParticipant.inJail == true then
+		if showActionBanner then
+			showActionBanner("🚨 TERCIDUK! KAMU MASUK LAPAS!")
 		end
 	end
 

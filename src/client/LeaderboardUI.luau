@@ -88,31 +88,20 @@ local function clearChildren(p: Instance)
 	end
 end
 
--- ─── SIDEBAR TOGGLE BUTTONS ──────────────────────────────────────────────────
-
-local function makeToggleBtn(name: string, icon: string, yOffset: number, bg: Color3, textCol: Color3, strokeCol: Color3): TextButton
-	local btn = Instance.new("TextButton")
-	btn.Name = name
-	btn.Size = UDim2.new(0, 42, 0, 42)
-	btn.Position = UDim2.new(1, -12, 0.5, yOffset)
-	btn.AnchorPoint = Vector2.new(1, 0.5)
-	btn.BackgroundColor3 = bg
-	btn.TextColor3 = textCol
-	btn.Text = icon
-	btn.TextSize = 20
-	btn.Font = Enum.Font.GothamBold
-	btn.Parent = screenGui
-	corner(21, btn)
-	stroke(strokeCol, 2, btn)
-	return btn
-end
-
-local toggleBtn = makeToggleBtn("LeaderboardToggle", "🏆", -125, Color3.fromRGB(22, 38, 50), Color3.fromRGB(250, 220, 80), Color3.fromRGB(200, 170, 40))
-local missionBtn = makeToggleBtn("MissionToggle", "📋", -75, Color3.fromRGB(30, 50, 30), Color3.fromRGB(100, 230, 130), Color3.fromRGB(60, 180, 80))
-local streakBtn = makeToggleBtn("StreakToggle", "📅", -25, Color3.fromRGB(18, 40, 50), Color3.fromRGB(100, 220, 255), Color3.fromRGB(40, 160, 200))
-local shopBtn = makeToggleBtn("ShopToggle", "🛍️", 25, Color3.fromRGB(45, 32, 18), Color3.fromRGB(255, 190, 80), Color3.fromRGB(220, 140, 40))
-local historyBtn = makeToggleBtn("HistoryToggle", "📜", 75, Color3.fromRGB(35, 30, 55), Color3.fromRGB(200, 170, 255), Color3.fromRGB(140, 110, 220))
-local achBtn = makeToggleBtn("AchievementToggle", "🏅", 125, Color3.fromRGB(50, 35, 22), Color3.fromRGB(255, 180, 90), Color3.fromRGB(220, 130, 40))
+-- ─── MASTER UNIFIED MENU TOGGLE (Menggantikan 6 tombol terpisah di kanan) ────
+local mainMenuBtn = Instance.new("TextButton")
+mainMenuBtn.Name = "MainMenuToggle"
+mainMenuBtn.Size = UDim2.new(0, 46, 0, 46)
+mainMenuBtn.Position = UDim2.new(1, -12, 0.42, 0)
+mainMenuBtn.AnchorPoint = Vector2.new(1, 0.5)
+mainMenuBtn.BackgroundColor3 = Color3.fromRGB(22, 34, 52)
+mainMenuBtn.TextColor3 = Color3.fromRGB(250, 220, 80)
+mainMenuBtn.Text = "🏆"
+mainMenuBtn.TextSize = 22
+mainMenuBtn.Font = Enum.Font.GothamBold
+mainMenuBtn.Parent = screenGui
+corner(23, mainMenuBtn)
+stroke(Color3.fromRGB(245, 185, 30), 2, mainMenuBtn)
 
 local streakBadge = Instance.new("TextLabel")
 streakBadge.Name = "Badge"
@@ -125,7 +114,7 @@ streakBadge.Text = "!"
 streakBadge.TextSize = 11
 streakBadge.Font = Enum.Font.GothamBold
 streakBadge.Visible = false
-streakBadge.Parent = streakBtn
+streakBadge.Parent = mainMenuBtn
 corner(8, streakBadge)
 stroke(Color3.fromRGB(255, 255, 255), 1.5, streakBadge)
 
@@ -134,8 +123,8 @@ stroke(Color3.fromRGB(255, 255, 255), 1.5, streakBadge)
 local function makePanel(name: string, bg: Color3, strokeCol: Color3, h: number): Frame
 	local f = Instance.new("Frame")
 	f.Name = name
-	f.Size = UDim2.new(0, 295, 0, h)
-	f.Position = UDim2.new(1, -62, 0.5, 0)
+	f.Size = UDim2.new(0, 310, 0, h)
+	f.Position = UDim2.new(1, -64, 0.5, 0)
 	f.AnchorPoint = Vector2.new(1, 0.5)
 	f.BackgroundColor3 = bg
 	f.BackgroundTransparency = 0.05
@@ -147,7 +136,7 @@ local function makePanel(name: string, bg: Color3, strokeCol: Color3, h: number)
 end
 
 local lbPanel = makePanel("LeaderboardPanel", Color3.fromRGB(14, 20, 32), Color3.fromRGB(200, 170, 40), 340)
-local missionPanel = makePanel("MissionPanel", Color3.fromRGB(14, 28, 22), Color3.fromRGB(60, 180, 80), 280)
+local missionPanel = makePanel("MissionPanel", Color3.fromRGB(14, 28, 22), Color3.fromRGB(60, 180, 80), 290)
 local streakPanel = makePanel("StreakPanel", Color3.fromRGB(16, 26, 36), Color3.fromRGB(40, 160, 200), 340)
 local shopPanel = makePanel("ShopPanel", Color3.fromRGB(26, 18, 16), Color3.fromRGB(220, 140, 40), 350)
 local historyPanel = makePanel("HistoryPanel", Color3.fromRGB(20, 16, 32), Color3.fromRGB(140, 110, 220), 310)
@@ -165,6 +154,94 @@ for _, p in ipairs(allPanels) do
 	pad.PaddingTop = UDim.new(0, 8); pad.PaddingBottom = UDim.new(0, 8)
 	pad.Parent = p
 end
+
+local lastActivePanel: Frame = lbPanel
+
+local function closeAllPanels()
+	for _, p in ipairs(allPanels) do
+		if p.Visible then
+			local t = TweenService:Create(p, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {BackgroundTransparency = 1})
+			t.Completed:Connect(function() p.Visible = false; p.BackgroundTransparency = 0.05 end)
+			t:Play()
+		end
+	end
+end
+
+local function togglePanel(target: Frame)
+	local isCurrentlyOpen = target.Visible
+	lastActivePanel = target
+	closeAllPanels()
+	if not isCurrentlyOpen then
+		target.Visible = true
+		target.BackgroundTransparency = 1
+		TweenService:Create(target, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.05}):Play()
+	end
+end
+
+local function attachTabBar(panel: Frame, currentKey: string)
+	local existing = panel:FindFirstChild("TabBar")
+	if existing then return end
+
+	local bar = Instance.new("Frame")
+	bar.Name = "TabBar"
+	bar.Size = UDim2.new(1, 0, 0, 30)
+	bar.BackgroundTransparency = 1
+	bar.LayoutOrder = -10
+	bar.Parent = panel
+
+	local layout = Instance.new("UIListLayout")
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.Padding = UDim.new(0, 4)
+	layout.Parent = bar
+
+	local tabs = {
+		{key = "lb", icon = "🏆", target = lbPanel},
+		{key = "mission", icon = "📋", target = missionPanel},
+		{key = "streak", icon = "📅", target = streakPanel},
+		{key = "shop", icon = "🛍️", target = shopPanel},
+		{key = "ach", icon = "🏅", target = achPanel},
+	}
+
+	for _, tab in ipairs(tabs) do
+		local tBtn = Instance.new("TextButton")
+		tBtn.Name = "Tab_" .. tab.key
+		tBtn.Size = UDim2.new(0, 36, 0, 26)
+		tBtn.Text = tab.icon
+		tBtn.TextSize = 14
+		tBtn.Font = Enum.Font.GothamBold
+		tBtn.BackgroundColor3 = if tab.key == currentKey then Color3.fromRGB(48, 68, 100) else Color3.fromRGB(20, 26, 38)
+		tBtn.TextColor3 = if tab.key == currentKey then Color3.fromRGB(255, 220, 80) else Color3.fromRGB(180, 190, 210)
+		corner(6, tBtn)
+		stroke(if tab.key == currentKey then Color3.fromRGB(245, 185, 30) else Color3.fromRGB(45, 55, 75), 1, tBtn)
+		tBtn.Parent = bar
+
+		tBtn.Activated:Connect(function()
+			togglePanel(tab.target)
+		end)
+	end
+
+	-- Close button (✕)
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.Name = "TabClose"
+	closeBtn.Size = UDim2.new(0, 26, 0, 26)
+	closeBtn.Text = "✕"
+	closeBtn.TextSize = 12
+	closeBtn.Font = Enum.Font.GothamBold
+	closeBtn.BackgroundColor3 = Color3.fromRGB(45, 25, 30)
+	closeBtn.TextColor3 = Color3.fromRGB(255, 110, 110)
+	corner(13, closeBtn)
+	closeBtn.Parent = bar
+	closeBtn.Activated:Connect(closeAllPanels)
+end
+
+attachTabBar(lbPanel, "lb")
+attachTabBar(missionPanel, "mission")
+attachTabBar(streakPanel, "streak")
+attachTabBar(shopPanel, "shop")
+attachTabBar(historyPanel, "lb")
+attachTabBar(achPanel, "ach")
 
 -- ─── RENDERING: 1. LEADERBOARD ───────────────────────────────────────────────
 
@@ -791,28 +868,17 @@ end
 
 -- ─── TOGGLE LOGIC & MUTUAL EXCLUSION ─────────────────────────────────────────
 
-local function togglePanel(target: Frame)
-	local isCurrentlyOpen = target.Visible
+mainMenuBtn.Activated:Connect(function()
+	local anyOpen = false
 	for _, p in ipairs(allPanels) do
-		if p.Visible then
-			local t = TweenService:Create(p, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {BackgroundTransparency = 1})
-			t.Completed:Connect(function() p.Visible = false; p.BackgroundTransparency = 0.05 end)
-			t:Play()
-		end
+		if p.Visible then anyOpen = true break end
 	end
-	if not isCurrentlyOpen then
-		target.Visible = true
-		target.BackgroundTransparency = 1
-		TweenService:Create(target, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {BackgroundTransparency = 0.05}):Play()
+	if anyOpen then
+		closeAllPanels()
+	else
+		togglePanel(lastActivePanel or lbPanel)
 	end
-end
-
-toggleBtn.Activated:Connect(function() togglePanel(lbPanel) end)
-missionBtn.Activated:Connect(function() togglePanel(missionPanel) end)
-streakBtn.Activated:Connect(function() togglePanel(streakPanel) end)
-shopBtn.Activated:Connect(function() togglePanel(shopPanel) end)
-historyBtn.Activated:Connect(function() togglePanel(historyPanel) end)
-achBtn.Activated:Connect(function() togglePanel(achPanel) end)
+end)
 
 -- ─── STATE LISTENER ──────────────────────────────────────────────────────────
 
@@ -822,12 +888,7 @@ local function onStateUpdate(payload: any)
 		or payload.phase == "AwaitBuy" or payload.phase == "AwaitBuild"
 		or payload.phase == "AwaitCardChoice"
 
-	toggleBtn.Visible = not inMatch
-	missionBtn.Visible = not inMatch
-	streakBtn.Visible = not inMatch
-	shopBtn.Visible = not inMatch
-	historyBtn.Visible = not inMatch
-	achBtn.Visible = not inMatch
+	mainMenuBtn.Visible = true
 
 	if inMatch then
 		for _, p in ipairs(allPanels) do
