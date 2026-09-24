@@ -117,7 +117,17 @@ local function paintDie(die: BasePart, skinKey: string?)
 	end
 end
 
+local activeDice: {BasePart} = {}
+
 function Dice3DFX.rollDice3D(d1: number, d2: number, skinKey: string?)
+	-- Bersihkan dadu putaran sebelumnya agar dadu selalu tampak di atas meja sampai giliran berikutnya
+	for _, oldDie in ipairs(activeDice) do
+		if oldDie and oldDie.Parent then
+			oldDie:Destroy()
+		end
+	end
+	table.clear(activeDice)
+
 	local board = workspace:FindFirstChild("WNIBoard")
 	local center = if board then board:GetPivot().Position else Vector3.new(9, 9, 8)
 	local values = {d1, d2}
@@ -132,6 +142,7 @@ function Dice3DFX.rollDice3D(d1: number, d2: number, skinKey: string?)
 		die.CFrame = launch
 		die.Parent = workspace
 		table.insert(dice, die)
+		table.insert(activeDice, die)
 	end
 	playBounceSound()
 	task.delay(0.18, function()
@@ -154,29 +165,7 @@ function Dice3DFX.rollDice3D(d1: number, d2: number, skinKey: string?)
 			end)
 		end
 	end)
-	task.delay(1.55, function()
-		for _, die in ipairs(dice) do
-			if die:IsDescendantOf(workspace) then
-				local fadeParts = {die}
-				for _, descendant in ipairs(die:GetDescendants()) do
-					if descendant:IsA("SurfaceGui") then
-						for _, pip in ipairs(descendant:GetChildren()) do
-							if pip:IsA("Frame") then table.insert(fadeParts, pip) end
-						end
-					end
-				end
-				for _, obj in ipairs(fadeParts) do
-					local goal = {}
-					if obj:IsA("BasePart") then goal.Transparency = 1 end
-					if obj:IsA("Frame") then goal.BackgroundTransparency = 1 end
-					TweenService:Create(obj, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In), goal):Play()
-				end
-			end
-		end
-	end)
-	for _, die in ipairs(dice) do
-		Debris:AddItem(die, 2.8)
-	end
+	-- Dadu tetap berada di atas meja papan menunjukkan angka lemparan terakhir (tidak lagi menghilang / fade out)
 end
 
 return Dice3DFX

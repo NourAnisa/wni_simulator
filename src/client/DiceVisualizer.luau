@@ -24,7 +24,9 @@ stateUpdated.OnClientEvent:Connect(function(current)
 	if typeof(d1) ~= "number" or typeof(d2) ~= "number" or d1 < 1 or d2 < 1 then return end
 	local changed = true
 	if typeof(previous) == "table" and typeof(previous.dice) == "table" then
-		changed = previous.dice[1] ~= d1 or previous.dice[2] ~= d2
+		local prevRev = if typeof(previous.revision) == "number" then previous.revision else 0
+		local curRev = if typeof(current.revision) == "number" then current.revision else 0
+		changed = previous.dice[1] ~= d1 or previous.dice[2] ~= d2 or (curRev ~= prevRev and current.activeSeat ~= previous.activeSeat)
 	end
 	if changed then
 		local skin = (typeof(current.profile) == "table" and current.profile.diceSkin) or "Classic"

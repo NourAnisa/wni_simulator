@@ -387,8 +387,14 @@ applyActionLayout()
 
 local function findMySeat(snap: any): number
 	local ps = snap.players
+	if typeof(ps) ~= "table" then return 0 end
 	for seat = 1, #ps do
-		if ps[seat].userId == player.UserId then return seat end
+		local p = ps[seat]
+		if typeof(p) == "table" then
+			if p.userId == player.UserId or p.name == player.Name or p.name == player.DisplayName then
+				return seat
+			end
+		end
 	end
 	return 0
 end
@@ -799,9 +805,12 @@ local function refresh(snap: any)
 	else
 		local pausedForReconnect = snap.room and snap.room.pausedForReconnect == true
 		setButton("Ready", false)
-		-- DiceRollBar handles roll when it's the player's turn — plain Roll button stays hidden
+		-- Lempar Dadu: Tampilkan DiceRollBar ala Let's Get Rich sekaligus aktifkan tombol Roll di panel
 		local wantDiceBar = not pausedForReconnect and phase == "AwaitRoll" and myTurn
-		setButton("Roll", false)
+		if showDiceRollBar then
+			showDiceRollBar(wantDiceBar)
+		end
+		setButton("Roll", wantDiceBar)
 		local buyText = "Beli"
 		if not pausedForReconnect and phase == "AwaitBuy" and myTurn and active then
 			local t = Tarif.get(active.position)
