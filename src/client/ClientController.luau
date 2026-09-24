@@ -2178,7 +2178,9 @@ local function initPolishUI()
 		local pawnsFolder = board and board:FindFirstChild("Pawns")
 		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. seat) or pawnsFolder:FindFirstChild("Pawn_" .. seat))
 		if not pawnModel then return end
-		local head = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart
+		local head: any = if pawnModel:IsA("BasePart") then pawnModel
+			elseif pawnModel:IsA("Model") then (pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart or pawnModel:FindFirstChildWhichIsA("BasePart"))
+			else nil
 		if not head then return end
 
 		local existing = head:FindFirstChild("SpeechBubbleGui")
@@ -2661,6 +2663,7 @@ local function initPolishUI()
 		local board = WS:FindFirstChild("WNIBoard")
 		local pawnsFolder = board and board:FindFirstChild("Pawns")
 		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. mySeat) or pawnsFolder:FindFirstChild("Pawn_" .. mySeat))
+		if not pawnModel then return end
 		local targetPart: BasePart? = nil
 		if pawnModel:IsA("BasePart") then
 			targetPart = pawnModel
@@ -2759,7 +2762,9 @@ local function initPolishUI()
 		local pawnsFolder = board and board:FindFirstChild("Pawns")
 		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. targetSeat) or pawnsFolder:FindFirstChild("Pawn_" .. targetSeat))
 		if not pawnModel then return end
-		local targetHead = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart
+		local targetHead: any = if pawnModel:IsA("BasePart") then pawnModel
+			elseif pawnModel:IsA("Model") then (pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart or pawnModel:FindFirstChildWhichIsA("BasePart"))
+			else nil
 		if not targetHead then return end
 
 		if kind == "Sandal" then

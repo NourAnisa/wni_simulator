@@ -951,48 +951,53 @@ for _, player in Players:GetPlayers() do onPlayerAdded(player) end
 updateBoard()
 task.spawn(function()
 	while script:IsDescendantOf(game) do
-		local now = Workspace:GetServerTimeNow()
-		if isMatchPlace and not admissionRoomReady and admissionDeadline > 0 and now >= admissionDeadline then
-			admissionDeadline = 0
-			if admissionProposalId then
-				globalMatchmaking:markRouteFailed(admissionProposalId, "Roster pertandingan tidak lengkap dalam batas waktu kedatangan ke Match server.")
-			end
-			if admissionRoster then routing:clearReconnectRoster(admissionRoster) end
-			for _, admitted in admittedPlayers do
-				if admitted.Parent == Players then
-					local returned, returnError = routing:teleportLobby(admitted)
-					if not returned then
-						admitted:Kick(returnError or "Roster pertandingan tidak lengkap dalam batas waktu kedatangan.")
+		local ok, loopErr = pcall(function()
+			local now = Workspace:GetServerTimeNow()
+			if isMatchPlace and not admissionRoomReady and admissionDeadline > 0 and now >= admissionDeadline then
+				admissionDeadline = 0
+				if admissionProposalId then
+					globalMatchmaking:markRouteFailed(admissionProposalId, "Roster pertandingan tidak lengkap dalam batas waktu kedatangan ke Match server.")
+				end
+				if admissionRoster then routing:clearReconnectRoster(admissionRoster) end
+				for _, admitted in admittedPlayers do
+					if admitted.Parent == Players then
+						local returned, returnError = routing:teleportLobby(admitted)
+						if not returned then
+							admitted:Kick(returnError or "Roster pertandingan tidak lengkap dalam batas waktu kedatangan.")
+						end
 					end
 				end
+				table.clear(admittedPlayers)
 			end
-			table.clear(admittedPlayers)
-		end
-		local reconnectExpired, expiredUserIds = rooms:expireReconnects(now)
-		if reconnectExpired then
-			for _, userId in expiredUserIds do profiles:release(userId) end
-		end
-		local engineChanged = false
-		if not rooms:hasReconnectGrace() then
-			engineChanged = botAI:tick(rooms, now)
-			if not engineChanged then engineChanged = engine:tick(now) end
-		end
-		local matchmakingChanged = false
-		if useGlobalMatchmaking then
-			if now >= nextGlobalMatchmakingPoll then
-				nextGlobalMatchmakingPoll = now + 1
-				matchmakingChanged = processGlobalMatchmaking()
+			local reconnectExpired, expiredUserIds = rooms:expireReconnects(now)
+			if reconnectExpired then
+				for _, userId in expiredUserIds do profiles:release(userId) end
 			end
-		else
-			local matchmakingRevision = matchmaking.revision
-			matchmakingChanged = matchmaking:tick(now)
-			if not matchmaking:hasProposal() and matchmaking:count() >= Rules.PlayerCount then
-				matchmaking:tryFormMatch(now)
+			local engineChanged = false
+			if not rooms:hasReconnectGrace() then
+				engineChanged = botAI:tick(rooms, now)
+				if not engineChanged then engineChanged = engine:tick(now) end
 			end
-			if matchmaking.revision ~= matchmakingRevision then matchmakingChanged = true end
+			local matchmakingChanged = false
+			if useGlobalMatchmaking then
+				if now >= nextGlobalMatchmakingPoll then
+					nextGlobalMatchmakingPoll = now + 1
+					matchmakingChanged = processGlobalMatchmaking()
+				end
+			else
+				local matchmakingRevision = matchmaking.revision
+				matchmakingChanged = matchmaking:tick(now)
+				if not matchmaking:hasProposal() and matchmaking:count() >= Rules.PlayerCount then
+					matchmaking:tryFormMatch(now)
+				end
+				if matchmaking.revision ~= matchmakingRevision then matchmakingChanged = true end
+			end
+			if LeaderboardService then LeaderboardService.tick(now) end
+			if reconnectExpired or engineChanged or matchmakingChanged then broadcast() end
+		end)
+		if not ok then
+			warn("[ServerBootstrap] Tick error caught safely: " .. tostring(loopErr))
 		end
-		if LeaderboardService then LeaderboardService.tick(now) end
-		if reconnectExpired or engineChanged or matchmakingChanged then broadcast() end
 		task.wait(0.25)
 	end
 end)

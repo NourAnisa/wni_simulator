@@ -53,7 +53,7 @@ function RoomService.depart(self: any, userId: number): boolean
 end
 
 function RoomService.markDisconnected(self: any, userId: number, now: number, graceSeconds: number): (boolean, boolean)
-	if not self.members[userId] then return false, false end
+	if not self.members[userId] or userId < 0 then return false, false end
 	local phase = self.engine.phase
 	local active = phase ~= "Waiting" and phase ~= "Finished" and phase ~= "Cancelled"
 	if not active then

@@ -1164,6 +1164,9 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 				participant.position = choice :: number
 				participant.inBekasi = false
 				participant.bekasiReturnPosition = nil
+				participant.inJail = false
+				participant.jailTries = 0
+				participant.jailRentToState = false
 				self:addLog(participant.name .. " kabur ke " .. self.tiles[choice :: number].name .. " (Kabur Aja Dulu); tanpa gaji START, efek lokasi tetap berlaku.")
 				self:resolveTile(now)
 			elseif cardId == "OrangDalam" then
@@ -1254,12 +1257,15 @@ function Engine.tick(self: any, now: number): boolean
 		self:resolveTile(now)
 	elseif self.phase == "AwaitCardChoice" then
 		local pending = self.pendingCardChoice
-		assert(pending, "Missing pending card choice")
-		local choices = self:cardLandChoices(pending.seat, pending.id)
-		local target = if pending.id == "MafiaTanah" then choices[1] else nil
-		self:addLog("Waktu habis: " .. (if target then "Mafia Tanah memilih tanah sah pertama (prototipe)." else "pilihan kartu dilewati."))
-		local ok, message = self:finishCardChoice(target, now)
-		assert(ok, message)
+		if pending then
+			local choices = self:cardLandChoices(pending.seat, pending.id)
+			local target = if pending.id == "MafiaTanah" then choices[1] else nil
+			self:addLog("Waktu habis: " .. (if target then "Mafia Tanah memilih tanah sah pertama (prototipe)." else "pilihan kartu dilewati."))
+			self:finishCardChoice(target, now)
+		else
+			self.phase = "AwaitRoll"
+			self:advance(now)
+		end
 	elseif self.phase == "AwaitBuy" then
 		self:addLog("Waktu habis: pembelian opsional dilewati.")
 		self:advance(now)

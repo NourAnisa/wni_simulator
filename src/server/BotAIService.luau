@@ -112,6 +112,7 @@ local function chooseBuildTarget(engine: any, seat: number, participant: any, pr
 				local cost = engine:upgradeCost(tileIndex)
 				if cost and (participant.cash - cost >= profile.reserve) then
 					local tariff = Tarif.get(tileIndex)
+					if not tariff then continue end
 					local nextRent = tariff.rents[level + 2] or 0
 					local currRent = tariff.rents[level + 1] or 0
 					local rentGain = nextRent - currRent
@@ -220,7 +221,7 @@ function BotAIService.decide(self: any, engine: any): (string?, any?)
 			end
 			return "SelectCardLand", bestChoice
 		end
-		if pending.id == "PembebasanLahan" then return "SkipCardChoice", nil end
+		return "SkipCardChoice", nil
 	end
 	return nil, nil
 end
@@ -231,17 +232,30 @@ function BotAIService.tick(self: any, rooms: any, now: number): boolean
 		self.pendingKey = nil
 		return false
 	end
-	local participant = engine.players[engine.activeSeat]
+	local seat = engine.activeSeat
+	local participant = engine.players[seat]
 	if not participant or participant.isBot ~= true or participant.eliminated then
 		self.pendingKey = nil
 		return false
 	end
 	local action, target = self:decide(engine)
 	if not action then
-		self.pendingKey = nil
-		return false
+		if engine.phase == "AwaitRoll" then
+			action = "Roll"
+		elseif engine.phase == "AwaitBuy" then
+			action = "Skip"
+		elseif engine.phase == "AwaitBuild" then
+			action = "SkipBuild"
+		elseif engine.phase == "AwaitCardChoice" then
+			action = "SkipCardChoice"
+		else
+			self.pendingKey = nil
+			return false
+		end
 	end
-	local key = table.concat({tostring(engine.matchId), tostring(engine.revision), tostring(engine.activeSeat), engine.phase, action}, "|")
+
+	-- Kunci keputusan bot TIDAK memuat engine.revision agar event latar belakang tidak mereset timer berpikir
+	local key = table.concat({tostring(engine.matchId), tostring(seat), engine.phase, tostring(action)}, "|")
 	if self.pendingKey ~= key then
 		self.pendingKey = key
 		self.executeAt = now + self.random:NextNumber(THINK_MIN, THINK_MAX)
@@ -252,8 +266,25 @@ function BotAIService.tick(self: any, rooms: any, now: number): boolean
 	self.pendingKey = nil
 	local ok, message = engine:handle(participant.userId, action, engine.revision, now, target)
 	if not ok then
-		engine:addLog(participant.name .. " gagal memilih aksi AI: " .. tostring(message))
-		engine.revision += 1
+		engine:addLog(participant.name .. " gagal memilih aksi AI (" .. tostring(action) .. "): " .. tostring(message))
+		-- Fallback darurat otomatis agar bot tidak pernah macet pada gilirannya
+		if engine.phase == "AwaitRoll" and action ~= "Roll" then
+			local rollOk, rollMsg = engine:handle(participant.userId, "Roll", engine.revision, now, nil)
+			if not rollOk then
+				engine:addLog(participant.name .. " fallback Roll darurat: " .. tostring(rollMsg))
+			end
+		elseif engine.phase == "AwaitBuy" and action ~= "Skip" then
+			engine:handle(participant.userId, "Skip", engine.revision, now, nil)
+		elseif engine.phase == "AwaitBuild" and action ~= "SkipBuild" then
+			engine:handle(participant.userId, "SkipBuild", engine.revision, now, nil)
+		elseif engine.phase == "AwaitCardChoice" then
+			local pending = engine.pendingCardChoice
+			local choices = if pending then engine:cardLandChoices(seat, pending.id) else {}
+			local fallbackTarget = choices[1]
+			engine:handle(participant.userId, if fallbackTarget then "SelectCardLand" else "SkipCardChoice", engine.revision, now, fallbackTarget)
+		else
+			engine.revision += 1
+		end
 		return true
 	end
 	return true
