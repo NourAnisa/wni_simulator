@@ -334,11 +334,15 @@ stateUpdated.OnClientEvent:Connect(function(snapshot)
 		end
 	end
 
+	local inMatch = snapshot.phase == "AwaitRoll" or snapshot.phase == "AwaitBuy" or snapshot.phase == "AwaitBuild" or snapshot.phase == "AwaitCardChoice"
+
 	-- Tampilkan spectator bar jika pemain tereliminasi atau di lobi menonton match aktif
 	if spectatorGui then
 		local bar = spectatorGui:FindFirstChild("SpectatorBar")
 		if bar and bar:IsA("Frame") then
-			local shouldShow = snapshot.phase == "Active" and (mySeat == 0 or (snapshot.players[mySeat] and snapshot.players[mySeat].isEliminated == true))
+			local myPlayer = if mySeat > 0 and snapshot.players then snapshot.players[mySeat] else nil
+			local isElim = myPlayer and myPlayer.eliminated == true
+			local shouldShow = inMatch and (mySeat == 0 or isElim)
 			bar.Visible = shouldShow
 		end
 	end
@@ -347,7 +351,7 @@ stateUpdated.OnClientEvent:Connect(function(snapshot)
 	if typeof(snapshot.dice) == "table" and snapshot.dice[1] and snapshot.dice[1] > 0 then
 		if snapshot.dice[1] ~= lastDice[1] or snapshot.dice[2] ~= lastDice[2] then
 			lastDice = {snapshot.dice[1], snapshot.dice[2]}
-			if not isCinematicActive and snapshot.phase == "Active" then
+			if not isCinematicActive and inMatch then
 				playDiceRollCam()
 			end
 		end

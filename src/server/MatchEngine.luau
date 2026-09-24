@@ -1002,6 +1002,19 @@ function Engine.handle(self: any, userId: number, action: string, expectedRevisi
 		local roleDef = if RoleConfig then RoleConfig.get(targetTile) else nil
 		local roleName = if roleDef then roleDef.icon .. " " .. roleDef.name else targetTile
 		self:addLog(participant.name .. " memilih profesi " .. roleName .. ".")
+	elseif action == "ClaimCoinFlip" then
+		if participant.eliminated then return false, "Pemain sudah tereliminasi." end
+		local tile = self.tiles[participant.position]
+		if not tile or (tile.kind ~= "Fate" and tile.kind ~= "Parking") then
+			return false, "Hanya dapat diklaim di petak Nasib atau Parkir."
+		end
+		if participant.claimedCoinFlipRound == self.round then
+			return false, "Sudah mengklaim koin pada putaran ini."
+		end
+		participant.claimedCoinFlipRound = self.round
+		local reward = 500000
+		Economy.credit(participant, reward)
+		self:addLog(string.format("🪙 TEBAK KOIN SUKSES! %s menebak koin Sultan dengan tepat dan meraih %s!", participant.name, Rules.formatMoney(reward)))
 	elseif action == "BailoutTeammate" then
 		if self.gameMode == "SoloFFA" then return false, "Tidak ada rekan di mode Solo." end
 		local teammateSeat = nil

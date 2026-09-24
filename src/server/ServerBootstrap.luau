@@ -232,10 +232,20 @@ local function updateBoard()
 			subtitle.Text = if isToll then "TOL • TIDAK DIJUAL" else originalSubtitles[index]
 			subtitle.TextColor3 = if isToll then Color3.fromRGB(255, 221, 133) else originalSubtitleColors[index]
 		end
+		local SOLO_TILE_COLORS = {
+			[1] = Color3.fromRGB(245, 205, 95),  -- Emas Sultan
+			[2] = Color3.fromRGB(120, 190, 255), -- Biru Laut
+			[3] = Color3.fromRGB(120, 230, 160), -- Hijau Zamrud
+			[4] = Color3.fromRGB(255, 140, 140), -- Merah Delima
+		}
 		if isToll then
 			tile.Color = Color3.fromRGB(65, 76, 83)
 		elseif owner then
-			tile.Color = if Rules.teamForSeat(owner) == "A" then Color3.fromRGB(174, 221, 202) else Color3.fromRGB(242, 196, 167)
+			if engine.gameMode == "SoloFFA" then
+				tile.Color = SOLO_TILE_COLORS[owner] or Color3.fromRGB(200, 200, 200)
+			else
+				tile.Color = if Rules.teamForSeat(owner) == "A" then Color3.fromRGB(174, 221, 202) else Color3.fromRGB(242, 196, 167)
+			end
 		else
 			tile.Color = originalColors[index]
 		end
@@ -244,7 +254,7 @@ local function updateBoard()
 		local level = engine.buildings[index] or 0
 		local isToll = (engine.tolls and engine.tolls[index]) or false
 		local owner = engine.owners[index]
-		local team = if owner and owner > 0 then Rules.teamForSeat(owner) else nil
+		local team = if owner and owner > 0 then (if engine.gameMode == "SoloFFA" then tostring(owner) else Rules.teamForSeat(owner)) else nil
 		BuildingVisuals.update(buildingsFolder, tile, index, level, isToll, team)
 	end
 end
@@ -710,7 +720,7 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 		return
 	end
 	if action ~= "Ready" and action ~= "Roll" and action ~= "Buy" and action ~= "Skip" and action ~= "Build" and action ~= "SkipBuild" and action ~= "Bail" and action ~= "Rematch" and action ~= "PlayCard" and action ~= "SelectCardLand" and action ~= "SkipCardChoice" and action ~= "ChooseTeam" and action ~= "RequestTeamSwap" and action ~= "AcceptTeamSwap" and action ~= "CancelTeamSwap"
-		and action ~= "BailoutTeammate" and action ~= "BailTeammateFromJail" and action ~= "BuyStock" and action ~= "SellStock" and action ~= "SetGameMode" and action ~= "SelectRole" then return end
+		and action ~= "BailoutTeammate" and action ~= "BailTeammateFromJail" and action ~= "BuyStock" and action ~= "SellStock" and action ~= "SetGameMode" and action ~= "SelectRole" and action ~= "ClaimCoinFlip" then return end
 	if typeof(revision) ~= "number" or revision ~= revision or revision % 1 ~= 0 or revision < 0 or revision > 1000000000 then return end
 	if typeof(version) ~= "string" or version ~= Rules.Version then
 		synchronize(player, "Versi aturan tidak cocok.")

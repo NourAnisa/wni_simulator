@@ -20,8 +20,11 @@ local active = false
 local lastCountdownSecond = -1
 local buzzerPlayed = false
 
-stateUpdated.OnClientEvent:Connect(function(current)
-	if typeof(current) ~= "table" then return end
+local latestSnapshot: any = nil
+
+local function updateTimer()
+	local current = latestSnapshot
+	if not current then return end
 	local phase = current.phase
 	local running = phase == "AwaitRoll" or phase == "AwaitBuy" or phase == "AwaitBuild" or phase == "AwaitCardChoice"
 	local mySeat = 0
@@ -52,11 +55,8 @@ stateUpdated.OnClientEvent:Connect(function(current)
 		return
 	end
 	if remaining <= ALERT_THRESHOLD then
-		if not active then
+		if not active or remaining ~= lastCountdownSecond then
 			active = true
-			lastCountdownSecond = remaining
-			TurnTimerFX.startCountdown(remaining)
-		elseif remaining ~= lastCountdownSecond then
 			lastCountdownSecond = remaining
 			TurnTimerFX.startCountdown(remaining)
 		end
@@ -64,5 +64,18 @@ stateUpdated.OnClientEvent:Connect(function(current)
 		if active then TurnTimerFX.stopCountdown() end
 		active = false
 		lastCountdownSecond = -1
+	end
+end
+
+stateUpdated.OnClientEvent:Connect(function(current)
+	if typeof(current) ~= "table" then return end
+	latestSnapshot = current
+	updateTimer()
+end)
+
+task.spawn(function()
+	while script:IsDescendantOf(game) do
+		updateTimer()
+		task.wait(0.2)
 	end
 end)

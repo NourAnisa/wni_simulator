@@ -68,14 +68,14 @@ stateUpdated.OnClientEvent:Connect(function(snapshot: any)
 	if typeof(d1) ~= "number" or typeof(d2) ~= "number" then return end
 	if d1 <= 0 or d2 <= 0 then return end
 
-	local currentTurn = typeof(snapshot.turnCount) == "number" and snapshot.turnCount or 0
+	local currentRev = typeof(snapshot.revision) == "number" and snapshot.revision or 0
 	local activeSeat = typeof(snapshot.activeSeat) == "number" and snapshot.activeSeat or 0
 
 	-- Cek apakah lemparan ini dadu kembar dan merupakan roll baru
 	if d1 == d2 then
-		local isNewRoll = (d1 ~= lastDiceState.d1 or d2 ~= lastDiceState.d2 or currentTurn ~= lastDiceState.turn)
+		local isNewRoll = (d1 ~= lastDiceState.d1 or d2 ~= lastDiceState.d2 or currentRev ~= lastDiceState.turn)
 		if isNewRoll then
-			lastDiceState = {d1 = d1, d2 = d2, turn = currentTurn}
+			lastDiceState = {d1 = d1, d2 = d2, turn = currentRev}
 
 			-- Tentukan apakah pemain lokal yang melempar
 			local isLocal = false
@@ -92,6 +92,6 @@ stateUpdated.OnClientEvent:Connect(function(snapshot: any)
 			DoubleRollFX.playDouble(targetPos, d1, isLocal)
 		end
 	else
-		lastDiceState = {d1 = d1, d2 = d2, turn = currentTurn}
+		lastDiceState = {d1 = d1, d2 = d2, turn = currentRev}
 	end
 end)

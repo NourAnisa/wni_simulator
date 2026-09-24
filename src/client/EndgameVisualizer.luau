@@ -67,7 +67,9 @@ stateUpdated.OnClientEvent:Connect(function(current)
 		victoryPlayed = true
 		local winningTeam = "A"
 		if typeof(current.result) == "string" then
-			if string.find(current.result, "Tim B") or string.find(current.result, "TIM B") then
+			if string.find(current.result, "SULTAN") then
+				winningTeam = "SULTAN"
+			elseif string.find(current.result, "Tim B") or string.find(current.result, "TIM B") then
 				winningTeam = "B"
 			end
 		end

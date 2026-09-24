@@ -10,6 +10,7 @@ local EndgameFX = {}
 local TEAM_PALETTE: {[string]: {Color3}} = {
 	A = {Color3.fromRGB(80, 200, 160), Color3.fromRGB(90, 215, 255), Color3.fromRGB(255, 208, 84)},
 	B = {Color3.fromRGB(255, 130, 90), Color3.fromRGB(255, 170, 60), Color3.fromRGB(255, 208, 84)},
+	SULTAN = {Color3.fromRGB(255, 215, 0), Color3.fromRGB(255, 255, 255), Color3.fromRGB(245, 185, 45)},
 }
 
 local function tempAnchor(position: Vector3, life: number): BasePart
@@ -239,7 +240,7 @@ function EndgameFX.playVictory(winningTeam: string, centerPos: Vector3?)
 	sub.Size = UDim2.new(1, 0, 0.45, 0)
 	sub.Position = UDim2.new(0, 0, 0.55, 0)
 	sub.BackgroundTransparency = 1
-	sub.Text = "SELAMAT KEPADA TIM " .. winningTeam .. "!"
+	sub.Text = if winningTeam == "SULTAN" then "👑 SULTAN TERKAYA NUSANTARA! 👑" else ("SELAMAT KEPADA TIM " .. winningTeam .. "!")
 	sub.TextColor3 = colors[1]
 	sub.TextStrokeColor3 = Color3.fromRGB(20, 15, 5)
 	sub.TextStrokeTransparency = 0

@@ -1857,8 +1857,9 @@ local function playSnapshotFeedback(previous: any, current: any)
 				if CoinFlipMiniGame and CoinFlipMiniGame.start and root.Parent and root.Parent:IsA("ScreenGui") then
 					task.delay(0.65, function()
 						CoinFlipMiniGame.start(root.Parent :: ScreenGui, function(won)
-							if won and audio then
-								audio:playSfx("WinJingle", false)
+							if won then
+								if audio then audio:playSfx("WinJingle", false) end
+								send("ClaimCoinFlip")
 							end
 						end)
 					end)
@@ -3116,9 +3117,10 @@ stateUpdated.OnClientEvent:Connect(function(payload)
 		showTutorialIfPending(payload.phase)
 	end
 	if audio then
-		if payload.phase == "Waiting" or payload.phase == "Preparation" or payload.phase == "Ended" then
+		local inMatch = payload.phase == "AwaitRoll" or payload.phase == "AwaitBuy" or payload.phase == "AwaitBuild" or payload.phase == "AwaitCardChoice"
+		if payload.phase == "Waiting" or payload.phase == "Finished" or payload.phase == "Cancelled" then
 			audio:crossfadeBgm("Lobby", 1.2)
-		elseif payload.phase == "Active" then
+		elseif inMatch then
 			if typeof(payload.round) == "number" and payload.round >= 6 then
 				audio:crossfadeBgm("Climax", 1.0)
 			else

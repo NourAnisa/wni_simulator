@@ -13,6 +13,10 @@ local BuildingVisualService = {}
 local TEAM_COLORS: {[string]: Color3} = {
 	A = Color3.fromRGB(80, 185, 160),  -- Tim A (Mint / Emerald)
 	B = Color3.fromRGB(240, 130, 90),  -- Tim B (Coral / Warm Orange)
+	["1"] = Color3.fromRGB(245, 185, 45), -- Solo Kursi 1 (Emas Sultan)
+	["2"] = Color3.fromRGB(60, 160, 240), -- Solo Kursi 2 (Biru Laut)
+	["3"] = Color3.fromRGB(50, 205, 120), -- Solo Kursi 3 (Hijau Zamrud)
+	["4"] = Color3.fromRGB(235, 75, 75),  -- Solo Kursi 4 (Merah Delima)
 }
 
 local function makePart(parent: Instance, name: string, size: Vector3, cf: CFrame, color: Color3, mat: Enum.Material?): Part
