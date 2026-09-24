@@ -2651,8 +2651,12 @@ local function initPolishUI()
 		local board = WS:FindFirstChild("WNIBoard")
 		local pawnsFolder = board and board:FindFirstChild("Pawns")
 		local pawnModel = pawnsFolder and (pawnsFolder:FindFirstChild("MiniMe_" .. mySeat) or pawnsFolder:FindFirstChild("Pawn_" .. mySeat))
-		if not pawnModel then return end
-		local targetPart = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart or pawnModel:FindFirstChildWhichIsA("BasePart")
+		local targetPart: BasePart? = nil
+		if pawnModel:IsA("BasePart") then
+			targetPart = pawnModel
+		elseif pawnModel:IsA("Model") then
+			targetPart = pawnModel:FindFirstChild("Head") or pawnModel.PrimaryPart or pawnModel:FindFirstChildWhichIsA("BasePart")
+		end
 		if not targetPart then return end
 
 		if myMarkerGui and myMarkerGui.Parent == targetPart then
