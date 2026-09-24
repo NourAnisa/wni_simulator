@@ -30,6 +30,8 @@ export type Profile = {
 	recentMatchIds: {string},
 	matchHistory: {MatchHistoryItem},
 	achievements: {[string]: AchievementItem},
+	streakDays: number,
+	lastClaimDay: number,
 	xp: number,
 	level: number,
 	coins: number,
@@ -58,9 +60,20 @@ local ACHIEVEMENTS_DEF: {[string]: {name: string, desc: string, xp: number, coin
 	ten_matches = {name = "Warga Teladan", desc = "Mainkan 10 pertandingan", xp = 300, coins = 600, icon = "⭐"},
 }
 
+local STREAK_REWARDS: {[number]: {coins: number, xp: number}} = {
+	[1] = {coins = 150, xp = 50},
+	[2] = {coins = 250, xp = 75},
+	[3] = {coins = 400, xp = 100},
+	[4] = {coins = 600, xp = 125},
+	[5] = {coins = 800, xp = 150},
+	[6] = {coins = 1200, xp = 200},
+	[7] = {coins = 2500, xp = 350},
+}
+
 local ProfileService = {}
 ProfileService.__index = ProfileService
 ProfileService.ACHIEVEMENTS_DEF = ACHIEVEMENTS_DEF
+ProfileService.STREAK_REWARDS = STREAK_REWARDS
 
 local function defaultProfile(): Profile
 	return {
@@ -73,6 +86,8 @@ local function defaultProfile(): Profile
 		recentMatchIds = {},
 		matchHistory = {},
 		achievements = {},
+		streakDays = 0,
+		lastClaimDay = 0,
 		xp = 0,
 		level = 1,
 		coins = 1000,
@@ -94,6 +109,9 @@ local function sanitize(raw: any): Profile
 	profile.draws = safeInt(raw.draws)
 	profile.xp = safeInt(raw.xp)
 	profile.coins = if typeof(raw.coins) == "number" and raw.coins >= 0 then math.floor(raw.coins) else 1000
+	profile.streakDays = safeInt(raw.streakDays)
+	profile.lastClaimDay = safeInt(raw.lastClaimDay)
+
 	local calculatedLevel = ProgressionConfig.calculateLevel(profile.xp)
 	profile.level = calculatedLevel
 	profile.title = ProgressionConfig.getTitleForLevel(calculatedLevel)
@@ -182,6 +200,74 @@ function ProfileService.load(self: any, player: Player): Profile
 	end
 	self.loaded[userId] = true
 	return self.cache[userId]
+end
+
+function ProfileService.getDailyStreakInfo(self: any, userId: number)
+	local profile = self:get(userId)
+	local currentDay = math.floor(os.time() / 86400)
+	local lastClaim = profile.lastClaimDay or 0
+	local streak = profile.streakDays or 0
+
+	local canClaim = lastClaim < currentDay
+	local nextStreak = streak
+	if canClaim then
+		if lastClaim == currentDay - 1 then
+			nextStreak = (streak % 7) + 1
+		else
+			nextStreak = 1
+		end
+	else
+		nextStreak = math.max(streak, 1)
+	end
+	local reward = STREAK_REWARDS[nextStreak] or STREAK_REWARDS[1]
+	return {
+		streakDays = streak,
+		canClaim = canClaim,
+		nextStreak = nextStreak,
+		nextReward = reward,
+	}
+end
+
+function ProfileService.claimDailyStreak(self: any, userId: number): (boolean, string, number, number)
+	local profile = self:get(userId)
+	local currentDay = math.floor(os.time() / 86400)
+	local lastClaim = profile.lastClaimDay or 0
+	if lastClaim >= currentDay then
+		return false, "Hadiah harian sudah diklaim hari ini. Kembali lagi besok!", 0, 0
+	end
+
+	local newStreak = 1
+	if lastClaim == currentDay - 1 then
+		newStreak = (profile.streakDays % 7) + 1
+	else
+		newStreak = 1
+	end
+
+	local reward = STREAK_REWARDS[newStreak] or STREAK_REWARDS[1]
+	profile.streakDays = newStreak
+	profile.lastClaimDay = currentDay
+	profile.coins = (profile.coins or 1000) + reward.coins
+	profile.xp = (profile.xp or 0) + reward.xp
+	local newLevel = ProgressionConfig.calculateLevel(profile.xp)
+	profile.level = newLevel
+	profile.title = ProgressionConfig.getTitleForLevel(newLevel)
+
+	local key = "u_" .. tostring(userId)
+	if store then
+		task.spawn(function()
+			pcall(function()
+				store:UpdateAsync(key, function(raw)
+					local p = sanitize(raw)
+					p.streakDays = newStreak
+					p.lastClaimDay = currentDay
+					p.coins = (p.coins or 1000) + reward.coins
+					p.xp = (p.xp or 0) + reward.xp
+					return p
+				end)
+			end)
+		end)
+	end
+	return true, "Berhasil klaim hadiah Login Hari ke-" .. tostring(newStreak) .. "!", reward.coins, reward.xp
 end
 
 function ProfileService.unlockAchievement(self: any, userId: number, achId: string): boolean

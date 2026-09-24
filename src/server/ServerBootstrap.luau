@@ -28,6 +28,11 @@ if not remotes:FindFirstChild("AchievementUnlocked") then
 	re.Name = "AchievementUnlocked"
 	re.Parent = remotes
 end
+if not remotes:FindFirstChild("SpectatorCheer") then
+	local sc = Instance.new("RemoteEvent")
+	sc.Name = "SpectatorCheer"
+	sc.Parent = remotes
+end
 local board = child(Workspace, "WNIBoard")
 local tileFolder = child(board, "Tiles")
 local pawnFolder = child(board, "Pawns")
@@ -292,6 +297,7 @@ local function snapshotFor(player: Player): any
 		diceSkin = profile.diceSkin or "Classic",
 		matchHistory = profile.matchHistory or {},
 		achievements = profile.achievements or {},
+		dailyStreak = profiles:getDailyStreakInfo(player.UserId),
 	}
 	snapshot.matchmaking = if useGlobalMatchmaking then globalMatchmaking:snapshot(player.UserId) else matchmaking:snapshot(player.UserId)
 	snapshot.routing = {
@@ -484,6 +490,27 @@ request.OnServerEvent:Connect(function(player: Player, action: any, revision: an
 			else
 				synchronize(player, "Skin dadu belum terbuka atau tidak valid.")
 			end
+		end
+		return
+	end
+	if action == "ClaimDailyStreak" then
+		local ok, msg, coins, xp = profiles:claimDailyStreak(player.UserId)
+		if ok then
+			if LeaderboardService then
+				local p = profiles:get(player.UserId)
+				LeaderboardService.updatePlayerXP(player.UserId, p.xp)
+			end
+			broadcast()
+		else
+			synchronize(player, msg)
+		end
+		return
+	end
+	if action == "SpectatorCheer" then
+		local cheerRemote = remotes:FindFirstChild("SpectatorCheer")
+		if cheerRemote and cheerRemote:IsA("RemoteEvent") then
+			local cheererName = player.DisplayName or player.Name
+			cheerRemote:FireAllClients(player.UserId, cheererName)
 		end
 		return
 	end

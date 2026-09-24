@@ -19,6 +19,11 @@ local stateUpdated = Remotes:WaitForChild("StateUpdated", 10) :: RemoteEvent
 local lbRemote = Remotes:WaitForChild("LeaderboardUpdated", 15) :: RemoteEvent
 local missionsRemote = Remotes:WaitForChild("MissionsUpdated", 15) :: RemoteEvent
 local achRemote = Remotes:WaitForChild("AchievementUnlocked", 15) :: RemoteEvent?
+local requestAction = Remotes:WaitForChild("RequestAction", 10) :: RemoteEvent?
+
+local rulesModule = shared:FindFirstChild("PrototypeRules")
+local Rules = if rulesModule and rulesModule:IsA("ModuleScript") then require(rulesModule) else nil
+local gameVersion = if Rules then Rules.Version else "1.5.3"
 
 -- ─── RESPONSIVE SCREEN GUI ───────────────────────────────────────────────────
 
@@ -26,7 +31,7 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "WNILeaderboardUI"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.DisplayOrder = 6
+screenGui.DisplayOrder = 12
 screenGui.Parent = pgui
 
 local uiScale = Instance.new("UIScale")
@@ -101,10 +106,26 @@ local function makeToggleBtn(name: string, icon: string, yOffset: number, bg: Co
 	return btn
 end
 
-local toggleBtn = makeToggleBtn("LeaderboardToggle", "🏆", -75, Color3.fromRGB(22, 38, 50), Color3.fromRGB(250, 220, 80), Color3.fromRGB(200, 170, 40))
-local missionBtn = makeToggleBtn("MissionToggle", "📋", -25, Color3.fromRGB(30, 50, 30), Color3.fromRGB(100, 230, 130), Color3.fromRGB(60, 180, 80))
-local historyBtn = makeToggleBtn("HistoryToggle", "📜", 25, Color3.fromRGB(35, 30, 55), Color3.fromRGB(200, 170, 255), Color3.fromRGB(140, 110, 220))
-local achBtn = makeToggleBtn("AchievementToggle", "🏅", 75, Color3.fromRGB(50, 35, 22), Color3.fromRGB(255, 180, 90), Color3.fromRGB(220, 130, 40))
+local toggleBtn = makeToggleBtn("LeaderboardToggle", "🏆", -100, Color3.fromRGB(22, 38, 50), Color3.fromRGB(250, 220, 80), Color3.fromRGB(200, 170, 40))
+local missionBtn = makeToggleBtn("MissionToggle", "📋", -50, Color3.fromRGB(30, 50, 30), Color3.fromRGB(100, 230, 130), Color3.fromRGB(60, 180, 80))
+local streakBtn = makeToggleBtn("StreakToggle", "📅", 0, Color3.fromRGB(18, 40, 50), Color3.fromRGB(100, 220, 255), Color3.fromRGB(40, 160, 200))
+local historyBtn = makeToggleBtn("HistoryToggle", "📜", 50, Color3.fromRGB(35, 30, 55), Color3.fromRGB(200, 170, 255), Color3.fromRGB(140, 110, 220))
+local achBtn = makeToggleBtn("AchievementToggle", "🏅", 100, Color3.fromRGB(50, 35, 22), Color3.fromRGB(255, 180, 90), Color3.fromRGB(220, 130, 40))
+
+local streakBadge = Instance.new("TextLabel")
+streakBadge.Name = "Badge"
+streakBadge.Size = UDim2.new(0, 16, 0, 16)
+streakBadge.Position = UDim2.new(1, -2, 0, -2)
+streakBadge.AnchorPoint = Vector2.new(0.5, 0.5)
+streakBadge.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+streakBadge.TextColor3 = Color3.fromRGB(255, 255, 255)
+streakBadge.Text = "!"
+streakBadge.TextSize = 11
+streakBadge.Font = Enum.Font.GothamBold
+streakBadge.Visible = false
+streakBadge.Parent = streakBtn
+corner(8, streakBadge)
+stroke(Color3.fromRGB(255, 255, 255), 1.5, streakBadge)
 
 -- ─── DOCK PANELS ─────────────────────────────────────────────────────────────
 
@@ -125,10 +146,11 @@ end
 
 local lbPanel = makePanel("LeaderboardPanel", Color3.fromRGB(14, 20, 32), Color3.fromRGB(200, 170, 40), 340)
 local missionPanel = makePanel("MissionPanel", Color3.fromRGB(14, 28, 22), Color3.fromRGB(60, 180, 80), 280)
+local streakPanel = makePanel("StreakPanel", Color3.fromRGB(16, 26, 36), Color3.fromRGB(40, 160, 200), 340)
 local historyPanel = makePanel("HistoryPanel", Color3.fromRGB(20, 16, 32), Color3.fromRGB(140, 110, 220), 310)
 local achPanel = makePanel("AchievementPanel", Color3.fromRGB(28, 20, 14), Color3.fromRGB(220, 130, 40), 320)
 
-local allPanels = {lbPanel, missionPanel, historyPanel, achPanel}
+local allPanels = {lbPanel, missionPanel, streakPanel, historyPanel, achPanel}
 
 for _, p in ipairs(allPanels) do
 	local layout = Instance.new("UIListLayout")
@@ -420,6 +442,133 @@ local function renderAchievements(userAchs: {[string]: any})
 	end
 end
 
+-- ─── RENDERING: 5. DAILY STREAK ──────────────────────────────────────────────
+
+local STREAK_REWARDS_DATA = {
+	{day = 1, coins = 150, xp = 50},
+	{day = 2, coins = 250, xp = 75},
+	{day = 3, coins = 400, xp = 100},
+	{day = 4, coins = 600, xp = 125},
+	{day = 5, coins = 800, xp = 150},
+	{day = 6, coins = 1200, xp = 200},
+	{day = 7, coins = 2500, xp = 350, jackpot = true},
+}
+
+local function renderStreak(streakInfo: any)
+	clearChildren(streakPanel)
+	if typeof(streakInfo) ~= "table" then return end
+
+	local streakDays = streakInfo.streakDays or 0
+	local canClaim = streakInfo.canClaim == true
+	local nextStreak = streakInfo.nextStreak or 1
+	local nextReward = streakInfo.nextReward or STREAK_REWARDS_DATA[nextStreak] or STREAK_REWARDS_DATA[1]
+
+	local head = label("📅 LOGIN HARIAN (STREAK)", 13, Color3.fromRGB(100, 220, 255), streakPanel)
+	head.LayoutOrder = 0
+
+	local sub = Instance.new("TextLabel")
+	sub.Text = "🔥 Streak: " .. tostring(streakDays) .. " Hari Berturut-turut"
+	sub.TextSize = 10
+	sub.TextColor3 = Color3.fromRGB(255, 200, 100)
+	sub.Font = Enum.Font.GothamBold
+	sub.BackgroundTransparency = 1
+	sub.Size = UDim2.new(1, 0, 0, 14)
+	sub.LayoutOrder = 1
+	sub.Parent = streakPanel
+
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Name = "StreakScroll"
+	scroll.Size = UDim2.new(1, 0, 1, -84)
+	scroll.BackgroundTransparency = 1
+	scroll.ScrollBarThickness = 3
+	scroll.ScrollBarImageColor3 = Color3.fromRGB(100, 200, 255)
+	scroll.CanvasSize = UDim2.new(0, 0, 0, 7 * 37)
+	scroll.LayoutOrder = 2
+	scroll.Parent = streakPanel
+
+	local sList = Instance.new("UIListLayout")
+	sList.Padding = UDim.new(0, 3)
+	sList.Parent = scroll
+
+	for dayIdx, reward in ipairs(STREAK_REWARDS_DATA) do
+		local isClaimed = not canClaim and dayIdx <= streakDays
+		local isCurrent = canClaim and dayIdx == nextStreak
+		local isLocked = dayIdx > (if canClaim then nextStreak else streakDays)
+
+		local row = Instance.new("Frame")
+		row.Size = UDim2.new(1, -4, 0, 33)
+		row.BackgroundColor3 = if isCurrent then Color3.fromRGB(24, 52, 64)
+			elseif isClaimed then Color3.fromRGB(20, 38, 28)
+			else Color3.fromRGB(24, 24, 30)
+		row.BackgroundTransparency = 0.2
+		row.Parent = scroll
+		corner(6, row)
+		if isCurrent then
+			stroke(Color3.fromRGB(255, 215, 60), 1.5, row)
+		end
+
+		local dayL = Instance.new("TextLabel")
+		dayL.Size = UDim2.new(0, 62, 1, 0)
+		dayL.Position = UDim2.new(0, 8, 0, 0)
+		dayL.Text = "HARI " .. tostring(dayIdx) .. (if reward.jackpot then " 🎁" else "")
+		dayL.TextColor3 = if isCurrent then Color3.fromRGB(255, 230, 120) elseif isClaimed then Color3.fromRGB(140, 230, 160) else Color3.fromRGB(180, 180, 180)
+		dayL.TextSize = 10
+		dayL.Font = Enum.Font.GothamBold
+		dayL.TextXAlignment = Enum.TextXAlignment.Left
+		dayL.BackgroundTransparency = 1
+		dayL.Parent = row
+
+		local rewardL = Instance.new("TextLabel")
+		rewardL.Size = UDim2.new(1, -145, 1, 0)
+		rewardL.Position = UDim2.new(0, 72, 0, 0)
+		rewardL.Text = "+" .. tostring(reward.coins) .. " 🪙  +" .. tostring(reward.xp) .. " XP"
+		rewardL.TextColor3 = Color3.fromRGB(255, 255, 255)
+		rewardL.TextSize = 9
+		rewardL.Font = Enum.Font.Gotham
+		rewardL.TextXAlignment = Enum.TextXAlignment.Left
+		rewardL.BackgroundTransparency = 1
+		rewardL.Parent = row
+
+		local statusL = Instance.new("TextLabel")
+		statusL.Size = UDim2.new(0, 66, 0, 18)
+		statusL.Position = UDim2.new(1, -72, 0.5, -9)
+		statusL.BackgroundColor3 = if isCurrent then Color3.fromRGB(220, 160, 20)
+			elseif isClaimed then Color3.fromRGB(35, 120, 60)
+			else Color3.fromRGB(45, 45, 50)
+		statusL.Text = if isCurrent then "⭐ KLAIM" elseif isClaimed then "✅ SELESAI" else "🔒 NANTI"
+		statusL.TextColor3 = Color3.fromRGB(255, 255, 255)
+		statusL.TextSize = 8
+		statusL.Font = Enum.Font.GothamBold
+		statusL.Parent = row
+		corner(4, statusL)
+	end
+
+	-- Tombol Klaim Hadiah
+	local claimBtn = Instance.new("TextButton")
+	claimBtn.Name = "ClaimBtn"
+	claimBtn.Size = UDim2.new(1, 0, 0, 32)
+	claimBtn.LayoutOrder = 3
+	claimBtn.BackgroundColor3 = if canClaim then Color3.fromRGB(35, 150, 75) else Color3.fromRGB(45, 50, 58)
+	claimBtn.Text = if canClaim then ("🎁 KLAIM HARI INI (+" .. tostring(nextReward.coins) .. " 🪙)") else "✅ SUDAH DIKLAIM HARI INI"
+	claimBtn.TextColor3 = if canClaim then Color3.fromRGB(255, 255, 255) else Color3.fromRGB(150, 150, 150)
+	claimBtn.TextSize = 11
+	claimBtn.Font = Enum.Font.GothamBold
+	claimBtn.Parent = streakPanel
+	corner(8, claimBtn)
+	if canClaim then
+		stroke(Color3.fromRGB(100, 255, 140), 1.5, claimBtn)
+	end
+
+	claimBtn.Activated:Connect(function()
+		if not canClaim then return end
+		if requestAction then
+			requestAction:FireServer("ClaimDailyStreak", 0, gameVersion, nil)
+			claimBtn.Text = "⏳ MEMPROSES..."
+			claimBtn.Active = false
+		end
+	end)
+end
+
 -- ─── POPUP NOTIFIKASI PENCAPAIAN DIBUKA ───────────────────────────────────────
 
 local function showAchievementToast(ach: any)
@@ -513,6 +662,7 @@ end
 
 toggleBtn.Activated:Connect(function() togglePanel(lbPanel) end)
 missionBtn.Activated:Connect(function() togglePanel(missionPanel) end)
+streakBtn.Activated:Connect(function() togglePanel(streakPanel) end)
 historyBtn.Activated:Connect(function() togglePanel(historyPanel) end)
 achBtn.Activated:Connect(function() togglePanel(achPanel) end)
 
@@ -526,6 +676,7 @@ local function onStateUpdate(payload: any)
 
 	toggleBtn.Visible = not inMatch
 	missionBtn.Visible = not inMatch
+	streakBtn.Visible = not inMatch
 	historyBtn.Visible = not inMatch
 	achBtn.Visible = not inMatch
 
@@ -535,13 +686,17 @@ local function onStateUpdate(payload: any)
 		end
 	end
 
-	-- Render History & Achievements jika ada di profile snapshot
+	-- Render History, Achievements & Daily Streak jika ada di profile snapshot
 	if typeof(payload.profile) == "table" then
 		if typeof(payload.profile.matchHistory) == "table" then
 			renderHistory(payload.profile.matchHistory)
 		end
 		if typeof(payload.profile.achievements) == "table" then
 			renderAchievements(payload.profile.achievements)
+		end
+		if typeof(payload.profile.dailyStreak) == "table" then
+			renderStreak(payload.profile.dailyStreak)
+			streakBadge.Visible = payload.profile.dailyStreak.canClaim == true
 		end
 	end
 end
